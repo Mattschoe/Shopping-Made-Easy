@@ -2,6 +2,7 @@ package weberstudio.app.billigsteprodukter.MVVM
 
 import android.Manifest
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -29,8 +30,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.content.FileProvider
 import weberstudio.app.billigsteprodukter.ui.theme.BilligsteProdukterTheme
+import java.io.File
 
 
 class MainActivity : ComponentActivity() {
@@ -70,22 +74,33 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     fun SaveImageButton() {
-        var previewImage by remember { mutableStateOf<Bitmap?>(null) }
+        var previewImage by remember { mutableStateOf<Bitmap?>(null) } //For debugging
+
+        val context = LocalContext.current
+        val imageFile = File(baseContext.cacheDir, "tempImage.jpg")
+        val imageURI = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", imageFile)
+
         //Takes image and processes it
-        val previewLauncher = rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.TakePicturePreview()
-        ) { bitmap: Bitmap? -> bitmap?.let {
-            previewImage = it
-            viewModel.processImage(it)
-        }}
+        val imageLauncher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.TakePicture()
+        ) { success ->
+            if (success) {
+                val bitmap = BitmapFactory.decodeFile(imageFile.absolutePath)
+                previewImage = bitmap //DEBUG
+                viewModel.processImage(bitmap)
+            } else {
+                Toast.makeText(context, "Image capture failed!", Toast.LENGTH_SHORT).show()
+            }
+        }
 
         //UI
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Button(onClick = { previewLauncher.launch() }) {
+            Button(onClick = { imageLauncher.launch(imageURI) }) {
                 Text(text = "Take a picture!")
             }
             Spacer(Modifier.height(12.dp))
             previewImage?.let { bmp ->
+                //DEBUG
                 Image(
                     bitmap = bmp.asImageBitmap(),
                     contentDescription = "Debug preview",

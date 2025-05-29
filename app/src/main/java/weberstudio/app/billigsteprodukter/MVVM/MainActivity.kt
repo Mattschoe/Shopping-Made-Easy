@@ -28,16 +28,11 @@ import weberstudio.app.billigsteprodukter.ui.theme.BilligsteProdukterTheme
 
 class MainActivity : ComponentActivity() {
     private val viewModel by viewModels<ViewModel>()
-    /**A list of required permissions for the app to work **/
-    private val REQUIRED_PERMISSIONS = arrayOf(
-        Manifest.permission.CAMERA
-    )
 
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        activityResultLauncher.launch(REQUIRED_PERMISSIONS) //Asks permission for the required permissions
         setContent {
             BilligsteProdukterTheme {
                 SaveImage()
@@ -50,25 +45,4 @@ class MainActivity : ComponentActivity() {
 
 
     }
-
-
-    private val activityResultLauncher =
-        registerForActivityResult(
-            ActivityResultContracts.RequestMultiplePermissions())
-        { permissions ->
-            // Handle Permission granted/rejected
-            var permissionGranted = true
-            permissions.entries.forEach {
-                if (it.key in REQUIRED_PERMISSIONS && it.value == false) permissionGranted = false //If permissions aren't granted
-            }
-            if (!permissionGranted) {
-                Toast.makeText(baseContext,
-                    "Permission request denied",
-                    Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(baseContext,
-                    "Permissions accepted!",
-                    Toast.LENGTH_SHORT).show()
-            }
-        }
 }

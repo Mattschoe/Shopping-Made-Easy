@@ -6,16 +6,12 @@ import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import weberstudio.app.billigsteprodukter.Product
 import weberstudio.app.billigsteprodukter.Store
+import weberstudio.app.billigsteprodukter.parsers.ParserFactory
+import weberstudio.app.billigsteprodukter.parsers.StoreParser
 
 class Model(val viewModel: ViewModel) {
     private val stores = HashMap<String, Store>()
     private val textRecognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
-
-    ///Adds the given product to the store. If no store creates a new one
-    public fun addProduct(storeName: String, product: Product) {
-        val store = stores.getOrPut(storeName) { Store(storeName) }
-        store.products.add(product)
-    }
 
     ///Reads the given image and tries to process the info
     public fun readImage(image: InputImage) {
@@ -26,14 +22,27 @@ class Model(val viewModel: ViewModel) {
 
     ///Processes the image info
     private fun processImageInfo(imageText: Text) {
-        if (imageText.textBlocks.isEmpty()) println("No text found in image!")
-        for (block in imageText.textBlocks) {
-            for (line in block.lines) {
-                for (element in line.elements) {
-                    println(element.text)
-                }
-            }
+        if (imageText.textBlocks.isEmpty()) {
+            println("No text found in image!")
+            return
         }
+        val parser: StoreParser? = ParserFactory.parseReceipt(imageText)
+        if (parser != null) {
+            println("Adding products to ${parser.toString()}")
+            addProducts(parser.toString(), parser.parse(imageText))
+        }
+        else println("No store found!")
     }
 
+    ///Adds the given product to the store. If no store creates a new one
+    private fun addProducts(storeName: String, products: HashSet<Product>) {
+        val store = stores.getOrPut(storeName) { Store(storeName) }
+        store.products.addAll(products)
+    }
+
+    ///Adds the given product to the store. If no store creates a new one
+    public fun addProduct(storeName: String, product: Product) {
+        val store = stores.getOrPut(storeName) { Store(storeName) }
+        store.products.add(product)
+    }
 }

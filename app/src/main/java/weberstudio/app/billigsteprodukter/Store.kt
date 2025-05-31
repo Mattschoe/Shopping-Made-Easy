@@ -1,5 +1,7 @@
 package weberstudio.app.billigsteprodukter
 
-class Store(val name: String) {
-    val products = HashSet<Product>();
+import androidx.annotation.IntegerRes
+
+data class Store(val name: String) {
+    val products = HashSet<Product>()
 }

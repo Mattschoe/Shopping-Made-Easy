@@ -10,17 +10,26 @@ object ParserFactory {
     fun parseReceipt(receipt: Text): StoreParser? {
         for (block in receipt.textBlocks) {
             for (line in block.lines) {
-                for (element in line.elements) {
-                    if (element.text == "Netto") return NettoParser
-                    else if (element.text == "Rema") return RemaParser
-                    else if (element.text == "Coop") return CoopParser
-                    else if (element.text == "Menu") return MenuParser
-                    else if (element.text == "Lidl") return LidlParser
-                    else if (element.text == "SuperBrugsen") return SuperBrugsenParser
-                }
+                val lineText = normalizeText(line.text)
+                if (lineText.contains("ETTO")) return NettoParser
+                else if (lineText == "REMA") return RemaParser
+                else if (lineText == "COOP") return CoopParser
+                else if (lineText == "MENU") return MenuParser
+                else if (lineText == "LIDL") return LidlParser
+                else if (lineText == "SUPERBRUGSEN") return SuperBrugsenParser
             }
         }
         return null
     }
 
+    private fun normalizeText(text: String): String {
+        text
+            .replace(Regex("[^A-Za-z0-9 ]"), "") //Limits to a-z, digits and whitespaces
+            .uppercase()
+            .replace("Æ", "AE")
+            .replace("Ø", "OE")
+            .replace("Å", "AA")
+            .trim()
+        return text
+    }
 }

@@ -18,7 +18,7 @@ object NettoParser : StoreParser {
         }
 
         //Collects all lines that intersect
-        val intersections: ArrayList<Pair<Line, Line>> = ArrayList<Pair<Line, Line>>()
+        val intersections: ArrayList<Pair<Line, Float>> = ArrayList<Pair<Line, Float>>()
         for (i in 0 until processedText.size) {
             for (j in i + 1 until processedText.size) {
                 val originalLine = lines[i]
@@ -27,47 +27,40 @@ object NettoParser : StoreParser {
 
                 if (doesLinesIntersect(normalizedLine, lines[j])) {
                     //If intersect we first check if its a collection, eg: "2 x 25,5" if it is, we save the previous one
+                    val productName = normalizeText(processedText[i].text)
+                    if (productName.contains("X ") || productName.contains(" X")) {
+                        val previousProduct = processedText.getOrNull(i-1)
+                        if (previousProduct == null) println("Couldn't access the previous product from product $productName!")
+                        else {
+                            try {
+                                //If we successfully got the actual product we save that instead of the original "2 x 25,5", and divide the price of the product by the amount
+                                val productPrice = normalizeText(processedText[j].text).toFloat()/normalizeText(processedText[i].text[0].toString()).toFloat()
+                                intersections.add(Pair(processedText[i-1], productPrice))
+                                break //Only connects one line to another, not multiple
+                            } catch (_: NumberFormatException) {
+                                println("Error dividing the product price with the amount!")
+                            }
+                        }
+                    }
 
-
-                    intersections.add(Pair(processedText[i], processedText[j]))
+                    try {
+                        intersections.add(Pair(processedText[i], normalizeText(processedText[j].text).toFloat()))
+                        break //Only connects one line to another, not multiple
+                    } catch (_: NumberFormatException) {
+                        println("Error converting: ${normalizeText(processedText[j].text)} to Float!")
+                    }
                 }
             }
         }
 
         //Instantiates products
-        var nextIsNotProduct = false
-        for (i in intersections.indices) {
-            if (nextIsNotProduct) {
-                //Skips if we marked the next line as not a product
-                nextIsNotProduct = false
-                continue
-            }
-            val productName: String = normalizeText(intersections[i].first.text)
-            if (productName.contains("X ") || productName.contains(" X")) {
-                //If its a collection of prices like "2 x 16,00" we take the name of the previous one
-                val previousProduct = intersections.getOrNull(i-1)
-                if (previousProduct != null) productName == normalizeText(previousProduct.first.text)
-                nextIsNotProduct = true
-            }
+        for (pair in intersections) {
+            products.add(Product(pair.first.text, pair.second))
+        }
 
-            //Tries to instantiate product
-            try {
-                val product = Product(productName, normalizeText(intersections[i].second.text).toFloat())
-                products.add(product)
-
-                //If the next intersection is a "RABAT" we take that off the product price and skips it
-                val nextProduct = intersections.getOrNull(i+1)
-                if (normalizeText(nextProduct?.first?.text ?: "no").contains("RABAT")) {
-                    try {
-                        val discount = normalizeText(intersections[i+1].second.text).toFloat()
-                        product.price -= discount
-                    } catch (_: NumberFormatException) {
-                        println("Error taking ${normalizeText(intersections[i+1].second.text)} off the original ${product.name}'s price!")
-                    }
-                }
-            } catch (_: NumberFormatException) {
-                println("Error converting: ${normalizeText(intersections[i].second.text)} to Float!")
-            }
+        //Cleanup in instantiated objects
+        products.removeAll {
+            it.name.contains("TOTAL") //We don't need total
         }
 
         return products

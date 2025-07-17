@@ -22,8 +22,8 @@ object NettoParser : StoreParser {
         for (i in 0 until processedText.size) {
             for (j in i + 1 until processedText.size) {
                 val originalLine = lines[i]
-                val startPoint = Point((originalLine.start.x + originalLine.end.x)/2, (originalLine.start.y + originalLine.end.y)/2)
-                val normalizedLine = SimpleLine(startPoint, Point(Integer.MAX_VALUE, startPoint.y))
+                val startPoint = Point((originalLine.start.x + originalLine.end.x)/2, (originalLine.start.y + originalLine.end.y)/2) //Middle of the two points
+                val normalizedLine = SimpleLine(startPoint, Point(Integer.MAX_VALUE, startPoint.y)) //Line starting at middle and going towards infinity on the right
 
                 if (doesLinesIntersect(normalizedLine, lines[j])) {
                     //If intersect we first check if its a collection, eg: "2 x 25,5" if it is, we save the previous one

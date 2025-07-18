@@ -14,16 +14,23 @@ import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.snapping.SnapPosition
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
@@ -48,6 +55,8 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import weberstudio.app.billigsteprodukter.ui.theme.BilligsteProdukterTheme
 import weberstudio.app.billigsteprodukter.R
+import weberstudio.app.billigsteprodukter.ui.theme.ThemeDarkGreen
+import weberstudio.app.billigsteprodukter.ui.theme.ThemeLightGreen
 import java.io.File
 
 
@@ -96,29 +105,33 @@ class MainActivity : ComponentActivity() {
         ) { innerPadding ->
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
+                    .padding(innerPadding)
+                    .padding(12.dp) //Standard padding from screen edge
+                    .fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 //Save receipt
-                SaveImageButtonUI(
+                SaveImageButton(
                     modifier = Modifier
-                        .weight(3f)
+                        .weight(1f)
                         .fillMaxWidth()
+                        .border(1.dp, Color.Gray, RoundedCornerShape(8.dp)) //Debug
                 )
 
                 //Quick actions row
                 QuickActionsUI(
                     modifier = Modifier
                         .weight(1f)
-                        .fillMaxWidth()
+                        .wrapContentSize(align = Alignment.BottomCenter)
+                        .border(1.dp, Color.Gray, RoundedCornerShape(8.dp)) //Debug
                 )
 
                 //Map UI
                 MapUI(
                     modifier = Modifier
-                        .weight(2f)
+                        .weight(1f)
                         .fillMaxWidth()
+                        .border(1.dp, Color.Gray, RoundedCornerShape(8.dp)) //Debug
                 )
             }
         }
@@ -129,7 +142,7 @@ class MainActivity : ComponentActivity() {
      * UI for saving the receipt to the program
      */
     @Composable
-    fun SaveImageButtonUI(modifier: Modifier) {
+    fun SaveImageButton(modifier: Modifier) {
         var previewImage by remember { mutableStateOf<Bitmap?>(null) } //For debugging
 
         val context = LocalContext.current
@@ -150,11 +163,24 @@ class MainActivity : ComponentActivity() {
         }
 
         //UI
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Button(onClick = { imageLauncher.launch(imageURI) }) {
-                Text(text = "Take a picture!")
+        Box(
+            modifier = modifier
+                .wrapContentSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Button(
+                modifier = Modifier
+                    .size(300.dp),
+                onClick = { imageLauncher.launch(imageURI) },
+                shape = CircleShape,
+            ) {
+                Text(
+                    text = "Take a picture!"
+                )
             }
-            Spacer(Modifier.height(12.dp))
+        }
+
+        /*
             previewImage?.let { bmp ->
                 //DEBUG
                 Image(
@@ -166,52 +192,32 @@ class MainActivity : ComponentActivity() {
                         .clip(RoundedCornerShape(8.dp))
                         .border(1.dp, Color.Gray, RoundedCornerShape(8.dp))
                 )
-            }
-        }
+            } */
     }
 
+
+
+    /**
+     * The layout UI for the quick actions buttons
+     */
     @Composable
     fun QuickActionsUI(modifier: Modifier) {
         Row(
-            modifier = modifier,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = modifier
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             CreateShoppingListUI(
                 modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
+                    .weight(1f, fill = false)
             )
 
             TempUI(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
+                modifier = modifier
+                    .weight(1f,  fill = false)
             )
         }
     }
-
-    @Composable
-    fun CreateShoppingListUI(modifier: Modifier) {
-        QuickActionsButton("Opret indkøbsliste", R.drawable.list, { println("Jeg vil gerne oprette min indkøbsliste!") }, modifier)
-    }
-
-    @Composable
-    fun MapUI(modifier: Modifier) {
-        Text(text = "mapUI")
-    }
-
-    //Temporary name until i find a use for this
-    @Composable
-    fun TempUI(modifier: Modifier) {
-        QuickActionsButton("Temp UI", R.drawable.list, { println("Jeg vil gerne lave noget temp her!") }, modifier)
-
-    }
-
-    @Composable
-    fun NavigationUI() {
-        Text(text = "menuUI")
-    }
-
 
     /**
      * Buttons for quick actions. Max 2 per row
@@ -220,11 +226,10 @@ class MainActivity : ComponentActivity() {
     fun QuickActionsButton(text: String, @DrawableRes iconRes: Int, onClick: () -> Unit, modifier: Modifier = Modifier) {
         Surface(
             modifier = modifier
-                .fillMaxWidth()
                 .height(72.dp)
                 .clickable(onClick = onClick),
             shape = RoundedCornerShape(12.dp),
-            color = Color.
+            color = ThemeLightGreen
         ) {
             Row(
                 modifier = Modifier
@@ -249,4 +254,36 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    @Composable
+    fun CreateShoppingListUI(modifier: Modifier) {
+        QuickActionsButton("Opret indkøbsliste", R.drawable.list, { println("Jeg vil gerne oprette min indkøbsliste!") }, modifier)
+    }
+
+    @Composable
+    fun MapUI(modifier: Modifier) {
+        Box(
+            modifier = modifier
+        ) {
+            Text(
+                text = "Her skal der være et kort! :)",
+                modifier = Modifier.align(Alignment.Center)
+            )
+        }
+    }
+
+    //Temporary name until i find a use for this
+    @Composable
+    fun TempUI(modifier: Modifier) {
+        QuickActionsButton("Temp UI", R.drawable.list, { println("Jeg vil gerne lave noget temp her!") }, modifier)
+
+    }
+
+    @Composable
+    fun NavigationUI() {
+        Row(
+            modifier = Modifier.
+        ) {
+            Text(text = "menuUI")
+        }
+    }
 }

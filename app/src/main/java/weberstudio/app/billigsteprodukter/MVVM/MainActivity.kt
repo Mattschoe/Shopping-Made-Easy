@@ -13,12 +13,17 @@ import androidx.activity.result.launch
 import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -31,6 +36,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import weberstudio.app.billigsteprodukter.ui.theme.BilligsteProdukterTheme
@@ -67,13 +73,55 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             BilligsteProdukterTheme {
-                SaveImageButton()
+                MainScreen()
             }
         }
     }
 
+    /**
+     * The main page of the UI
+     */
     @Composable
-    fun SaveImageButton() {
+    fun MainScreen() {
+        Scaffold(
+            topBar = { NavigationUI() }
+        ) { innerPadding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                //Save receipt
+                SaveImageButtonUI(
+                    modifier = Modifier
+                        .weight(3f)
+                        .fillMaxWidth()
+                )
+
+                //Quick actions row
+                QuickActionsUI(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                )
+
+                //Map UI
+                MapUI(
+                    modifier = Modifier
+                        .weight(2f)
+                        .fillMaxWidth()
+                )
+            }
+        }
+    }
+
+
+    /**
+     * UI for saving the receipt to the program
+     */
+    @Composable
+    fun SaveImageButtonUI(modifier: Modifier) {
         var previewImage by remember { mutableStateOf<Bitmap?>(null) } //For debugging
 
         val context = LocalContext.current
@@ -114,5 +162,51 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    @Composable
+    fun QuickActionsUI(modifier: Modifier) {
+        Row(
+            modifier = modifier,
+            //horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            CreateShoppingListUI(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+            )
 
+            TempUI(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+            )
+        }
+    }
+
+    @Composable
+    fun CreateShoppingListUI(modifier: Modifier) {
+        Button(
+            onClick = { println("Jeg vil gerne oprette min indkøbsliste!") },
+            modifier = modifier
+        ) {
+            Text(
+                text = "Opret indkøbsliste"
+            )
+        }
+    }
+
+    @Composable
+    fun MapUI(modifier: Modifier) {
+        Text(text = "mapUI")
+    }
+
+    //Temporary name until i find a use for this
+    @Composable
+    fun TempUI(modifier: Modifier) {
+        Text(text = "tempUI")
+    }
+
+    @Composable
+    fun NavigationUI() {
+        Text(text = "menuUI")
+    }
 }

@@ -9,10 +9,11 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.result.launch
 import androidx.activity.viewModels
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -21,9 +22,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -36,10 +42,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import weberstudio.app.billigsteprodukter.ui.theme.BilligsteProdukterTheme
+import weberstudio.app.billigsteprodukter.R
 import java.io.File
 
 
@@ -166,7 +174,7 @@ class MainActivity : ComponentActivity() {
     fun QuickActionsUI(modifier: Modifier) {
         Row(
             modifier = modifier,
-            //horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             CreateShoppingListUI(
                 modifier = Modifier
@@ -184,14 +192,7 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     fun CreateShoppingListUI(modifier: Modifier) {
-        Button(
-            onClick = { println("Jeg vil gerne oprette min indkøbsliste!") },
-            modifier = modifier
-        ) {
-            Text(
-                text = "Opret indkøbsliste"
-            )
-        }
+        QuickActionsButton("Opret indkøbsliste", R.drawable.list, { println("Jeg vil gerne oprette min indkøbsliste!") }, modifier)
     }
 
     @Composable
@@ -202,11 +203,50 @@ class MainActivity : ComponentActivity() {
     //Temporary name until i find a use for this
     @Composable
     fun TempUI(modifier: Modifier) {
-        Text(text = "tempUI")
+        QuickActionsButton("Temp UI", R.drawable.list, { println("Jeg vil gerne lave noget temp her!") }, modifier)
+
     }
 
     @Composable
     fun NavigationUI() {
         Text(text = "menuUI")
     }
+
+
+    /**
+     * Buttons for quick actions. Max 2 per row
+     */
+    @Composable
+    fun QuickActionsButton(text: String, @DrawableRes iconRes: Int, onClick: () -> Unit, modifier: Modifier = Modifier) {
+        Surface(
+            modifier = modifier
+                .fillMaxWidth()
+                .height(72.dp)
+                .clickable(onClick = onClick),
+            shape = RoundedCornerShape(12.dp),
+            color = Color.
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    painter = painterResource(iconRes),
+                    contentDescription = "Ikon af kvittering",
+                    modifier = Modifier.size(32.dp)
+                )
+                Spacer(Modifier.width(16.dp)) //Padding between icon and text
+
+                Text(
+                    text = text,
+                    style = MaterialTheme.typography.titleMedium,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+    }
+
 }

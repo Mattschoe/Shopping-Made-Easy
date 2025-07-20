@@ -1,14 +1,12 @@
-package weberstudio.app.billigsteprodukter.MVVM
+package weberstudio.app.billigsteprodukter.ui.pages.home
 
 import android.graphics.Bitmap
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.runtime.Composable
 import androidx.lifecycle.ViewModel
 import com.google.mlkit.vision.common.InputImage
+import weberstudio.app.billigsteprodukter.MVVM.Model
 import weberstudio.app.billigsteprodukter.Product
 
-class ViewModel: ViewModel() {
+class MainPageViewModel: ViewModel() {
     private val model = Model(this)
 
     ///Adds a product to the store

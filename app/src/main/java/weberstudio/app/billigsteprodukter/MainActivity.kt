@@ -1,4 +1,4 @@
-package weberstudio.app.billigsteprodukter.MVVM
+package weberstudio.app.billigsteprodukter
 
 import android.Manifest
 import android.os.Bundle
@@ -6,7 +6,6 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.viewModels
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -36,10 +35,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
-import weberstudio.app.billigsteprodukter.R
-import weberstudio.app.billigsteprodukter.navigation.PageNavigation
+import weberstudio.app.billigsteprodukter.ui.navigation.PageNavigation
 import weberstudio.app.billigsteprodukter.ui.pages.home.MainPageContent
-import weberstudio.app.billigsteprodukter.ui.pages.home.MainPageViewModel
 import weberstudio.app.billigsteprodukter.ui.pages.settings.SettingsPageContent
 import weberstudio.app.billigsteprodukter.ui.theme.BilligsteProdukterTheme
 

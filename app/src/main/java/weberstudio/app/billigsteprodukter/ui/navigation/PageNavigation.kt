@@ -1,4 +1,4 @@
-package weberstudio.app.billigsteprodukter.navigation
+package weberstudio.app.billigsteprodukter.ui.navigation
 
 sealed class PageNavigation(val route: String) {
     object Home : PageNavigation("home")

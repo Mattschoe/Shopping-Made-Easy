@@ -3,7 +3,7 @@ package weberstudio.app.billigsteprodukter.ui.pages.home
 import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import com.google.mlkit.vision.common.InputImage
-import weberstudio.app.billigsteprodukter.MVVM.Model
+import weberstudio.app.billigsteprodukter.Model
 import weberstudio.app.billigsteprodukter.Product
 
 class MainPageViewModel: ViewModel() {

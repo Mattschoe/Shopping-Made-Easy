@@ -4,8 +4,6 @@ import android.Manifest
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Bundle
-import android.widget.Button
-import android.widget.ImageButton
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -13,10 +11,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.annotation.DrawableRes
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.snapping.SnapPosition
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,42 +21,46 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
-import weberstudio.app.billigsteprodukter.ui.theme.BilligsteProdukterTheme
+import com.google.android.datatransport.runtime.Destination
+import kotlinx.coroutines.launch
 import weberstudio.app.billigsteprodukter.R
-import weberstudio.app.billigsteprodukter.ui.theme.ThemeDarkGreen
+import weberstudio.app.billigsteprodukter.ui.theme.BilligsteProdukterTheme
 import weberstudio.app.billigsteprodukter.ui.theme.ThemeLightGreen
 import java.io.File
+
 
 
 class MainActivity : ComponentActivity() {
@@ -99,45 +98,67 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-
     /**
      * The main page of the UI
      */
     @Composable
     fun MainScreen() {
-        Scaffold(
-            topBar = { NavigationUI() }
-        ) { innerPadding ->
-            Column(
-                modifier = Modifier
-                    .padding(innerPadding)
-                    .padding(12.dp) //Standard padding from screen edge
-                    .border(1.dp, Color.Red, RoundedCornerShape(8.dp)) //Debug
-                    .fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                //Save receipt
-                SaveImageButton(
+        //Navigation drawer
+        val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+        val scope = rememberCoroutineScope()
+        ModalNavigationDrawer(
+            drawerState = drawerState,
+            drawerContent = {
+                ModalDrawerSheet {
+                    NavigationDrawerUI(
+                        onDestinationClicked = { destination ->
+                            scope.launch { drawerState.close() } //Closes the nav drawer since we are changing page
+                            /*when (destination) {
+                                NavigationDestinations.Home -> navController.navigate("home")
+                                NavigationDestinations.Settings -> navController.navigate("settings")
+                            } */
+                        }
+                    )
+                }
+            }
+        ) {
+            //Main page
+            Scaffold(
+                //Navigation drawer UI
+                topBar = { NavigationUI(onMenuClick = { scope.launch { drawerState.open()} }) }
+            ) { innerPadding ->
+                //Main page
+                Column(
                     modifier = Modifier
-                        .weight(1.25f)
-                        .fillMaxSize()
-                        .border(1.dp, Color.Gray, RoundedCornerShape(8.dp)) //Debug
-                )
+                        .padding(innerPadding)
+                        .padding(12.dp) //Standard padding from screen edge
+                        //.border(1.dp, Color.Red, RoundedCornerShape(8.dp)) //Debug
+                        .fillMaxSize(),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    //Save receipt
+                    SaveImageButton(
+                        modifier = Modifier
+                            .weight(1.25f)
+                            .fillMaxSize()
+                            //.border(1.dp, Color.Gray, RoundedCornerShape(8.dp)) //Debug
+                    )
 
-                //Quick actions row
-                QuickActionsUI(
-                    modifier = Modifier
-                        .wrapContentSize(align = Alignment.BottomCenter)
-                        .border(1.dp, Color.Gray, RoundedCornerShape(8.dp)) //Debug
-                )
+                    //Quick actions row
+                    QuickActionsUI(
+                        modifier = Modifier
+                            .wrapContentSize(align = Alignment.BottomCenter)
+                            //.border(1.dp, Color.Gray, RoundedCornerShape(8.dp)) //Debug
+                    )
 
-                //Map UI
-                MapUI(
-                    modifier = Modifier
-                        .weight(0.75f)
-                        .fillMaxWidth()
-                        .border(1.dp, Color.Gray, RoundedCornerShape(8.dp)) //Debug
-                )
+                    //Map UI
+                    MapUI(
+                        modifier = Modifier
+                            .weight(0.75f)
+                            .fillMaxWidth()
+                            //.border(1.dp, Color.Gray, RoundedCornerShape(8.dp)) //Debug
+                    )
+                }
             }
         }
     }
@@ -279,19 +300,52 @@ class MainActivity : ComponentActivity() {
         QuickActionsButton("Temp UI", R.drawable.list, { println("Jeg vil gerne lave noget temp her!") }, modifier)
     }
 
+    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
-    fun NavigationUI(modifier: Modifier = Modifier) {
-        Row(
-            modifier = modifier
+    fun NavigationUI(onMenuClick: () -> Unit) {
+        TopAppBar(
+            title = { Text("Title på app her!") },
+            navigationIcon = {
+                IconButton(onClick = onMenuClick) {
+                    Icon(
+                        painterResource(id = R.drawable.menu_dots_svgrepo_com),
+                        contentDescription = "Åbne navigationsmenu"
+                    )
+                }
+            }
+        )
+    }
+
+    /***
+     * The UI for the navigation drawer
+     * @param onDestinationClicked the destination chosen by user, destinations are stated in enum "NavigationDestinations"
+     */
+    @Composable
+    fun NavigationDrawerUI(modifier: Modifier = Modifier, onDestinationClicked: (NavigationDestinations) -> Unit) {
+        Column(
+            modifier
+                .fillMaxHeight()
+                .padding(16.dp)
         ) {
-            IconButton(
-                onClick = { NavigationDrawerUI() }
-            ) { }
+            Text("Hjem",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onDestinationClicked(NavigationDestinations.Home) }
+                    .padding(vertical = 8.dp)
+            )
+            HorizontalDivider()
+            Text("Indstillinger",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onDestinationClicked(NavigationDestinations.Settings)}
+                    .padding(vertical = 8.dp)
+            )
         }
     }
-
-    @Composable
-    fun NavigationDrawerUI() {
-
-    }
 }
+
+/**
+ * The destinations/pages of the app
+ */
+enum class NavigationDestinations{Home, Settings}
+

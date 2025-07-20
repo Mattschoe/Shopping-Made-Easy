@@ -4,7 +4,7 @@ import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import com.google.mlkit.vision.common.InputImage
 import weberstudio.app.billigsteprodukter.Model
-import weberstudio.app.billigsteprodukter.Product
+import weberstudio.app.billigsteprodukter.logic.Product
 
 class MainPageViewModel: ViewModel() {
     private val model = Model(this)

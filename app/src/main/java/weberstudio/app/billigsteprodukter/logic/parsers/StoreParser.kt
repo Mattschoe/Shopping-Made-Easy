@@ -1,7 +1,7 @@
-package weberstudio.app.billigsteprodukter.parsers
+package weberstudio.app.billigsteprodukter.logic.parsers
 
 import com.google.mlkit.vision.text.Text
-import weberstudio.app.billigsteprodukter.Product
+import weberstudio.app.billigsteprodukter.logic.Product
 
 interface StoreParser {
     /**

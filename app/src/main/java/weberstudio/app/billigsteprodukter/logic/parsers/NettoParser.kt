@@ -1,9 +1,9 @@
-package weberstudio.app.billigsteprodukter.parsers
+package weberstudio.app.billigsteprodukter.logic.parsers
 
 import android.graphics.Point
 import com.google.mlkit.vision.text.Text
 import com.google.mlkit.vision.text.Text.Line
-import weberstudio.app.billigsteprodukter.Product
+import weberstudio.app.billigsteprodukter.logic.Product
 import kotlin.system.exitProcess
 
 object NettoParser : StoreParser {

@@ -4,8 +4,10 @@ import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.Text
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
-import weberstudio.app.billigsteprodukter.parsers.ParserFactory
-import weberstudio.app.billigsteprodukter.parsers.StoreParser
+import weberstudio.app.billigsteprodukter.logic.Product
+import weberstudio.app.billigsteprodukter.logic.Store
+import weberstudio.app.billigsteprodukter.logic.parsers.ParserFactory
+import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser
 import weberstudio.app.billigsteprodukter.ui.pages.home.MainPageViewModel
 
 class Model(val viewModel: MainPageViewModel) {

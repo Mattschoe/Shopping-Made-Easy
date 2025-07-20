@@ -35,6 +35,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
+import weberstudio.app.billigsteprodukter.ui.components.PageShell
 import weberstudio.app.billigsteprodukter.ui.navigation.PageNavigation
 import weberstudio.app.billigsteprodukter.ui.pages.home.MainPageContent
 import weberstudio.app.billigsteprodukter.ui.pages.settings.SettingsPageContent
@@ -99,93 +100,5 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-
-    /**
-     * The shell of each page in the app. Has to be applied to every page in the app
-     * @param navController the page controller
-     * @param title the title of the page
-     * @param modifier the modifier that's going to be propagated to page
-     * @param pageContent the content that has to be displayed on the page. F.ex. [MainPageContent] for the "Home" page
-     */
-    @Composable
-    fun PageShell(navController: NavController, title: String, modifier: Modifier = Modifier, pageContent: @Composable (PaddingValues) -> Unit) {
-        //Navigation drawer
-        val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-        val scope = rememberCoroutineScope()
-        ModalNavigationDrawer(
-            drawerState = drawerState,
-            drawerContent = {
-                ModalDrawerSheet {
-                    NavigationDrawerUI(
-                        onDestinationClicked = { destination ->
-                            scope.launch { drawerState.close() } //Closes the nav drawer since we are changing page
-                            /*when (destination) {
-                                NavigationDestinations.Home -> navController.navigate("home")
-                                NavigationDestinations.Settings -> navController.navigate("settings")
-                            } */
-                        }
-                    )
-                }
-            },
-            modifier = modifier
-        ) {
-            Scaffold(
-                //Top bar UI
-                topBar = {
-                    NavigationUI(title, onMenuClick = { scope.launch { drawerState.open()} })
-                }
-            ) { innerPadding ->
-                pageContent(innerPadding) //Shows the page given as parameter
-            }
-        }
-    }
-
-    @OptIn(ExperimentalMaterial3Api::class)
-    @Composable
-    fun NavigationUI(title: String, onMenuClick: () -> Unit) {
-        TopAppBar(
-            title = { Text(title) },
-            navigationIcon = {
-                IconButton(onClick = onMenuClick) {
-                    Icon(
-                        painterResource(id = R.drawable.menu_dots_svgrepo_com),
-                        contentDescription = "Åbne navigationsmenu"
-                    )
-                }
-            }
-        )
-    }
-
-    /***
-     * The UI for the navigation drawer
-     * @param onDestinationClicked the destination chosen by user, destinations are stated in enum "NavigationDestinations"
-     */
-    @Composable
-    fun NavigationDrawerUI(modifier: Modifier = Modifier, onDestinationClicked: (NavigationDestinations) -> Unit) {
-        Column(
-            modifier
-                .fillMaxHeight()
-                .padding(16.dp)
-        ) {
-            Text("Hjem",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onDestinationClicked(NavigationDestinations.Home) }
-                    .padding(vertical = 8.dp)
-            )
-            HorizontalDivider()
-            Text("Indstillinger",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onDestinationClicked(NavigationDestinations.Settings)}
-                    .padding(vertical = 8.dp)
-            )
-        }
-    }
 }
-
-/**
- * The destinations/pages of the app
- */
-enum class NavigationDestinations{Home, Settings}
 

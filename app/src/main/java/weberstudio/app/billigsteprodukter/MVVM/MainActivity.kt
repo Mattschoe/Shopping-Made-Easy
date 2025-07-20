@@ -4,6 +4,8 @@ import android.Manifest
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Bundle
+import android.widget.Button
+import android.widget.ImageButton
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -34,6 +36,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -51,6 +54,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import weberstudio.app.billigsteprodukter.ui.theme.BilligsteProdukterTheme
@@ -95,6 +99,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+
     /**
      * The main page of the UI
      */
@@ -107,21 +112,21 @@ class MainActivity : ComponentActivity() {
                 modifier = Modifier
                     .padding(innerPadding)
                     .padding(12.dp) //Standard padding from screen edge
+                    .border(1.dp, Color.Red, RoundedCornerShape(8.dp)) //Debug
                     .fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 //Save receipt
                 SaveImageButton(
                     modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
+                        .weight(1.25f)
+                        .fillMaxSize()
                         .border(1.dp, Color.Gray, RoundedCornerShape(8.dp)) //Debug
                 )
 
                 //Quick actions row
                 QuickActionsUI(
                     modifier = Modifier
-                        .weight(1f)
                         .wrapContentSize(align = Alignment.BottomCenter)
                         .border(1.dp, Color.Gray, RoundedCornerShape(8.dp)) //Debug
                 )
@@ -129,7 +134,7 @@ class MainActivity : ComponentActivity() {
                 //Map UI
                 MapUI(
                     modifier = Modifier
-                        .weight(1f)
+                        .weight(0.75f)
                         .fillMaxWidth()
                         .border(1.dp, Color.Gray, RoundedCornerShape(8.dp)) //Debug
                 )
@@ -164,8 +169,7 @@ class MainActivity : ComponentActivity() {
 
         //UI
         Box(
-            modifier = modifier
-                .wrapContentSize(),
+            modifier = modifier,
             contentAlignment = Alignment.Center
         ) {
             Button(
@@ -194,8 +198,6 @@ class MainActivity : ComponentActivity() {
                 )
             } */
     }
-
-
 
     /**
      * The layout UI for the quick actions buttons
@@ -275,15 +277,21 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun TempUI(modifier: Modifier) {
         QuickActionsButton("Temp UI", R.drawable.list, { println("Jeg vil gerne lave noget temp her!") }, modifier)
-
     }
 
     @Composable
-    fun NavigationUI() {
+    fun NavigationUI(modifier: Modifier = Modifier) {
         Row(
-            modifier = Modifier.
+            modifier = modifier
         ) {
-            Text(text = "menuUI")
+            IconButton(
+                onClick = { NavigationDrawerUI() }
+            ) { }
         }
+    }
+
+    @Composable
+    fun NavigationDrawerUI() {
+
     }
 }

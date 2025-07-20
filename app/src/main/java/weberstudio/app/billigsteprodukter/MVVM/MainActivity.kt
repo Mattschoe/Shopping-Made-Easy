@@ -60,10 +60,10 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.google.android.datatransport.runtime.Destination
 import kotlinx.coroutines.launch
 import weberstudio.app.billigsteprodukter.R
 import weberstudio.app.billigsteprodukter.navigation.PageNavigation
+import weberstudio.app.billigsteprodukter.ui.components.SaveImageButton
 import weberstudio.app.billigsteprodukter.ui.theme.BilligsteProdukterTheme
 import weberstudio.app.billigsteprodukter.ui.theme.ThemeLightGreen
 import java.io.File
@@ -73,7 +73,6 @@ class MainActivity : ComponentActivity() {
     private val REQUIRED_PERMISSIONS = arrayOf(
         Manifest.permission.CAMERA
     )
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -104,7 +103,7 @@ class MainActivity : ComponentActivity() {
     }
 
     /**
-     * The host that's responsible for navigation in the application
+     * The host that's responsible for navigation between pages in the application
      */
     @Composable
     fun ApplicationNavigationHost(navController: NavHostController = rememberNavController(), startPage: String = PageNavigation.Home.route) {
@@ -135,9 +134,8 @@ class MainActivity : ComponentActivity() {
      * @param navController the page controller
      * @param title the title of the page
      * @param modifier the modifier that's going to be propagated to page
-     * @param pageContent the content that has to be displayed on the page. F.ex. [MainScreenContent] for the "Home" page
+     * @param pageContent the content that has to be displayed on the page. F.ex. [MainPageContent] for the "Home" page
      */
-    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     fun PageShell(navController: NavController, title: String, modifier: Modifier = Modifier, pageContent: @Composable (PaddingValues) -> Unit) {
         //Navigation drawer
@@ -161,13 +159,9 @@ class MainActivity : ComponentActivity() {
             modifier = modifier
         ) {
             Scaffold(
+                //Top bar UI
                 topBar = {
-                    TopAppBar(
-                        title = { Text(title) },
-                        navigationIcon = {
-                            NavigationUI(onMenuClick = { scope.launch { drawerState.open()} })
-                        }
-                    )
+                    NavigationUI(title, onMenuClick = { scope.launch { drawerState.open()} })
                 }
             ) { innerPadding ->
                 pageContent(innerPadding) //Shows the page given as parameter
@@ -176,7 +170,7 @@ class MainActivity : ComponentActivity() {
     }
 
     /**
-     * The UI content of the Main Page
+     * The UI content of the *Main* Page
      */
     @Composable
     fun MainPageContent(modifier: Modifier = Modifier) {
@@ -194,7 +188,9 @@ class MainActivity : ComponentActivity() {
                     .weight(1.25f)
                     .fillMaxSize()
                     //.border(1.dp, Color.Gray, RoundedCornerShape(8.dp)) //Debug
-            )
+            ) { bitmap ->
+                viewModel.processImage(bitmap)
+            }
 
             //Quick actions row
             QuickActionsUI(
@@ -213,64 +209,12 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    fun SettingsPageContent(modifier: Modifier = Modifier) {
-        //HEJ :)
-    }
-
     /**
-     * UI for saving the receipt to the program
+     * The UI content of the *Settings* Page
      */
     @Composable
-    fun SaveImageButton(modifier: Modifier) {
-        var previewImage by remember { mutableStateOf<Bitmap?>(null) } //For debugging
-
-        val context = LocalContext.current
-        val imageFile = File(baseContext.cacheDir, "tempImage.jpg")
-        val imageURI = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", imageFile)
-
-        //Takes image and processes it
-        val imageLauncher = rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.TakePicture()
-        ) { success ->
-            if (success) {
-                val bitmap = BitmapFactory.decodeFile(imageFile.absolutePath)
-                previewImage = bitmap //DEBUG
-                viewModel.processImage(bitmap)
-            } else {
-                Toast.makeText(context, "Image capture failed!", Toast.LENGTH_SHORT).show()
-            }
-        }
-
-        //UI
-        Box(
-            modifier = modifier,
-            contentAlignment = Alignment.Center
-        ) {
-            Button(
-                modifier = Modifier
-                    .size(300.dp),
-                onClick = { imageLauncher.launch(imageURI) },
-                shape = CircleShape,
-            ) {
-                Text(
-                    text = "Take a picture!"
-                )
-            }
-        }
-
-        /*
-            previewImage?.let { bmp ->
-                //DEBUG
-                Image(
-                    bitmap = bmp.asImageBitmap(),
-                    contentDescription = "Debug preview",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(800.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .border(1.dp, Color.Gray, RoundedCornerShape(8.dp))
-                )
-            } */
+    fun SettingsPageContent(modifier: Modifier = Modifier) {
+        //HEJ :)
     }
 
     /**
@@ -355,9 +299,9 @@ class MainActivity : ComponentActivity() {
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
-    fun NavigationUI(onMenuClick: () -> Unit) {
+    fun NavigationUI(title: String, onMenuClick: () -> Unit) {
         TopAppBar(
-            title = { Text("Title på app her!") },
+            title = { Text(title) },
             navigationIcon = {
                 IconButton(onClick = onMenuClick) {
                     Icon(

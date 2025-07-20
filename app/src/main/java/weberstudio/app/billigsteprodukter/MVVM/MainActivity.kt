@@ -15,6 +15,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -54,14 +55,18 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
+import androidx.navigation.NavController
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.google.android.datatransport.runtime.Destination
 import kotlinx.coroutines.launch
 import weberstudio.app.billigsteprodukter.R
+import weberstudio.app.billigsteprodukter.navigation.PageNavigation
 import weberstudio.app.billigsteprodukter.ui.theme.BilligsteProdukterTheme
 import weberstudio.app.billigsteprodukter.ui.theme.ThemeLightGreen
 import java.io.File
-
-
 
 class MainActivity : ComponentActivity() {
     private val viewModel by viewModels<ViewModel>()
@@ -93,16 +98,48 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             BilligsteProdukterTheme {
-                MainScreen()
+                ApplicationNavigationHost()
             }
         }
     }
 
     /**
-     * The main page of the UI
+     * The host that's responsible for navigation in the application
      */
     @Composable
-    fun MainScreen() {
+    fun ApplicationNavigationHost(navController: NavHostController = rememberNavController(), startPage: String = PageNavigation.Home.route) {
+        NavHost(
+            navController = navController,
+            startDestination = startPage,
+            modifier = Modifier
+                .fillMaxSize()
+        ) {
+            //Main Screen
+            composable(PageNavigation.Home.route) {
+                PageShell(navController, title = "Forside") { padding ->
+                    MainPageContent(Modifier.padding(padding))
+                }
+            }
+
+            //Settings
+            composable(PageNavigation.Settings.route) {
+                PageShell(navController, title = "Indstillinger") { padding ->
+                    SettingsPageContent(Modifier.padding(padding))
+                }
+            }
+        }
+    }
+
+    /**
+     * The shell of each page in the app. Has to be applied to every page in the app
+     * @param navController the page controller
+     * @param title the title of the page
+     * @param modifier the modifier that's going to be propagated to page
+     * @param pageContent the content that has to be displayed on the page. F.ex. [MainScreenContent] for the "Home" page
+     */
+    @OptIn(ExperimentalMaterial3Api::class)
+    @Composable
+    fun PageShell(navController: NavController, title: String, modifier: Modifier = Modifier, pageContent: @Composable (PaddingValues) -> Unit) {
         //Navigation drawer
         val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
         val scope = rememberCoroutineScope()
@@ -120,49 +157,65 @@ class MainActivity : ComponentActivity() {
                         }
                     )
                 }
-            }
+            },
+            modifier = modifier
         ) {
-            //Main page
             Scaffold(
-                //Navigation drawer UI
-                topBar = { NavigationUI(onMenuClick = { scope.launch { drawerState.open()} }) }
-            ) { innerPadding ->
-                //Main page
-                Column(
-                    modifier = Modifier
-                        .padding(innerPadding)
-                        .padding(12.dp) //Standard padding from screen edge
-                        //.border(1.dp, Color.Red, RoundedCornerShape(8.dp)) //Debug
-                        .fillMaxSize(),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    //Save receipt
-                    SaveImageButton(
-                        modifier = Modifier
-                            .weight(1.25f)
-                            .fillMaxSize()
-                            //.border(1.dp, Color.Gray, RoundedCornerShape(8.dp)) //Debug
-                    )
-
-                    //Quick actions row
-                    QuickActionsUI(
-                        modifier = Modifier
-                            .wrapContentSize(align = Alignment.BottomCenter)
-                            //.border(1.dp, Color.Gray, RoundedCornerShape(8.dp)) //Debug
-                    )
-
-                    //Map UI
-                    MapUI(
-                        modifier = Modifier
-                            .weight(0.75f)
-                            .fillMaxWidth()
-                            //.border(1.dp, Color.Gray, RoundedCornerShape(8.dp)) //Debug
+                topBar = {
+                    TopAppBar(
+                        title = { Text(title) },
+                        navigationIcon = {
+                            NavigationUI(onMenuClick = { scope.launch { drawerState.open()} })
+                        }
                     )
                 }
+            ) { innerPadding ->
+                pageContent(innerPadding) //Shows the page given as parameter
             }
         }
     }
 
+    /**
+     * The UI content of the Main Page
+     */
+    @Composable
+    fun MainPageContent(modifier: Modifier = Modifier) {
+        //Main page
+        Column(
+            modifier = modifier
+                .padding(12.dp) //Standard padding from screen edge
+                //.border(1.dp, Color.Red, RoundedCornerShape(8.dp)) //Debug
+                .fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            //Save receipt
+            SaveImageButton(
+                modifier = Modifier
+                    .weight(1.25f)
+                    .fillMaxSize()
+                    //.border(1.dp, Color.Gray, RoundedCornerShape(8.dp)) //Debug
+            )
+
+            //Quick actions row
+            QuickActionsUI(
+                modifier = Modifier
+                    .wrapContentSize(align = Alignment.BottomCenter)
+                    //.border(1.dp, Color.Gray, RoundedCornerShape(8.dp)) //Debug
+            )
+
+            //Map UI
+            MapUI(
+                modifier = Modifier
+                    .weight(0.75f)
+                    .fillMaxWidth()
+                    //.border(1.dp, Color.Gray, RoundedCornerShape(8.dp)) //Debug
+            )
+        }
+    }
+
+    fun SettingsPageContent(modifier: Modifier = Modifier) {
+        //HEJ :)
+    }
 
     /**
      * UI for saving the receipt to the program
@@ -343,6 +396,8 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
+
 
 /**
  * The destinations/pages of the app

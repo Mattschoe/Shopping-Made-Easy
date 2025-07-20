@@ -10,9 +10,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import kotlinx.coroutines.launch
 import weberstudio.app.billigsteprodukter.ui.navigation.NavigationDrawerUI
 import weberstudio.app.billigsteprodukter.ui.navigation.NavigationUI
+import weberstudio.app.billigsteprodukter.ui.navigation.PageNavigation
 import weberstudio.app.billigsteprodukter.ui.pages.home.MainPageContent
 
 /**
@@ -23,7 +25,7 @@ import weberstudio.app.billigsteprodukter.ui.pages.home.MainPageContent
  * @param pageContent the content that has to be displayed on the page. F.ex. [MainPageContent] for the "Home" page
  */
 @Composable
-fun PageShell(navController: NavController, title: String, modifier: Modifier = Modifier, pageContent: @Composable (PaddingValues) -> Unit) {
+fun PageShell(navController: NavHostController, title: String, modifier: Modifier = Modifier, pageContent: @Composable (PaddingValues) -> Unit) {
     //Navigation drawer
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -34,10 +36,11 @@ fun PageShell(navController: NavController, title: String, modifier: Modifier = 
                 NavigationDrawerUI(
                     onDestinationClicked = { destination ->
                         scope.launch { drawerState.close() } //Closes the nav drawer since we are changing page
-                        /*when (destination) {
-                            NavigationDestinations.Home -> navController.navigate("home")
-                            NavigationDestinations.Settings -> navController.navigate("settings")
-                        } */
+                        navController.navigate(destination.route) {
+                            popUpTo(navController.graph.startDestinationId) { saveState = true } //Popper back stacken så vi ikke får overflow
+                            launchSingleTop = true
+                            restoreState = true
+                        }
                     }
                 )
             }

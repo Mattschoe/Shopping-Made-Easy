@@ -36,6 +36,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
 import weberstudio.app.billigsteprodukter.ui.components.PageShell
+import weberstudio.app.billigsteprodukter.ui.navigation.ApplicationNavigationHost
 import weberstudio.app.billigsteprodukter.ui.navigation.PageNavigation
 import weberstudio.app.billigsteprodukter.ui.pages.home.MainPageContent
 import weberstudio.app.billigsteprodukter.ui.pages.settings.SettingsPageContent
@@ -70,33 +71,6 @@ class MainActivity : ComponentActivity() {
         setContent {
             BilligsteProdukterTheme {
                 ApplicationNavigationHost()
-            }
-        }
-    }
-
-    /**
-     * The host that's responsible for navigation between pages in the application
-     */
-    @Composable
-    fun ApplicationNavigationHost(navController: NavHostController = rememberNavController(), startPage: String = PageNavigation.Home.route) {
-        NavHost(
-            navController = navController,
-            startDestination = startPage,
-            modifier = Modifier
-                .fillMaxSize()
-        ) {
-            //Main Screen
-            composable(PageNavigation.Home.route) {
-                PageShell(navController, title = "Forside") { padding ->
-                    MainPageContent(Modifier.padding(padding))
-                }
-            }
-
-            //Settings
-            composable(PageNavigation.Settings.route) {
-                PageShell(navController, title = "Indstillinger") { padding ->
-                    SettingsPageContent(Modifier.padding(padding))
-                }
             }
         }
     }

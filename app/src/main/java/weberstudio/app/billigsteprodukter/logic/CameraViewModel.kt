@@ -1,26 +1,23 @@
 package weberstudio.app.billigsteprodukter.logic
 
 import android.content.Context
-import android.graphics.BitmapFactory
 import android.net.Uri
-import android.util.Log
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.Text
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import weberstudio.app.billigsteprodukter.Model
+import weberstudio.app.billigsteprodukter.logic.exceptions.ParsingException
 import weberstudio.app.billigsteprodukter.logic.parsers.ParserFactory
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser
-import java.io.File
+import weberstudio.app.billigsteprodukter.ui.ParsingState
 
 class CameraViewModel: ViewModel() {
     private val model = Model
-
-    ///Adds a product to the store
-    private fun addProduct(storeName: String, productName: String, productPrice: Float) {
-        model.addProduct(storeName, Product(productName, productPrice))
-    }
+    private val parsingState = mutableStateOf<ParsingState>(ParsingState.Idle)
 
     /**
      * @param imageURI the URI of the image that needs processing
@@ -28,6 +25,7 @@ class CameraViewModel: ViewModel() {
      */
     fun processImage(imageURI: Uri, context: Context) {
         println("Processing Image..")
+        parsingState.value = ParsingState.InProgress
         //Tries to read image
         try {
             val textRecognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
@@ -44,8 +42,7 @@ class CameraViewModel: ViewModel() {
                     textRecognizer.close()
                 }
         } catch(e: Exception) {
-            print("Error loading image!: ${e.message}")
-            e.printStackTrace()
+            parsingState.value = ParsingState.Error("Error loading image!: ${e.message}")
         }
     }
 
@@ -54,14 +51,23 @@ class CameraViewModel: ViewModel() {
      */
     private fun processImageInfo(imageText: Text) {
         if (imageText.textBlocks.isEmpty()) {
-            println("No text found in image!")
-            return
+            parsingState.value = ParsingState.Error("Ingen tekst fundet i billedet!")
         }
         val parser: StoreParser? = ParserFactory.parseReceipt(imageText)
         if (parser != null) {
-            println("Adding products to ${parser.toString()}")
-            model.addProducts(parser.toString(), parser.parse(imageText))
+            println("Adding products to $parser")
+            try {
+                model.addProducts(parser.toString(), parser.parse(imageText))
+                ParsingState.Success
+            } catch (e: ParsingException) {
+                ParsingState.Error("Fejl med at scanne kvittering, $e")
+            }
         }
-        else println("No store found!")
+        parsingState.value = ParsingState.Error("Ingen butik fundet!")
     }
+
+    /**
+     * Returns the state of image parsing
+     */
+    fun getParserState(): State<ParsingState> = parsingState
 }

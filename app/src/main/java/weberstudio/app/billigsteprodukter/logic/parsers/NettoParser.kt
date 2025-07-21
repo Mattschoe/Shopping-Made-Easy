@@ -4,12 +4,17 @@ import android.graphics.Point
 import com.google.mlkit.vision.text.Text
 import com.google.mlkit.vision.text.Text.Line
 import weberstudio.app.billigsteprodukter.logic.Product
+import weberstudio.app.billigsteprodukter.logic.exceptions.ParsingException
+import java.util.Collections
+import kotlin.jvm.Throws
 import kotlin.system.exitProcess
 
 object NettoParser : StoreParser {
     override fun parse(receipt: Text): HashSet<Product> {
         val products: HashSet<Product> = HashSet<Product>()
         val processedText: ArrayList<Line> = processImageText(receipt)
+
+        if (processedText.isEmpty()) return hashSetOf() //Returner empty Set hvis error
 
         //Converts all text.lines into actual lines
         val lines: ArrayList<SimpleLine> = ArrayList<SimpleLine>()
@@ -82,11 +87,7 @@ object NettoParser : StoreParser {
             }
         }
         //If anchors not found
-        if (anchorTop == Int.MAX_VALUE || anchorBottom == Int.MIN_VALUE) {
-            println("Error finding anchors!")
-            exitProcess(1)
-        }
-
+        if (anchorTop == Int.MAX_VALUE || anchorBottom == Int.MIN_VALUE) throw ParsingException("Error finding anchors!")
 
         //If found we collect every line thats inside the bounding box
         val linesInRange: ArrayList<Line> = ArrayList<Line>()
@@ -96,14 +97,15 @@ object NettoParser : StoreParser {
         }
         //If no line found between anchors
         if (linesInRange.isEmpty()) {
-            println("No lines found between anchorTop and anchorBottom!")
-            exitProcess(1)
+            throw ParsingException("No lines found between anchorTop and anchorBottom!")
         }
         //Adds all lines to a list of strings
         return linesInRange
     }
 
-    ///Normalizes the text to uppercase + no danish
+    /**
+     * Normalizes the text to uppercase + no danish
+     */
     private fun normalizeText(text: String): String {
         return text
             .replace(Regex("[^A-Za-z0-9 ,.]"), "") //Limits to a-z, digits and whitespaces
@@ -114,6 +116,7 @@ object NettoParser : StoreParser {
             .replace(",", ".") //Ændrer "12,50" til "12.50" så vi kan parse korrekt senere
             .trim()
     }
+
     /**
      * Returns whether the two given lines intersect
      */

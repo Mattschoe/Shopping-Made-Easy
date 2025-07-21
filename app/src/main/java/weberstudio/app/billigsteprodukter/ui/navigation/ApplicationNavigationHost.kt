@@ -30,7 +30,14 @@ fun ApplicationNavigationHost(navController: NavHostController = rememberNavCont
         //Main Screen
         composable(PageNavigation.Home.route) {
             PageShell(navController, title = "Forside") { padding ->
-                MainPageContent(Modifier.padding(padding))
+                MainPageContent(Modifier.padding(padding), navController)
+            }
+        }
+
+        //Receipt Content
+        composable(PageNavigation.ReceiptScanning.route) {
+            PageShell(navController, title = "Kvitteringsoversigt") { padding ->
+                ReceiptScanningContent(Modifier.padding(padding), navController)
             }
         }
 

@@ -25,9 +25,10 @@ import java.io.File
 /**
  * Reads and saves a image of a receipt.
  * @param uiContent the onClick UI that activates the SaveImage function
+ * @param onImageProcessed determines what to do after the image has been taken and processed. Often used to navigate to a different page
  */
 @Composable
-fun SaveImage(onImageCaptured: (Bitmap) -> Unit, uiContent: @Composable (modifier: Modifier, onClick: () -> Unit) -> Unit) {
+fun SaveImage(onImageCaptured: (Bitmap) -> Unit, onImageProcessed: () -> Unit, uiContent: @Composable (modifier: Modifier, onClick: () -> Unit) -> Unit) {
     var previewImage by remember { mutableStateOf<Bitmap?>(null) } //For debugging
 
     val context = LocalContext.current
@@ -42,6 +43,7 @@ fun SaveImage(onImageCaptured: (Bitmap) -> Unit, uiContent: @Composable (modifie
             val bitmap = BitmapFactory.decodeFile(imageFile.absolutePath)
             previewImage = bitmap //DEBUG
             onImageCaptured(bitmap)
+            onImageProcessed()
         } else {
             Toast.makeText(context, "Image capture failed!", Toast.LENGTH_SHORT).show()
         }

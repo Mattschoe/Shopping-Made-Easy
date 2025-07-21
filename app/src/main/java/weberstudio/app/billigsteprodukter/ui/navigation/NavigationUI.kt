@@ -1,5 +1,6 @@
 package weberstudio.app.billigsteprodukter.ui.navigation
 
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -56,8 +57,12 @@ fun NavigationDrawerUI(modifier: Modifier = Modifier, onDestinationClicked: (Pag
             modifier
         )
 
+        //"Scan kvittering"
         SaveImage(
-            onImageCaptured = { bitmap -> CameraViewModel().processImage(bitmap)}
+            onImageCaptured = {
+                bitmap -> CameraViewModel().processImage(bitmap)
+            },
+            onImageProcessed = { onDestinationClicked(PageNavigation.ReceiptScanning) }
         ) { modifier, launchCamera ->
             QuickActionsButton(
                 "Scan kvittering",

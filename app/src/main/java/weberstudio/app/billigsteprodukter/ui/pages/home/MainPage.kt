@@ -10,17 +10,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import weberstudio.app.billigsteprodukter.logic.CameraViewModel
 import weberstudio.app.billigsteprodukter.ui.components.MapUI
 import weberstudio.app.billigsteprodukter.ui.components.QuickActionsUI
 import weberstudio.app.billigsteprodukter.ui.components.SaveImage
 import weberstudio.app.billigsteprodukter.ui.components.SaveImageButton
+import weberstudio.app.billigsteprodukter.ui.navigation.PageNavigation
 
 /**
  * The UI content of the *Main* Page
  */
 @Composable
-fun MainPageContent(modifier: Modifier = Modifier, viewModel: CameraViewModel = CameraViewModel()) {
+fun MainPageContent(modifier: Modifier = Modifier, navController: NavController, viewModel: CameraViewModel = CameraViewModel()) {
     //Main page
     Column(
         modifier = modifier
@@ -31,7 +33,8 @@ fun MainPageContent(modifier: Modifier = Modifier, viewModel: CameraViewModel = 
     ) {
         //Save receipt
         SaveImage(
-            onImageCaptured = { bitmap -> viewModel.processImage(bitmap) }
+            onImageCaptured = { bitmap -> viewModel.processImage(bitmap) },
+            onImageProcessed = { navController.navigate(PageNavigation.ReceiptScanning) }
         ) { modifier, launchCamera ->
             SaveImageButton(
                 modifier = Modifier

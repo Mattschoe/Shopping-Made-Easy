@@ -60,7 +60,7 @@ fun NavigationDrawerUI(modifier: Modifier = Modifier, onDestinationClicked: (Pag
         //"Scan kvittering"
         SaveImage(
             onImageCaptured = {
-                bitmap -> CameraViewModel().processImage(bitmap)
+                uri, context -> CameraViewModel().processImage(uri, context)
             },
             onImageProcessed = { onDestinationClicked(PageNavigation.ReceiptScanning) }
         ) { modifier, launchCamera ->

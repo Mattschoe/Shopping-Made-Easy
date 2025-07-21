@@ -33,7 +33,7 @@ fun MainPageContent(modifier: Modifier = Modifier, navController: NavController,
     ) {
         //Save receipt
         SaveImage(
-            onImageCaptured = { bitmap -> viewModel.processImage(bitmap) },
+            onImageCaptured = { uri, context -> viewModel.processImage(uri, context) },
             onImageProcessed = { navController.navigate(PageNavigation.ReceiptScanning) }
         ) { modifier, launchCamera ->
             SaveImageButton(

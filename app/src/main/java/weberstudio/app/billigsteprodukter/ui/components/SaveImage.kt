@@ -1,7 +1,9 @@
 package weberstudio.app.billigsteprodukter.ui.components
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -28,9 +30,7 @@ import java.io.File
  * @param onImageProcessed determines what to do after the image has been taken and processed. Often used to navigate to a different page
  */
 @Composable
-fun SaveImage(onImageCaptured: (Bitmap) -> Unit, onImageProcessed: () -> Unit, uiContent: @Composable (modifier: Modifier, onClick: () -> Unit) -> Unit) {
-    var previewImage by remember { mutableStateOf<Bitmap?>(null) } //For debugging
-
+fun SaveImage(onImageCaptured: (Uri, Context) -> Unit, onImageProcessed: () -> Unit, uiContent: @Composable (modifier: Modifier, onClick: () -> Unit) -> Unit) {
     val context = LocalContext.current
     val imageFile = File(context.cacheDir, "tempImage.jpg") //Temp file in image directory
     val imageURI = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", imageFile)
@@ -40,9 +40,7 @@ fun SaveImage(onImageCaptured: (Bitmap) -> Unit, onImageProcessed: () -> Unit, u
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
         if (success) {
-            val bitmap = BitmapFactory.decodeFile(imageFile.absolutePath)
-            previewImage = bitmap //DEBUG
-            onImageCaptured(bitmap)
+            onImageCaptured(imageURI, context)
             onImageProcessed()
         } else {
             Toast.makeText(context, "Image capture failed!", Toast.LENGTH_SHORT).show()

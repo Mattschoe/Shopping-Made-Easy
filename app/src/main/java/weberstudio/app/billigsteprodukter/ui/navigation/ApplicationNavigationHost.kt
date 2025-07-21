@@ -34,13 +34,6 @@ fun ApplicationNavigationHost(navController: NavHostController = rememberNavCont
             }
         }
 
-        //Scan Receipt
-        composable(PageNavigation.ReceiptScanning.route) {
-            PageShell(navController, title = "Scan kvittering") { padding ->
-                ReceiptScanningContent(Modifier.padding(padding))
-            }
-        }
-
         //Shopping List
         composable(PageNavigation.ShoppingList.route) {
             PageShell(navController, title = "Indkøbsliste") { padding ->

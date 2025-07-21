@@ -23,15 +23,16 @@ import androidx.core.content.FileProvider
 import java.io.File
 
 /**
- * UI for saving the receipt to the program
+ * Reads and saves a image of a receipt.
+ * @param uiContent the onClick UI that activates the SaveImage function
  */
 @Composable
-fun SaveImageButton(modifier: Modifier = Modifier, onImageCaptured: (Bitmap) -> Unit) {
+fun SaveImage(onImageCaptured: (Bitmap) -> Unit, uiContent: @Composable (modifier: Modifier, onClick: () -> Unit) -> Unit) {
     var previewImage by remember { mutableStateOf<Bitmap?>(null) } //For debugging
 
     val context = LocalContext.current
     val imageFile = File(context.cacheDir, "tempImage.jpg") //Temp file in image directory
-    val imageURI = F        ileProvider.getUriForFile(context, "${context.packageName}.fileprovider", imageFile)
+    val imageURI = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", imageFile)
 
     //Takes image and processes it
     val imageLauncher = rememberLauncherForActivityResult(
@@ -47,6 +48,17 @@ fun SaveImageButton(modifier: Modifier = Modifier, onImageCaptured: (Bitmap) -> 
     }
 
     //UI
+    uiContent(Modifier) {
+        imageLauncher.launch(imageURI)
+    }
+}
+
+
+/**
+ * UI for saving the receipt to the program
+ */
+@Composable
+fun SaveImageButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
     Box(
         modifier = modifier,
         contentAlignment = Alignment.Center
@@ -54,7 +66,7 @@ fun SaveImageButton(modifier: Modifier = Modifier, onImageCaptured: (Bitmap) -> 
         Button(
             modifier = Modifier
                 .size(300.dp),
-            onClick = { imageLauncher.launch(imageURI) },
+            onClick = onClick,
             shape = CircleShape,
         ) {
             Text(

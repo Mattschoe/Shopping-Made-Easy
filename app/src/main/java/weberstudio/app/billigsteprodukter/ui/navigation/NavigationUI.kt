@@ -17,8 +17,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import weberstudio.app.billigsteprodukter.R
+import weberstudio.app.billigsteprodukter.logic.CameraViewModel
 import weberstudio.app.billigsteprodukter.ui.components.QuickActionsButton
+import weberstudio.app.billigsteprodukter.ui.components.SaveImage
+import weberstudio.app.billigsteprodukter.ui.pages.receiptScanning.ReceiptScanningContent
 
 /***
  * The UI for the navigation drawer
@@ -50,12 +55,18 @@ fun NavigationDrawerUI(modifier: Modifier = Modifier, onDestinationClicked: (Pag
             { onDestinationClicked(PageNavigation.Home) },
             modifier
         )
-        QuickActionsButton(
-            "Scan kvittering",
-            R.drawable.camera_icon,
-            { onDestinationClicked(PageNavigation.ReceiptScanning) },
-            modifier
-        )
+
+        SaveImage(
+            onImageCaptured = { bitmap -> CameraViewModel().processImage(bitmap)}
+        ) { modifier, launchCamera ->
+            QuickActionsButton(
+                "Scan kvittering",
+                R.drawable.camera_icon,
+                onClick = launchCamera,
+                modifier = modifier
+            )
+        }
+
         QuickActionsButton(
             "Opret Indkøbsliste",
             R.drawable.menu_dots_svgrepo_com,

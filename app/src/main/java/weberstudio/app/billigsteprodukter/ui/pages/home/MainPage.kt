@@ -10,10 +10,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import weberstudio.app.billigsteprodukter.logic.CameraViewModel
 import weberstudio.app.billigsteprodukter.ui.components.MapUI
 import weberstudio.app.billigsteprodukter.ui.components.QuickActionsUI
+import weberstudio.app.billigsteprodukter.ui.components.SaveImage
 import weberstudio.app.billigsteprodukter.ui.components.SaveImageButton
 
 /**
@@ -30,13 +30,15 @@ fun MainPageContent(modifier: Modifier = Modifier, viewModel: CameraViewModel = 
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         //Save receipt
-        SaveImageButton(
-            modifier = Modifier
-                .weight(1.25f)
-                .fillMaxSize()
-            //.border(1.dp, Color.Gray, RoundedCornerShape(8.dp)) //Debug
-        ) { bitmap ->
-            viewModel.processImage(bitmap)
+        SaveImage(
+            onImageCaptured = { bitmap -> viewModel.processImage(bitmap) }
+        ) { modifier, launchCamera ->
+            SaveImageButton(
+                modifier = Modifier
+                    .weight(1.25f)
+                    .fillMaxSize(),
+                onClick = launchCamera
+            )
         }
 
         //Quick actions row

@@ -31,7 +31,7 @@ fun SaveImageButton(modifier: Modifier = Modifier, onImageCaptured: (Bitmap) -> 
 
     val context = LocalContext.current
     val imageFile = File(context.cacheDir, "tempImage.jpg") //Temp file in image directory
-    val imageURI = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", imageFile)
+    val imageURI = F        ileProvider.getUriForFile(context, "${context.packageName}.fileprovider", imageFile)
 
     //Takes image and processes it
     val imageLauncher = rememberLauncherForActivityResult(
@@ -63,3 +63,4 @@ fun SaveImageButton(modifier: Modifier = Modifier, onImageCaptured: (Bitmap) -> 
         }
     }
 }
+

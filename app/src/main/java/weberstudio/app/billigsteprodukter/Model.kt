@@ -8,9 +8,9 @@ import weberstudio.app.billigsteprodukter.logic.Product
 import weberstudio.app.billigsteprodukter.logic.Store
 import weberstudio.app.billigsteprodukter.logic.parsers.ParserFactory
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser
-import weberstudio.app.billigsteprodukter.ui.pages.home.MainPageViewModel
+import weberstudio.app.billigsteprodukter.logic.CameraViewModel
 
-class Model(val viewModel: MainPageViewModel) {
+object Model {
     private val stores = HashMap<String, Store>()
     private val textRecognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
 

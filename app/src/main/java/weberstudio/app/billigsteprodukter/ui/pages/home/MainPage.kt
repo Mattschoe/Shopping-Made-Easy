@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import weberstudio.app.billigsteprodukter.logic.CameraViewModel
 import weberstudio.app.billigsteprodukter.ui.components.MapUI
 import weberstudio.app.billigsteprodukter.ui.components.QuickActionsUI
 import weberstudio.app.billigsteprodukter.ui.components.SaveImageButton
@@ -19,7 +20,7 @@ import weberstudio.app.billigsteprodukter.ui.components.SaveImageButton
  * The UI content of the *Main* Page
  */
 @Composable
-fun MainPageContent(modifier: Modifier = Modifier, viewModel: MainPageViewModel = viewModel()) {
+fun MainPageContent(modifier: Modifier = Modifier, viewModel: CameraViewModel = CameraViewModel()) {
     //Main page
     Column(
         modifier = modifier

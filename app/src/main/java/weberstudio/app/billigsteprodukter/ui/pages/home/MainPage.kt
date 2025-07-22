@@ -6,26 +6,23 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import weberstudio.app.billigsteprodukter.logic.CameraViewModel
+import weberstudio.app.billigsteprodukter.ui.ParsingState
+import weberstudio.app.billigsteprodukter.ui.components.ErrorMessageLarge
+import weberstudio.app.billigsteprodukter.ui.components.launchCamera
 import weberstudio.app.billigsteprodukter.ui.components.MapUI
 import weberstudio.app.billigsteprodukter.ui.components.QuickActionsUI
 import weberstudio.app.billigsteprodukter.ui.components.SaveImage
 import weberstudio.app.billigsteprodukter.ui.components.SaveImageButton
-import weberstudio.app.billigsteprodukter.ui.navigation.PageNavigation
-import androidx.compose.runtime.getValue
-import androidx.lifecycle.viewmodel.compose.viewModel
-import weberstudio.app.billigsteprodukter.ui.ParsingState
-import weberstudio.app.billigsteprodukter.ui.components.ErrorMessageLarge
 
 /**
  * The UI content of the *Main* Page
@@ -34,20 +31,22 @@ import weberstudio.app.billigsteprodukter.ui.components.ErrorMessageLarge
 @Composable
 fun MainPageContent(modifier: Modifier = Modifier, navController: NavController, viewModel: CameraViewModel = viewModel()) {
     val parsingState by viewModel.getParserState()
+    val launchCamera = launchCamera(
+        onImageCaptured = { uri, context -> viewModel.processImage(uri, context) },
+        onImageProcessed = { println("HEJ:)") }
+    )
 
     //Main page
     Column(
         modifier = modifier
             .padding(12.dp) //Standard padding from screen edge
-            //.border(1.dp, Color.Red, RoundedCornerShape(8.dp)) //Debug
             .fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         //Save receipt
         SaveImage(
             onImageCaptured = { uri, context -> viewModel.processImage(uri, context) },
-            onImageProcessed = { print("Hej:)")}
-            //onImageProcessed = { navController.navigate(PageNavigation.ReceiptScanning) }
+            onImageProcessed = { navController.popBackStack() }
         ) { modifier, launchCamera ->
             SaveImageButton(
                 modifier = Modifier
@@ -61,7 +60,6 @@ fun MainPageContent(modifier: Modifier = Modifier, navController: NavController,
         QuickActionsUI(
             modifier = Modifier
                 .wrapContentSize(align = Alignment.BottomCenter)
-            //.border(1.dp, Color.Gray, RoundedCornerShape(8.dp)) //Debug
         )
 
         //Map UI
@@ -69,7 +67,6 @@ fun MainPageContent(modifier: Modifier = Modifier, navController: NavController,
             modifier = Modifier
                 .weight(0.75f)
                 .fillMaxWidth()
-            //.border(1.dp, Color.Gray, RoundedCornerShape(8.dp)) //Debug
         )
     }
 
@@ -78,28 +75,16 @@ fun MainPageContent(modifier: Modifier = Modifier, navController: NavController,
     else if (parsingState is ParsingState.Error) {
         val errorMessage = (parsingState as ParsingState.Error).message
         ErrorMessageLarge(
-            { viewModel.clearParserState() },
             "Fejl i scanning!",
             errorMessage,
-            { viewModel.clearParserState() }
-        )
-
-
-        println(errorMessage)
-        AlertDialog(
-            onDismissRequest = { viewModel.clearParserState() },
-            title = { Text("Fejl i scanning!") },
-            text = { Text(errorMessage)},
-            confirmButton = {
-                TextButton(onClick = { viewModel.clearParserState() }) {
-                    Text("Ok")
-                }
-            }
+            onDismissRequest = {
+                viewModel.clearParserState()
+                navController.popBackStack()
+           },
+            onConfirmError = { launchCamera() }, //Launches camera again if user clicks "Prøv igen"
+            onDismissError = { } //Goes back to last screen if user presses "Cancel"
         )
     }
 }
 
-@Composable
-fun ParserErrorHandler() {
-
-}
+//Hvis user taster "Prøv Igen" så prøver vi at tage billedet om

@@ -28,12 +28,21 @@ import java.io.File
  * Reads and saves a image of a receipt.
  * @param uiContent the onClick UI that activates the SaveImage function
  * @param onImageProcessed determines what to do after the image has been taken and processed. Often used to navigate to a different page
+ * @param latestParams returns the latest parameters for *URI* and *Context*. Usefull for error handling
  */
 @Composable
-fun SaveImage(onImageCaptured: (Uri, Context) -> Unit, onImageProcessed: () -> Unit, uiContent: @Composable (modifier: Modifier, onClick: () -> Unit) -> Unit) {
+fun SaveImage(modifier: Modifier = Modifier,
+              onImageCaptured: (Uri, Context) -> Unit,
+              onImageProcessed: () -> Unit,
+              uiContent: @Composable (modifier: Modifier, onClick: () -> Unit) -> Unit = { _, _ -> }
+    ) {
     val context = LocalContext.current
-    val imageFile = File(context.cacheDir, "tempImage.jpg") //Temp file in image directory
-    val imageURI = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", imageFile)
+    val imageURI = remember { //Uses "remember" so we dont calculate this every recomposition
+        File(context.cacheDir, "tempImage.jpg")
+            .let { imageFile ->
+                FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", imageFile)
+            }
+    }
 
     //Takes image and processes it
     val imageLauncher = rememberLauncherForActivityResult(
@@ -47,8 +56,8 @@ fun SaveImage(onImageCaptured: (Uri, Context) -> Unit, onImageProcessed: () -> U
         }
     }
 
-    //UI
-    uiContent(Modifier) {
+    //Shows image
+    uiContent(modifier) {
         imageLauncher.launch(imageURI)
     }
 }
@@ -58,7 +67,7 @@ fun SaveImage(onImageCaptured: (Uri, Context) -> Unit, onImageProcessed: () -> U
  * UI for saving the receipt to the program
  */
 @Composable
-fun SaveImageButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
+fun SaveImageButton(modifier: Modifier, onClick: () -> Unit) {
     Box(
         modifier = modifier,
         contentAlignment = Alignment.Center
@@ -73,6 +82,36 @@ fun SaveImageButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
                 text = "Take a picture!"
             )
         }
+    }
+}
+
+/**
+ * Returns *imageLauncher.launch(imageURI)* which launches the camera. Useful for launching the camera on error handling
+ */
+@Composable
+fun launchCamera(onImageCaptured: (Uri, Context) -> Unit, onImageProcessed: () -> Unit): () -> Unit {
+    val context = LocalContext.current
+    val imageURI = remember { //Uses "remember" so we dont calculate this every recomposition
+        File(context.cacheDir, "tempImage.jpg")
+            .let { imageFile ->
+                FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", imageFile)
+            }
+    }
+
+    //Takes image and processes it
+    val imageLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success) {
+            onImageCaptured(imageURI, context)
+            onImageProcessed()
+        } else {
+            Toast.makeText(context, "Image capture failed!", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    return {
+        imageLauncher.launch(imageURI)
     }
 }
 

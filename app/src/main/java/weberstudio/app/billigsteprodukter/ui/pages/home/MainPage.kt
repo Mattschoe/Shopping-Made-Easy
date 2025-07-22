@@ -13,7 +13,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import weberstudio.app.billigsteprodukter.logic.CameraViewModel
 import weberstudio.app.billigsteprodukter.ui.ParsingState
@@ -23,17 +22,18 @@ import weberstudio.app.billigsteprodukter.ui.components.MapUI
 import weberstudio.app.billigsteprodukter.ui.components.QuickActionsUI
 import weberstudio.app.billigsteprodukter.ui.components.SaveImage
 import weberstudio.app.billigsteprodukter.ui.components.SaveImageButton
+import weberstudio.app.billigsteprodukter.ui.navigation.PageNavigation
 
 /**
  * The UI content of the *Main* Page
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainPageContent(modifier: Modifier = Modifier, navController: NavController, viewModel: CameraViewModel = viewModel()) {
+fun MainPageContent(modifier: Modifier = Modifier, navController: NavController, viewModel: CameraViewModel) {
     val parsingState by viewModel.getParserState()
     val launchCamera = launchCamera(
         onImageCaptured = { uri, context -> viewModel.processImage(uri, context) },
-        onImageProcessed = { println("HEJ:)") }
+        onImageProcessed = { navController.navigate(PageNavigation.ReceiptScanning.route) }
     )
 
     //Main page
@@ -46,7 +46,12 @@ fun MainPageContent(modifier: Modifier = Modifier, navController: NavController,
         //Save receipt
         SaveImage(
             onImageCaptured = { uri, context -> viewModel.processImage(uri, context) },
-            onImageProcessed = { navController.popBackStack() }
+            onImageProcessed = {
+                try {
+                    navController.navigate(PageNavigation.ReceiptScanning.route)
+                } catch (e: Exception) {
+                    println(e)
+                } }
         ) { modifier, launchCamera ->
             SaveImageButton(
                 modifier = Modifier
@@ -86,5 +91,3 @@ fun MainPageContent(modifier: Modifier = Modifier, navController: NavController,
         )
     }
 }
-
-//Hvis user taster "Prøv Igen" så prøver vi at tage billedet om

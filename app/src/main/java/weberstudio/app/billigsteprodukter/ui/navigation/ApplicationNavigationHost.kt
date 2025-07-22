@@ -4,10 +4,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import weberstudio.app.billigsteprodukter.logic.CameraViewModel
 import weberstudio.app.billigsteprodukter.ui.components.PageShell
 import weberstudio.app.billigsteprodukter.ui.pages.database.DatabaseContent
 import weberstudio.app.billigsteprodukter.ui.pages.home.MainPageContent
@@ -21,6 +23,8 @@ import weberstudio.app.billigsteprodukter.ui.pages.shoppingList.ShoppingListCont
  */
 @Composable
 fun ApplicationNavigationHost(navController: NavHostController = rememberNavController(), startPage: String = PageNavigation.Home.route) {
+    val cameraViewModel: CameraViewModel = viewModel()
+
     NavHost(
         navController = navController,
         startDestination = startPage,
@@ -30,14 +34,14 @@ fun ApplicationNavigationHost(navController: NavHostController = rememberNavCont
         //Main Screen
         composable(PageNavigation.Home.route) {
             PageShell(navController, title = "Forside") { padding ->
-                MainPageContent(Modifier.padding(padding), navController)
+                MainPageContent(Modifier.padding(padding), navController, cameraViewModel)
             }
         }
 
         //Receipt Content
         composable(PageNavigation.ReceiptScanning.route) {
             PageShell(navController, title = "Kvitteringsoversigt") { padding ->
-                ReceiptScanningContent(Modifier.padding(padding), navController)
+                ReceiptScanningContent(Modifier.padding(padding), navController, cameraViewModel)
             }
         }
 

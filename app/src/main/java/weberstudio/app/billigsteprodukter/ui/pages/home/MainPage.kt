@@ -6,6 +6,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -17,12 +22,19 @@ import weberstudio.app.billigsteprodukter.ui.components.QuickActionsUI
 import weberstudio.app.billigsteprodukter.ui.components.SaveImage
 import weberstudio.app.billigsteprodukter.ui.components.SaveImageButton
 import weberstudio.app.billigsteprodukter.ui.navigation.PageNavigation
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.viewmodel.compose.viewModel
+import weberstudio.app.billigsteprodukter.ui.ParsingState
+import weberstudio.app.billigsteprodukter.ui.components.ErrorMessageLarge
 
 /**
  * The UI content of the *Main* Page
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainPageContent(modifier: Modifier = Modifier, navController: NavController, viewModel: CameraViewModel = CameraViewModel()) {
+fun MainPageContent(modifier: Modifier = Modifier, navController: NavController, viewModel: CameraViewModel = viewModel()) {
+    val parsingState by viewModel.getParserState()
+
     //Main page
     Column(
         modifier = modifier
@@ -34,7 +46,8 @@ fun MainPageContent(modifier: Modifier = Modifier, navController: NavController,
         //Save receipt
         SaveImage(
             onImageCaptured = { uri, context -> viewModel.processImage(uri, context) },
-            onImageProcessed = { navController.navigate(PageNavigation.ReceiptScanning) }
+            onImageProcessed = { print("Hej:)")}
+            //onImageProcessed = { navController.navigate(PageNavigation.ReceiptScanning) }
         ) { modifier, launchCamera ->
             SaveImageButton(
                 modifier = Modifier
@@ -59,4 +72,34 @@ fun MainPageContent(modifier: Modifier = Modifier, navController: NavController,
             //.border(1.dp, Color.Gray, RoundedCornerShape(8.dp)) //Debug
         )
     }
+
+    //Checks for error in parsing
+    if (parsingState is ParsingState.InProgress) CircularProgressIndicator()
+    else if (parsingState is ParsingState.Error) {
+        val errorMessage = (parsingState as ParsingState.Error).message
+        ErrorMessageLarge(
+            { viewModel.clearParserState() },
+            "Fejl i scanning!",
+            errorMessage,
+            { viewModel.clearParserState() }
+        )
+
+
+        println(errorMessage)
+        AlertDialog(
+            onDismissRequest = { viewModel.clearParserState() },
+            title = { Text("Fejl i scanning!") },
+            text = { Text(errorMessage)},
+            confirmButton = {
+                TextButton(onClick = { viewModel.clearParserState() }) {
+                    Text("Ok")
+                }
+            }
+        )
+    }
+}
+
+@Composable
+fun ParserErrorHandler() {
+
 }

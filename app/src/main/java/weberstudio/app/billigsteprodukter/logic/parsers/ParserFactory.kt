@@ -1,6 +1,7 @@
 package weberstudio.app.billigsteprodukter.logic.parsers
 
 import com.google.mlkit.vision.text.Text
+import weberstudio.app.billigsteprodukter.ui.ParsingState
 
 ///Parses the given textblock into the correct store
 object ParserFactory {

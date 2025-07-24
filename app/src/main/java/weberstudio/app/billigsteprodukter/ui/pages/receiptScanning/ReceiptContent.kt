@@ -1,23 +1,29 @@
 package weberstudio.app.billigsteprodukter.ui.pages.receiptScanning
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import weberstudio.app.billigsteprodukter.logic.CameraViewModel
 import weberstudio.app.billigsteprodukter.ui.components.SaveImage
 import androidx.compose.runtime.getValue
+import weberstudio.app.billigsteprodukter.logic.Product
 import weberstudio.app.billigsteprodukter.ui.ParsingState
 import weberstudio.app.billigsteprodukter.ui.components.ErrorMessageLarge
+import weberstudio.app.billigsteprodukter.ui.components.LogoBarHandler
+import weberstudio.app.billigsteprodukter.ui.components.ProductRow
+import weberstudio.app.billigsteprodukter.ui.components.TotalBar
 import weberstudio.app.billigsteprodukter.ui.components.launchCamera
 import weberstudio.app.billigsteprodukter.ui.navigation.PageNavigation
 
 /**
  * @param uiContent the UI that activates the [SaveImage] function
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ReceiptScanningContent(modifier: Modifier = Modifier, navController: NavController, viewModel: CameraViewModel) {
     //region Checks for parsing errors first:
@@ -42,13 +48,23 @@ fun ReceiptScanningContent(modifier: Modifier = Modifier, navController: NavCont
     }
     //endregion
 
+
+    val products: ArrayList<Product> = ArrayList<Product>()
+    products.add(Product("Kikærter", 15f))
+    products.add(Product("Spaghetti", 10.95f))
+    products.add(Product("Lasagne 500g", 39.95f))
+    
     //UI
     LazyColumn {
-        stickyHeader {
+        stickyHeader{
             Column {
-
+                LogoBarHandler(storeName = "Netto")
+                TotalBar()
             }
         }
+        items(products) { product ->
+            ProductRow(product.name, product.price.toString(), ) { }
+        }
+
     }
-    
 }

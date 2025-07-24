@@ -1,6 +1,5 @@
 package weberstudio.app.billigsteprodukter.ui.navigation
 
-import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,13 +17,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import weberstudio.app.billigsteprodukter.R
 import weberstudio.app.billigsteprodukter.logic.CameraViewModel
 import weberstudio.app.billigsteprodukter.ui.components.QuickActionsButton
 import weberstudio.app.billigsteprodukter.ui.components.SaveImage
-import weberstudio.app.billigsteprodukter.ui.pages.receiptScanning.ReceiptScanningContent
 
 /***
  * The UI for the navigation drawer
@@ -74,7 +70,7 @@ fun NavigationDrawerUI(modifier: Modifier = Modifier, onDestinationClicked: (Pag
 
         QuickActionsButton(
             "Opret Indkøbsliste",
-            R.drawable.menu_dots_svgrepo_com,
+            R.drawable.threedots_icon,
             { onDestinationClicked(PageNavigation.ShoppingList) },
             modifier
         )
@@ -106,7 +102,7 @@ fun NavigationUI(title: String, onMenuClick: () -> Unit) {
         navigationIcon = {
             IconButton(onClick = onMenuClick) {
                 Icon(
-                    painterResource(id = R.drawable.menu_dots_svgrepo_com),
+                    painterResource(id = R.drawable.threedots_icon),
                     contentDescription = "Åbne navigationsmenu"
                 )
             }

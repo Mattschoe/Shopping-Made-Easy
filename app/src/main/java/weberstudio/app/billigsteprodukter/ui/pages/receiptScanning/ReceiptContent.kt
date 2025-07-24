@@ -1,6 +1,9 @@
 package weberstudio.app.billigsteprodukter.ui.pages.receiptScanning
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
@@ -39,5 +42,13 @@ fun ReceiptScanningContent(modifier: Modifier = Modifier, navController: NavCont
     }
     //endregion
 
+    //UI
+    LazyColumn {
+        stickyHeader {
+            Column {
+
+            }
+        }
+    }
     
 }

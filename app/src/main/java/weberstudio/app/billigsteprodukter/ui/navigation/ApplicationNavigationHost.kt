@@ -9,12 +9,14 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navigation
 import weberstudio.app.billigsteprodukter.logic.CameraViewModel
 import weberstudio.app.billigsteprodukter.ui.components.PageShell
 import weberstudio.app.billigsteprodukter.ui.pages.database.DatabaseContent
 import weberstudio.app.billigsteprodukter.ui.pages.home.MainPageContent
 import weberstudio.app.billigsteprodukter.ui.pages.map.MapContent
 import weberstudio.app.billigsteprodukter.ui.pages.receiptScanning.ReceiptScanningContent
+import weberstudio.app.billigsteprodukter.ui.pages.receiptScanning.ReceiptScanningViewModel
 import weberstudio.app.billigsteprodukter.ui.pages.settings.SettingsPageContent
 import weberstudio.app.billigsteprodukter.ui.pages.shoppingList.ShoppingListContent
 
@@ -23,25 +25,34 @@ import weberstudio.app.billigsteprodukter.ui.pages.shoppingList.ShoppingListCont
  */
 @Composable
 fun ApplicationNavigationHost(navController: NavHostController = rememberNavController(), startPage: String = PageNavigation.Home.route) {
-    val cameraViewModel: CameraViewModel = viewModel()
-
     NavHost(
         navController = navController,
         startDestination = startPage,
         modifier = Modifier
             .fillMaxSize()
     ) {
-        //Main Screen
-        composable(PageNavigation.Home.route) {
-            PageShell(navController, title = "Forside") { padding ->
-                MainPageContent(Modifier.padding(padding), navController, cameraViewModel)
-            }
-        }
 
-        //Receipt Content
-        composable(PageNavigation.ReceiptScanning.route) {
-            PageShell(navController, title = "Kvitteringsoversigt") { padding ->
-                ReceiptScanningContent(Modifier.padding(padding), navController, cameraViewModel)
+
+        //Receipt navigation route
+        navigation(
+            route = "ReceiptRoute",
+            startDestination = PageNavigation.Home.route
+        ) {
+            //Main Screen
+            composable(PageNavigation.Home.route) { backStackEntry ->
+                val cameraViewModel: CameraViewModel = viewModel(backStackEntry) //Sørger for at lifecycle af viewmodel bliver locked til denne navigation
+                PageShell(navController, title = "Forside") { padding ->
+                    MainPageContent(Modifier.padding(padding), navController, cameraViewModel)
+                }
+            }
+
+            //Receipt Content
+            composable(PageNavigation.ReceiptScanning.route) { backStackEntry ->
+                val cameraViewModel: CameraViewModel = viewModel(backStackEntry)
+                PageShell(navController, title = "Kvitteringsoversigt") { padding ->
+                    val receiptViewModel: ReceiptScanningViewModel = viewModel(backStackEntry)
+                    ReceiptScanningContent(Modifier.padding(padding), navController, cameraViewModel, receiptViewModel)
+                }
             }
         }
 

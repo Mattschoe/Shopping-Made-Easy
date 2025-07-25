@@ -7,11 +7,14 @@ import android.net.Uri
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.Text
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
+import kotlinx.coroutines.launch
 import weberstudio.app.billigsteprodukter.Model
+import weberstudio.app.billigsteprodukter.data.ReceiptRepository
 import weberstudio.app.billigsteprodukter.logic.exceptions.ParsingException
 import weberstudio.app.billigsteprodukter.logic.parsers.ParserFactory
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser
@@ -20,7 +23,7 @@ import java.io.File
 
 
 class CameraViewModel: ViewModel() {
-    private val model = Model
+    private val receiptRepo: ReceiptRepository = ReceiptRepository
     private val parsingState = mutableStateOf<ParsingState>(ParsingState.NotActivated)
 
     /**
@@ -68,7 +71,8 @@ class CameraViewModel: ViewModel() {
             if (parser != null) {
                 println("Adding products to $parser")
                 try {
-                    model.addProducts(parser.toString(), parser.parse(imageText))
+                    val parsedText = parser.parse(imageText)
+                    viewModelScope.launch { receiptRepo.addReceiptProducts(parsedText) } //Saves to repository
                     parsingState.value = ParsingState.Success
                 } catch (e: ParsingException) {
                     parsingState.value = ParsingState.Error("Fejl med at scanne kvittering, $e")

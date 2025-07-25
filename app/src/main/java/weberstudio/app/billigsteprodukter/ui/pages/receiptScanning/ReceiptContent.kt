@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import weberstudio.app.billigsteprodukter.logic.CameraViewModel
@@ -25,11 +26,11 @@ import weberstudio.app.billigsteprodukter.ui.navigation.PageNavigation
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun ReceiptScanningContent(modifier: Modifier = Modifier, navController: NavController, viewModel: CameraViewModel) {
+fun ReceiptScanningContent(modifier: Modifier = Modifier, navController: NavController, cameraViewModel: CameraViewModel, receiptViewModel: ReceiptScanningViewModel) {
     //region Checks for parsing errors first:
-    val parsingState by viewModel.getParserState()
+    val parsingState by cameraViewModel.getParserState()
     val launchCamera = launchCamera(
-        onImageCaptured = { uri, context -> viewModel.processImage(uri, context) },
+        onImageCaptured = { uri, context -> cameraViewModel.processImage(uri, context) },
         onImageProcessed = { navController.navigate(PageNavigation.ReceiptScanning.route) }
     )
     if (parsingState is ParsingState.InProgress) CircularProgressIndicator()
@@ -39,7 +40,7 @@ fun ReceiptScanningContent(modifier: Modifier = Modifier, navController: NavCont
             "Fejl i scanning!",
             errorMessage,
             onDismissRequest = {
-                viewModel.clearParserState()
+                cameraViewModel.clearParserState()
                 navController.navigate(PageNavigation.Home.route)
             },
             onConfirmError = { launchCamera() }, //Launches camera again if user clicks "Prøv igen"
@@ -49,11 +50,7 @@ fun ReceiptScanningContent(modifier: Modifier = Modifier, navController: NavCont
     //endregion
 
 
-    val products: ArrayList<Product> = ArrayList<Product>()
-    products.add(Product("Kikærter", 15f))
-    products.add(Product("Spaghetti", 10.95f))
-    products.add(Product("Lasagne 500g", 39.95f))
-
+    val products by receiptViewModel.lastReceipt.collectAsState()
     //UI
     LazyColumn {
         stickyHeader{

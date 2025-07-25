@@ -53,7 +53,7 @@ fun ReceiptScanningContent(modifier: Modifier = Modifier, navController: NavCont
     products.add(Product("Kikærter", 15f))
     products.add(Product("Spaghetti", 10.95f))
     products.add(Product("Lasagne 500g", 39.95f))
-    
+
     //UI
     LazyColumn {
         stickyHeader{

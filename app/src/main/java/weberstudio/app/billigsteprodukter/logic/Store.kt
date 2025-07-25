@@ -1,3 +1,14 @@
 package weberstudio.app.billigsteprodukter.logic
 
-data class Store(val name: String, val products: Set<Product> = HashSet<Product>())
+import weberstudio.app.billigsteprodukter.R
+
+enum class Store() {
+    Netto,
+    Bilka,
+    Coop365,
+    Foetex,
+    Lidl,
+    Menu,
+    Rema1000,
+    SuperBrugsen;
+}

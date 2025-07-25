@@ -4,6 +4,7 @@ import android.graphics.Point
 import com.google.mlkit.vision.text.Text
 import com.google.mlkit.vision.text.Text.Line
 import weberstudio.app.billigsteprodukter.logic.Product
+import weberstudio.app.billigsteprodukter.logic.Store
 import weberstudio.app.billigsteprodukter.logic.exceptions.ParsingException
 import java.util.Collections
 import kotlin.jvm.Throws
@@ -60,7 +61,7 @@ object NettoParser : StoreParser {
 
         //Instantiates products
         for (pair in intersections) {
-            products.add(Product(pair.first.text, pair.second))
+            products.add(Product(pair.first.text, pair.second, Store.Netto))
         }
 
         //Cleanup in instantiated objects

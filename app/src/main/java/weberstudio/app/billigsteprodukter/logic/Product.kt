@@ -4,9 +4,10 @@ package weberstudio.app.billigsteprodukter.logic
  * A product in a store.
  */
 data class Product(
-    val store: Store,
     val name: String,
-    val price: Float) {
+    val price: Float,
+    val store: Store
+    ) {
     val ID: ProductID = ProductID(store, name)
 }
 

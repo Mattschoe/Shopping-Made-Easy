@@ -42,6 +42,7 @@ android {
 dependencies {
     implementation("com.google.mlkit:text-recognition:16.0.1")
     implementation("androidx.navigation:navigation-compose:2.9.2")
+    implementation("org.apache.commons:commons-text:1.10.0")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)

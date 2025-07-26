@@ -78,8 +78,8 @@ fun DatabaseContent(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(32.dp, Alignment.CenterHorizontally), //Spacing mellem items
-            contentPadding = PaddingValues(horizontal = 16.dp) //Spacing mellem alle items og alt andet rundt om
+            horizontalArrangement = Arrangement.spacedBy(18.dp, Alignment.CenterHorizontally), //Spacing mellem items
+            contentPadding = PaddingValues(horizontal = 36.dp) //Spacing mellem alle items og alt andet rundt om
         ) {
             itemsIndexed(stores) { index, store ->
                 Image(
@@ -87,7 +87,7 @@ fun DatabaseContent(
                     contentDescription = "Logo for ${store.name}",
                     contentScale = ContentScale.Fit,
                     modifier = Modifier
-                        .height(80.dp)
+                        .height(180.dp)
                         .wrapContentWidth()
                         .clip(RoundedCornerShape(16.dp))
                         .border( //Highlights the currently centered store

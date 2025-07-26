@@ -7,4 +7,5 @@ sealed class PageNavigation(val route: String) {
     object Database : PageNavigation("database")
     object Map : PageNavigation("map")
     object Settings : PageNavigation("settings")
+    object ReceiptRoute : PageNavigation("receiptRoute")
 }

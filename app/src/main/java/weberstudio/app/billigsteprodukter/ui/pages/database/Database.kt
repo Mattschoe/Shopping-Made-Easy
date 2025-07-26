@@ -13,9 +13,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -29,6 +32,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -71,21 +75,26 @@ fun DatabaseContent(
         //Store logo
         LazyRow(
             state = rowState,
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(32.dp, Alignment.CenterHorizontally), //Spacing mellem items
+            contentPadding = PaddingValues(horizontal = 16.dp) //Spacing mellem alle items og alt andet rundt om
         ) {
             itemsIndexed(stores) { index, store ->
                 Image(
+                    painter = painterResource(id = store.image),
+                    contentDescription = "Logo for ${store.name}",
+                    contentScale = ContentScale.Fit,
                     modifier = Modifier
-                        .height(205.dp)
-                        .padding(end = 8.dp)
+                        .height(80.dp)
+                        .wrapContentWidth()
+                        .clip(RoundedCornerShape(16.dp))
                         .border( //Highlights the currently centered store
                             width = if (rowState.firstVisibleItemIndex == index) 3.dp else 0.dp,
                             color = if (rowState.firstVisibleItemIndex == index) Color.Blue else Color.Transparent,
                             shape = RoundedCornerShape(8.dp)
                         ),
-                    painter = painterResource(id = store.image),
-                    contentDescription = "Logo for ${store.name}",
-                    contentScale = ContentScale.Crop
                 )
             }
         }
@@ -114,7 +123,7 @@ fun DatabaseContent(
                 .fillMaxSize()
         ) {
             items(currentStoreProducts) { product ->
-                ProductCard(product)
+                //ProductCard(product)
             }
         }
     }

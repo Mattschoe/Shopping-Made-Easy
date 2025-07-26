@@ -8,12 +8,12 @@ enum class Store(
     @DrawableRes val image: Int,
     val contentDescription: String
 ) {
-    Netto(0, R.drawable.storelogo_bilka, "Bilka Logo"),
-    Bilka(0, R.drawable.storelogo_coop365, "Coop365 Logo"),
-    Coop365(0, R.drawable.storelogo_foetex, "Føtex Logo"),
-    Foetex(0, R.drawable.storelogo_lidl, "Lidl Logo"),
-    Lidl(0, R.drawable.storelogo_menu, "Menu Logo"),
-    Menu(0, R.drawable.storelogo_netto, "Netto Logo"),
+    Bilka(0, R.drawable.storelogo_bilka, "Bilka Logo"),
+    Coop365(0, R.drawable.storelogo_coop365, "Coop365 Logo"),
+    Foetex(0, R.drawable.storelogo_foetex, "Føtex Logo"),
+    Lidl(0, R.drawable.storelogo_lidl, "Lidl Logo"),
+    Menu(0, R.drawable.storelogo_menu, "Menu Logo"),
+    Netto(0, R.drawable.storelogo_netto, "Netto Logo"),
     Rema1000(0, R.drawable.storelogo_rema1000, "Rema 1000 Logo"),
     SuperBrugsen(0, R.drawable.storelogo_superbrugsen, "SuperBrugsen Logo"),
 }

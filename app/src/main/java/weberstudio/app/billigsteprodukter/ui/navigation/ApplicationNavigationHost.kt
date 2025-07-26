@@ -11,6 +11,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
 import weberstudio.app.billigsteprodukter.logic.CameraViewModel
+import weberstudio.app.billigsteprodukter.logic.Store
 import weberstudio.app.billigsteprodukter.ui.components.PageShell
 import weberstudio.app.billigsteprodukter.ui.pages.database.DataBaseViewModel
 import weberstudio.app.billigsteprodukter.ui.pages.database.DatabaseContent
@@ -25,7 +26,7 @@ import weberstudio.app.billigsteprodukter.ui.pages.shoppingList.ShoppingListCont
  * The host that's responsible for navigation between pages in the application
  */
 @Composable
-fun ApplicationNavigationHost(navController: NavHostController = rememberNavController(), startPage: String = PageNavigation.Home.route) {
+fun ApplicationNavigationHost(navController: NavHostController = rememberNavController(), startPage: String = PageNavigation.ReceiptRoute.route) {
     NavHost(
         navController = navController,
         startDestination = startPage,
@@ -34,7 +35,7 @@ fun ApplicationNavigationHost(navController: NavHostController = rememberNavCont
     ) {
         //Receipt navigation route
         navigation(
-            route = "ReceiptRoute",
+            route = "receiptRoute",
             startDestination = PageNavigation.Home.route
         ) {
             //Main Screen
@@ -66,7 +67,7 @@ fun ApplicationNavigationHost(navController: NavHostController = rememberNavCont
         composable(PageNavigation.Database.route) { backStackEntry ->
             val databaseViewModel: DataBaseViewModel = viewModel(backStackEntry)
             PageShell(navController, title = "Oversigt over priser") { padding ->
-                DatabaseContent(Modifier.padding(padding), databaseViewModel)
+                DatabaseContent(Modifier.padding(padding), databaseViewModel, Store.Netto)
             }
         }
 

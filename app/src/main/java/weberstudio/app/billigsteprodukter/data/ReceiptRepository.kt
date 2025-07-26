@@ -1,9 +1,13 @@
 package weberstudio.app.billigsteprodukter.data
 
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import weberstudio.app.billigsteprodukter.logic.Product
 import weberstudio.app.billigsteprodukter.logic.ProductID
+import weberstudio.app.billigsteprodukter.logic.Store
 
 object ReceiptRepository {
     private val ID2Product = mutableMapOf<ProductID, Product>()
@@ -50,4 +54,14 @@ object ReceiptRepository {
     private suspend fun refreshStream() {
         _products.emit(ID2Product.values.toList()) //Opdater og pusher produktlisten downstream
     }
+
+    /**
+     * Returns all the products from the store given as argument
+     */
+    fun getProductsByStore(store: Store): Flow<List<Product>> =
+        productStream
+            .map { allProducts ->
+                allProducts.filter { it.ID.store == store }
+            }
+            .distinctUntilChanged()
 }

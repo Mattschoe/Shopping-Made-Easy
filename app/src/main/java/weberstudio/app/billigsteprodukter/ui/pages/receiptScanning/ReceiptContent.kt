@@ -62,6 +62,5 @@ fun ReceiptScanningContent(modifier: Modifier = Modifier, navController: NavCont
         items(products) { product ->
             ProductRow(product.name, product.price.toString(), ) { }
         }
-
     }
 }

@@ -9,12 +9,10 @@ import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.launch
 import weberstudio.app.billigsteprodukter.ui.navigation.NavigationDrawerUI
 import weberstudio.app.billigsteprodukter.ui.navigation.NavigationUI
-import weberstudio.app.billigsteprodukter.ui.navigation.PageNavigation
 import weberstudio.app.billigsteprodukter.ui.pages.home.MainPageContent
 
 /**

@@ -77,8 +77,9 @@ class CameraViewModel: ViewModel() {
                     parsingState.value = ParsingState.Error("Fejl med at scanne kvittering, $e")  //TODO: Denne her Error dukker ikke op på UI
                     return@runCatching
                 }
+            } else {
+                parsingState.value = ParsingState.Error("Ingen butik fundet!")
             }
-            parsingState.value = ParsingState.Error("Ingen butik fundet!")
         }
     }
 

@@ -1,21 +1,83 @@
 package weberstudio.app.billigsteprodukter.logic.parsers
 
+import android.graphics.Point
+import android.graphics.PointF
 import com.google.mlkit.vision.text.Text
 import org.apache.commons.text.similarity.JaroWinklerSimilarity
 import org.apache.commons.text.similarity.LevenshteinDistance
+import weberstudio.app.billigsteprodukter.logic.FuzzyMatcher
 import weberstudio.app.billigsteprodukter.logic.Product
+import weberstudio.app.billigsteprodukter.logic.Store
 import weberstudio.app.billigsteprodukter.logic.exceptions.ParsingException
+import kotlin.math.abs
+import kotlin.math.atan2
 import kotlin.math.ceil
+import kotlin.math.sqrt
 
 object NettoParser : StoreParser {
     private val fuzzyMatcherJaro = JaroWinklerSimilarity()
     private val fuzzyMatcherLeven = LevenshteinDistance()
+    private val fuzzyMatcher = FuzzyMatcher()
 
     override fun parse(receipt: Text): HashSet<Product> {
         val products: HashSet<Product> = HashSet<Product>()
+        val parsedLines = processImageText(receipt)
 
-        
+        val angleTolerance = Math.toRadians(10.0).toFloat()  //A tolerance for ray hit
+        val verticalBounds = 20f //Kigger kun på de linjer hvor deres centrum er verticalTolerance pixels væk fra hinanden, på den måde slipper vi for alt for mange checks
 
+        for (i in parsedLines.indices) {
+            val lineA = parsedLines[i]
+
+            for (j in parsedLines.indices) {
+                if (i == j) continue
+                val lineB = parsedLines[j]
+
+                //Skipper hvis de ikke er inde for tolerancen
+                val angleDifference = abs(lineA.angle - lineB.angle)
+                if (angleDifference > angleTolerance) continue
+
+                //Skipper hvis de ikke er inde for samme "Row" i kvitteringen
+                val verticalDifference = abs(lineA.center.y - lineB.center.y)
+                if (verticalDifference > verticalBounds) continue
+
+                //Accepterer kun "hits" hvor linje B er "hen ad" linje A. På den måde kan vi checke kvitteringen korrekt ind selvom billedet bliver taget 180 grader
+                val deltaX = lineB.center.x - lineA.center.x
+                val deltaY = lineB.center.y - lineA.center.y
+                if (lineA.direction.x * deltaX + lineA.direction.y * deltaY <= 0) continue
+
+                //Finder den korrekte produktpris
+                val productName = lineA.text
+                val productPrice: Float
+
+                try {
+                    productPrice = lineB.text.toFloat()
+                } catch (_: NumberFormatException) {
+                    println("Couldn't convert ${lineB.text} to Float!")
+                    continue
+                }
+
+                //Hvis det er en "3 x 9.95" parser vi den sidste linjes navn
+                if (productName.contains("X ") || productName.contains(" X")) {
+                    val lastLineProductName = parsedLines.getOrNull(i-1)
+                    if (lastLineProductName == null) println("Couldn't access the previous product from product $productName!")
+                    else {
+                        try {
+                            //If we successfully got the actual product we save that instead of the original "2 x 25,5", and divide the price of the product by the amount
+                            val productPrice = normalizeText(lineB.text).toFloat()/normalizeText(lineA.text[0].toString()).toFloat()
+                            products.add(Product(lastLineProductName.text, productPrice, Store.Netto))
+                            break //Only connects one line to another, not multiple
+                        } catch (_: NumberFormatException) {
+                            println("Error dividing the product price with the amount!")
+                        }
+                    }
+                }
+
+                //Hvis det er en "Rabat" så trækker vi det lige fra det sidste produkt
+
+                products.add(Product(productName, productPrice, Store.Netto))
+            }
+        }
 
         if (products.isEmpty()) {
             throw ParsingException("Productlist is empty!")
@@ -41,9 +103,49 @@ object NettoParser : StoreParser {
     }
 
     /**
+     * Processes the text from the image into [ParsedLine]'s
+     */
+    private fun processImageText(text: Text): List<ParsedLine> {
+        val allLines = mutableListOf<ParsedLine>()
+
+        //Runs through each line and processes it into a **ParsedLine** by extracting its values
+        for (block in text.textBlocks) {
+            for (line in block.lines) {
+                val corners = line.cornerPoints ?: continue
+
+                //Angle
+                val p0 = corners[0]
+                val p1 = corners[1]
+                val angle = calculateAngle(p0, p1)
+
+                //Direction
+                val dx = (p1.x - p0.x).toFloat()
+                val dy = (p1.y - p0.y).toFloat()
+                val len = sqrt(dx*dx + dy*dy)
+                val direction = PointF(dx/len, dy/len)
+
+                //Center
+                val center = PointF(
+                    corners.map { it.x }.average().toFloat(),
+                    corners.map { it.y }.average().toFloat()
+                )
+
+                allLines.add(ParsedLine(text = normalizeText(line.text), angle = angle, center = center, corners = corners, direction = direction))
+            }
+        }
+        return allLines
+    }
+
+    private fun calculateAngle(p1: Point, p2: Point): Float {
+        val dx = (p2.x - p1.x).toFloat()
+        val dy = (p2.y - p1.y).toFloat()
+        return atan2(dy, dx) //Angle in radians
+    }
+
+    /**
      * Normalizes the text to uppercase + no danish
      */
-        private fun normalizeText(text: String): String {
+    private fun normalizeText(text: String): String {
             //TODO: Det her skal standardiseres igennem hele codebasen og ændres til Compose best practice
             return text
                 .replace(Regex("[^A-Za-z0-9 ,.]"), "") //Limits to a-z, digits and whitespaces
@@ -56,14 +158,10 @@ object NettoParser : StoreParser {
         }
 
     /**
-     * Returns whether the two given lines intersect
-     */
-
-    /**
      * Checks and see if word given as argument is a stop word using fuzzy search
      */
     private fun isStopWord(input: String): Boolean {
-        val stopWords = listOf("TOTAL", "BETALINGSKORT")
+        val stopWords = listOf("TOTAL", "BETALINGSKORT", "MOMS UDGØR",)
 
         return stopWords.any { stopWord ->
             val jaroSimilarity = fuzzyMatcherJaro.apply(input, stopWord) ?: 0.0
@@ -80,30 +178,16 @@ object NettoParser : StoreParser {
         }
     }
 
-    /**
-     * Checks and see if word given as argument is a start word using fuzzy search
-     */
-    private fun isStartWord(input: String): Boolean {
-        val stopWords = listOf("NETTO")
-
-        return stopWords.any { stopWord ->
-            val jaroSimilarity = fuzzyMatcherJaro.apply(input, stopWord) ?: 0.0
-            if (jaroSimilarity >= 0.85) {
-                return true
-            } //Higher = Fewer false positive
-
-
-            val maxEdits = ceil(stopWord.length * 0.5).toInt() ////Lower = Fewer false positive
-            val levenSimilarity = fuzzyMatcherLeven.apply(input, stopWord) ?: Int.MAX_VALUE
-            if (levenSimilarity <= maxEdits) {
-                return true
-            }
-
-            false
-        }
-    }
-
     override fun toString(): String {
         return "Netto"
     }
+
+    data class ParsedLine(
+        val text: String,
+        val angle: Float,
+        val center: PointF,
+        val direction: PointF,
+        val corners: Array<Point>
+    )
 }
+

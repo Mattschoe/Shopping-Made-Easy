@@ -11,7 +11,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import org.apache.commons.text.similarity.JaroWinklerDistance
+import org.apache.commons.text.similarity.JaroWinklerSimilarity
 import org.apache.commons.text.similarity.LevenshteinDistance
 import weberstudio.app.billigsteprodukter.data.ReceiptRepository
 import weberstudio.app.billigsteprodukter.logic.Product
@@ -27,7 +29,7 @@ class DataBaseViewModel(): ViewModel() {
 
     private val productRepo: ReceiptRepository = ReceiptRepository
     private val fuzzyMatcherLeven = LevenshteinDistance()
-    private val fuzzyMatcherJaro = JaroWinklerDistance()
+    private val fuzzyMatcherJaro = JaroWinklerSimilarity()
 
     val searchQuery = _searchQuery.asStateFlow()
     val searchAllStores = _searchAllStores.asStateFlow()
@@ -84,6 +86,16 @@ class DataBaseViewModel(): ViewModel() {
                 started = SharingStarted.WhileSubscribed(5_000),
                 initialValue = emptyList()
             )
+    }
+
+    /**
+     * Toggles the product given as argument as favorite
+     */
+    fun toggleFavorite(product: Product) {
+        val toggledFavoriteStatus = !product.isFavorite
+        viewModelScope.launch {
+            productRepo.setProductFavorite(product.ID, toggledFavoriteStatus)
+        }
     }
 
     private fun calculateMatchScore(productName: String, query: String): Int {

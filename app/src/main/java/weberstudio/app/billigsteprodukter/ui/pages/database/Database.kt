@@ -53,6 +53,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import weberstudio.app.billigsteprodukter.R
 import weberstudio.app.billigsteprodukter.logic.Store
+import weberstudio.app.billigsteprodukter.ui.components.ProductCard
 import weberstudio.app.billigsteprodukter.ui.components.SearchBar
 import weberstudio.app.billigsteprodukter.ui.components.StoreScopeDropDownMenu
 
@@ -92,7 +93,7 @@ fun DatabaseContent(
         BoxWithConstraints(
             modifier = Modifier
                 .height(150.dp) //Size of images (ish)
-                .border(4.dp, Color.Green)
+                //.border(4.dp, Color.Green)
         ) {
             val pageInset: Dp = maxWidth * 0.17f //The small "before" and "after" stores you can see in the pager
             HorizontalPager(
@@ -106,8 +107,8 @@ fun DatabaseContent(
             ) { page ->
                 Box(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .border(width = 3.dp, color = Color.Magenta),
+                        .fillMaxSize(),
+                        //.border(width = 3.dp, color = Color.Magenta)
                     contentAlignment = Alignment.Center
                 ) {
                     val store = stores[page]
@@ -129,7 +130,7 @@ fun DatabaseContent(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .border(width = 4.dp, color = Color.Red)
+                //.border(width = 4.dp, color = Color.Red)
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -147,12 +148,52 @@ fun DatabaseContent(
             modifier = Modifier
                 .weight(1f) //Takes the rest of the space. OBS: DONT USE WEIGHT ANYWHERE ELSE FOR THIS TO WORK
                 .fillMaxSize()
-                .border(width = 4.dp, color = Color.Black)
+                //.border(width = 4.dp, color = Color.Black)
                 .padding(4.dp)
         ) {
             items(filteredAndRankedProducts) { product ->
-                //ProductCard(product)
+                ProductCard(
+                    name = product.name,
+                    price = product.price.toString(), //TODO Product skal være en string og ikke float
+                    isFavorite = false,
+                    onFavoriteClick = { viewModel.toggleFavorite(product) }
+                )
             }
+
+            /* TESTING
+            item {
+                ProductCard(
+                    name = "Kikærter",
+                    price = "15.95kr", //TODO Product skal være en string og ikke float
+                    isFavorite = false,
+                    onFavoriteClick = { println("Tiløk") }
+                )
+            }
+            item {
+                ProductCard(
+                    name = "Tomat på dåse",
+                    price = "3x5.95kr", //TODO Product skal være en string og ikke float
+                    isFavorite = false,
+                    onFavoriteClick = { println("Tiløk") }
+                )
+            }
+            item {
+                ProductCard(
+                    name = "Spaghetti",
+                    price = "9.95kr", //TODO Product skal være en string og ikke float
+                    isFavorite = false,
+                    onFavoriteClick = { println("Tiløk") }
+                )
+            }
+            item {
+                ProductCard(
+                    name = "Chili con carne - Frost",
+                    price = "49.99kr", //TODO Product skal være en string og ikke float
+                    isFavorite = false,
+                    onFavoriteClick = { println("Tiløk") }
+                )
+            }
+            */
         }
     }
 }

@@ -74,7 +74,8 @@ class CameraViewModel: ViewModel() {
                     viewModelScope.launch { receiptRepo.addReceiptProducts(parsedText) } //Saves to repository
                     parsingState.value = ParsingState.Success
                 } catch (e: ParsingException) {
-                    parsingState.value = ParsingState.Error("Fejl med at scanne kvittering, $e")
+                    parsingState.value = ParsingState.Error("Fejl med at scanne kvittering, $e")  //TODO: Denne her Error dukker ikke op på UI
+                    return@runCatching
                 }
             }
             parsingState.value = ParsingState.Error("Ingen butik fundet!")

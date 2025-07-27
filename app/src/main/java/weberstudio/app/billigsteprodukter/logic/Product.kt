@@ -6,7 +6,8 @@ package weberstudio.app.billigsteprodukter.logic
 data class Product(
     val name: String,
     val price: Float,
-    val store: Store
+    val store: Store,
+    var isFavorite: Boolean = false
     ) {
     val ID: ProductID = ProductID(store, name)
 }

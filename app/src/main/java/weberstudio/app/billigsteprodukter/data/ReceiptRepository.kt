@@ -64,4 +64,9 @@ object ReceiptRepository {
                 allProducts.filter { it.ID.store == store }
             }
             .distinctUntilChanged()
+
+    suspend fun setProductFavorite(ID: ProductID, updatedProductFavoriteStatus: Boolean) {
+        ID2Product[ID]!!.isFavorite = updatedProductFavoriteStatus
+        refreshStream()
+    }
 }

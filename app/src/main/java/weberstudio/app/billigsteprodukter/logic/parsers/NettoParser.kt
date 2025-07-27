@@ -3,6 +3,9 @@ package weberstudio.app.billigsteprodukter.logic.parsers
 import android.graphics.Point
 import com.google.mlkit.vision.text.Text
 import com.google.mlkit.vision.text.Text.Line
+import org.apache.commons.text.similarity.JaroWinklerDistance
+import org.apache.commons.text.similarity.JaroWinklerSimilarity
+import org.apache.commons.text.similarity.LevenshteinDistance
 import weberstudio.app.billigsteprodukter.logic.Product
 import weberstudio.app.billigsteprodukter.logic.Store
 import weberstudio.app.billigsteprodukter.logic.exceptions.ParsingException
@@ -11,6 +14,9 @@ import kotlin.jvm.Throws
 import kotlin.system.exitProcess
 
 object NettoParser : StoreParser {
+    private val fuzzyMatcherJaro = JaroWinklerSimilarity()
+    private val fuzzyMatcherLeven = LevenshteinDistance()
+
     override fun parse(receipt: Text): HashSet<Product> {
         val products: HashSet<Product> = HashSet<Product>()
         val processedText: ArrayList<Line> = processImageText(receipt)
@@ -65,11 +71,11 @@ object NettoParser : StoreParser {
         }
 
         //Cleanup in instantiated objects
-        products.removeAll {
-            it.name.contains("TOTAL") //We don't need total
-        }
+        val filteredProducts = products.filter { product ->
+            !isStopWord(product.name)
+        }.toHashSet()
 
-        return products
+        return filteredProducts
     }
 
     ///Processes the image text so we later only parse the products and not the full receipt
@@ -83,12 +89,14 @@ object NettoParser : StoreParser {
             for (line in block.lines) {
                 allLines.add(line)
                 val normalizedText: String = normalizeText(line.text)
-                if (normalizedText.contains("NETTO") || normalizedText.contains("ETTO")) anchorTop = minOf(anchorTop, line.boundingBox!!.top) //Found the top
-                if (normalizedText.contains("TOTAL")) anchorBottom = maxOf(anchorBottom, line.boundingBox!!.bottom) //Found bottom
+                if (isStartWord(normalizedText)) anchorTop = minOf(anchorTop, line.boundingBox!!.top) //Found the top
+                if (isStopWord(normalizedText)) anchorBottom = maxOf(anchorBottom, line.boundingBox!!.bottom) //Found bottom. //TODO: Check hvor meget de lige koster at køre så mange idiot "contains"
             }
         }
         //If anchors not found
-        if (anchorTop == Int.MAX_VALUE || anchorBottom == Int.MIN_VALUE) throw ParsingException("Error finding anchors!")
+        if (anchorTop == Int.MAX_VALUE || anchorBottom == Int.MIN_VALUE) {
+            throw ParsingException("Error finding anchors!")
+        }
 
         //If found we collect every line thats inside the bounding box
         val linesInRange: ArrayList<Line> = ArrayList<Line>()
@@ -121,6 +129,7 @@ object NettoParser : StoreParser {
     /**
      * Returns whether the two given lines intersect
      */
+
     private fun doesLinesIntersect(line1: SimpleLine, line2: SimpleLine): Boolean {
         val x1 = line1.start.x.toFloat()
         val x2 = line1.end.x.toFloat()
@@ -138,6 +147,41 @@ object NettoParser : StoreParser {
         //Bro, Kilde ig: https://www.jeffreythompson.org/collision-detection/line-line.php
         return uA >= 0 && uA <= 1 && uB >= 0 && uB <= 1
     }
+
+    /**
+     * Checks and see if word given as argument is a stop word using fuzzy search
+     */
+    private fun isStopWord(input: String): Boolean {
+        val stopWords = listOf("TOTAL", "BETALINGSKORT")
+
+        return stopWords.any { stopWord ->
+            val jaroSimilarity = fuzzyMatcherJaro.apply(input, stopWord) ?: 0.0
+            if (jaroSimilarity >= 0.80) return true
+
+            val levenSimilarity = fuzzyMatcherLeven.apply(input, stopWord)
+            if (levenSimilarity <= 2) return true
+
+            false
+        }
+    }
+
+    /**
+     * Checks and see if word given as argument is a start word using fuzzy search
+     */
+    private fun isStartWord(input: String): Boolean {
+        val stopWords = listOf("NETTO")
+
+        return stopWords.any { stopWord ->
+            val jaroSimilarity = fuzzyMatcherJaro.apply(input, stopWord) ?: 0.0
+            if (jaroSimilarity >= 0.80) return true
+
+            val levenSimilarity = fuzzyMatcherLeven.apply(input, stopWord)
+            if (levenSimilarity <= 2) return true
+
+            false
+        }
+    }
+
 
     data class SimpleLine(val start: Point, val end: Point)
 

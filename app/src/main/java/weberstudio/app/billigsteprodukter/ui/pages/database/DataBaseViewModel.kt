@@ -31,10 +31,12 @@ class DataBaseViewModel(): ViewModel() {
 
     val searchQuery = _searchQuery.asStateFlow()
     val searchAllStores = _searchAllStores.asStateFlow()
-    /**
-     * Products filtered by the search query and parameters
-     */
 
+    /**
+     * The current store selected by user
+     */
+    val currentStore = _currentSelectedStore.asStateFlow()
+    val allStoresSearchEnabled = _searchAllStores.asStateFlow()
 
     /**
      * Retrieves products from the current store selected by user in the UI

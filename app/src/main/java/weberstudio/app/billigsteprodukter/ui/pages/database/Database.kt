@@ -2,6 +2,7 @@ package weberstudio.app.billigsteprodukter.ui.pages.database
 
 import android.annotation.SuppressLint
 import androidx.annotation.DrawableRes
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -52,6 +53,8 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import weberstudio.app.billigsteprodukter.R
 import weberstudio.app.billigsteprodukter.logic.Store
+import weberstudio.app.billigsteprodukter.ui.components.SearchBar
+import weberstudio.app.billigsteprodukter.ui.components.StoreScopeDropDownMenu
 
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -59,13 +62,14 @@ import weberstudio.app.billigsteprodukter.logic.Store
 fun DatabaseContent(
     modifier: Modifier = Modifier,
     viewModel: DataBaseViewModel,
-    currentStore: Store
 ) {
     //TODO: Det her skal ændres siden det bare er alfabetisk rækkefølge, bliver nødt til at finde en måde at sortere dem ud efter dem som har mest data eller lade useren "hjerte" deres yndlingsstore
 
     //region Loads the products by checking when the HorizontalPager updates
     val stores = remember { Store.entries.toList() }
-    val currentStoreProducts by viewModel.getProductsFromCurrentStore().collectAsState()
+    val filteredAndRankedProducts by viewModel.filteredProductsFlow().collectAsState()
+    val currentStore by viewModel.currentStore.collectAsState()
+    val allStoresEnabled by viewModel.allStoresSearchEnabled.collectAsState()
     val pagerState = rememberPagerState(initialPage = 0, pageCount = { stores.size })
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.currentPage }
@@ -79,31 +83,31 @@ fun DatabaseContent(
     //endregion
 
 
+
     //UI
     Column(
         modifier = modifier
             .fillMaxWidth()
     ) {
         BoxWithConstraints(
-            Modifier.fillMaxSize()
+            modifier = Modifier
+                .height(150.dp) //Size of images (ish)
+                .border(4.dp, Color.Green)
         ) {
             val pageInset: Dp = maxWidth * 0.17f //The small "before" and "after" stores you can see in the pager
-
             HorizontalPager(
                 state = pagerState,
+                contentPadding = PaddingValues(horizontal = pageInset),
+                pageSpacing = 8.dp,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(150.dp)
-                    //.padding(horizontal = 16.dp)
+                //.padding(horizontal = 16.dp)
                 ,
-                contentPadding = PaddingValues(horizontal = pageInset),
-                pageSpacing = 8.dp
             ) { page ->
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        //.border(width = 3.dp, color = Color.Black), //Debug
-                    ,
+                        .border(width = 3.dp, color = Color.Magenta),
                     contentAlignment = Alignment.Center
                 ) {
                     val store = stores[page]
@@ -115,11 +119,6 @@ fun DatabaseContent(
                             .fillMaxSize() //Logo size
                             .wrapContentSize()
                             .clip(RoundedCornerShape(8.dp))
-                        /*.border( //Highlights the currently centered store
-                            width = if (pagerState.currentPage == page) 3.dp else 0.dp,
-                            color = if (pagerState.currentPage == page) Color.Blue else Color.Transparent,
-                            shape = RoundedCornerShape(8.dp)
-                        ) */,
                     )
                 }
             }
@@ -130,14 +129,13 @@ fun DatabaseContent(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .border(width = 4.dp, color = Color.Red)
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            //Indsæt search her
-
+            SearchBar(modifier = Modifier.weight(2f), searchQuery =  viewModel.searchQuery.collectAsState().value, onQueryChange =  viewModel::setSearchQuery )
             Spacer(modifier = Modifier.width((8.dp)))
-
-            //Indsæt search scope dropdown her
+            StoreScopeDropDownMenu(modifier = Modifier.weight(1.33f), currentStore = currentStore, allStoresEnabled = allStoresEnabled, onAllStoresToggle = viewModel::setSearchAllStores)
         }
 
         //Product list/grid
@@ -147,9 +145,12 @@ fun DatabaseContent(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier
+                .weight(1f) //Takes the rest of the space. OBS: DONT USE WEIGHT ANYWHERE ELSE FOR THIS TO WORK
                 .fillMaxSize()
+                .border(width = 4.dp, color = Color.Black)
+                .padding(4.dp)
         ) {
-            items(currentStoreProducts) { product ->
+            items(filteredAndRankedProducts) { product ->
                 //ProductCard(product)
             }
         }

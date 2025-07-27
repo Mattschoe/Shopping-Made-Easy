@@ -67,7 +67,7 @@ fun ApplicationNavigationHost(navController: NavHostController = rememberNavCont
         composable(PageNavigation.Database.route) { backStackEntry ->
             val databaseViewModel: DataBaseViewModel = viewModel(backStackEntry)
             PageShell(navController, title = "Oversigt over priser") { padding ->
-                DatabaseContent(Modifier.padding(padding), databaseViewModel, Store.Netto)
+                DatabaseContent(Modifier.padding(padding), databaseViewModel)
             }
         }
 

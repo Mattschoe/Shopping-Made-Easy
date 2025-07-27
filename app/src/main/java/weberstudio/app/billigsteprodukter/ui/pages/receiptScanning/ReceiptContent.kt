@@ -1,5 +1,6 @@
 package weberstudio.app.billigsteprodukter.ui.pages.receiptScanning
 
+import android.icu.text.DecimalFormat
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.lazy.LazyColumn
@@ -60,7 +61,9 @@ fun ReceiptScanningContent(modifier: Modifier = Modifier, navController: NavCont
             }
         }
         items(products) { product ->
-            ProductRow(product.name, product.price.toString(), ) { }
+            ProductRow(product.name, DecimalFormat("#.##").format(product.price) + "kr") {
+
+            }
         }
     }
 }

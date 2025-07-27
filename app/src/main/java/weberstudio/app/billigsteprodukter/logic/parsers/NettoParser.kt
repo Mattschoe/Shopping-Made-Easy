@@ -11,6 +11,7 @@ import weberstudio.app.billigsteprodukter.logic.Store
 import weberstudio.app.billigsteprodukter.logic.exceptions.ParsingException
 import java.util.Collections
 import kotlin.jvm.Throws
+import kotlin.math.ceil
 import kotlin.system.exitProcess
 
 object NettoParser : StoreParser {
@@ -70,12 +71,27 @@ object NettoParser : StoreParser {
             products.add(Product(pair.first.text, pair.second, Store.Netto))
         }
 
-        //Cleanup in instantiated objects
-        val filteredProducts = products.filter { product ->
-            !isStopWord(product.name)
-        }.toHashSet()
+        if (products.isEmpty()) {
+            throw ParsingException("Productlist is empty!")
+        }
 
-        return filteredProducts
+        //region Filtering and returning
+        //Hvis der er mere end to produkter (så ét produkt og ét stopord), så gemmer vi alle dem som har den samme pris som stop ordet (Så hvis "Total" fucker f.eks.)
+        val stopWordPrices = if (products.size > 2) {
+            products
+                .filter { isStopWord(it.name) }
+                .map { it.price }
+                .toSet()
+        } else {
+            emptySet()
+        }
+
+
+        //Returner kun produkter som ikke er stop ordet, eller som har den samme pris som stop ordet (så hvis "Total" fucker f.eks.)
+        val filteredList = products.filter { product -> !isStopWord(product.name) && product.price !in stopWordPrices }.toHashSet()
+
+        return filteredList
+        //endregion
     }
 
     ///Processes the image text so we later only parse the products and not the full receipt
@@ -95,6 +111,7 @@ object NettoParser : StoreParser {
         }
         //If anchors not found
         if (anchorTop == Int.MAX_VALUE || anchorBottom == Int.MIN_VALUE) {
+            println("ARGH")
             throw ParsingException("Error finding anchors!")
         }
 
@@ -106,6 +123,7 @@ object NettoParser : StoreParser {
         }
         //If no line found between anchors
         if (linesInRange.isEmpty()) {
+            println("ARGH")
             throw ParsingException("No lines found between anchorTop and anchorBottom!")
         }
         //Adds all lines to a list of strings
@@ -156,10 +174,14 @@ object NettoParser : StoreParser {
 
         return stopWords.any { stopWord ->
             val jaroSimilarity = fuzzyMatcherJaro.apply(input, stopWord) ?: 0.0
-            if (jaroSimilarity >= 0.80) return true
+            if (jaroSimilarity >= 0.80) {
+                return true
+            } //Higher = Fewer false positive
 
             val levenSimilarity = fuzzyMatcherLeven.apply(input, stopWord)
-            if (levenSimilarity <= 2) return true
+            if (levenSimilarity <= 2) {
+                return true
+            } //LMAO good luck adjusting lel
 
             false
         }
@@ -173,10 +195,16 @@ object NettoParser : StoreParser {
 
         return stopWords.any { stopWord ->
             val jaroSimilarity = fuzzyMatcherJaro.apply(input, stopWord) ?: 0.0
-            if (jaroSimilarity >= 0.80) return true
+            if (jaroSimilarity >= 0.85) {
+                return true
+            } //Higher = Fewer false positive
 
-            val levenSimilarity = fuzzyMatcherLeven.apply(input, stopWord)
-            if (levenSimilarity <= 2) return true
+
+            val maxEdits = ceil(stopWord.length * 0.5).toInt() ////Lower = Fewer false positive
+            val levenSimilarity = fuzzyMatcherLeven.apply(input, stopWord) ?: Int.MAX_VALUE
+            if (levenSimilarity <= maxEdits) {
+                return true
+            }
 
             false
         }

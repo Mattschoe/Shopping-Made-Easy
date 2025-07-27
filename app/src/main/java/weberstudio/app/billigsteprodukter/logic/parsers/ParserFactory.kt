@@ -14,12 +14,12 @@ object ParserFactory {
             for (line in block.lines) {
                 val lineText = normalizeText(line.text)
 
-                if (fuzzyMatcher.match("NETTO", listOf("NETTO"), 0.85f, 0.3f)) return NettoParser
-                else if (fuzzyMatcher.match("REMA", listOf("REMA"), 0.85f, 0.3f)) return RemaParser
-                else if (fuzzyMatcher.match("COOP", listOf("COOP"), 0.85f, 0.3f)) return CoopParser
-                else if (fuzzyMatcher.match("MENU", listOf("MENU"), 0.85f, 0.3f)) return MenuParser
-                else if (fuzzyMatcher.match("LIDL", listOf("LIDL"), 0.85f, 0.3f)) return LidlParser
-                else if (fuzzyMatcher.match("SUPERBRUGSEN", listOf("SUPERBRUGSEN"), 0.85f, 0.3f)) return SuperBrugsenParser
+                if (fuzzyMatcher.match(lineText, listOf("NETTO"), 0.85f, 0.3f)) return NettoParser
+                else if (fuzzyMatcher.match(lineText, listOf("REMA"), 0.85f, 0.3f)) return RemaParser
+                else if (fuzzyMatcher.match(lineText, listOf("COOP"), 0.85f, 0.3f)) return CoopParser
+                else if (fuzzyMatcher.match(lineText, listOf("MENU"), 0.85f, 0.3f)) return MenuParser
+                else if (fuzzyMatcher.match(lineText, listOf("LIDL"), 0.85f, 0.3f)) return LidlParser
+                else if (fuzzyMatcher.match(lineText, listOf("SUPERBRUGSEN"), 0.85f, 0.3f)) return SuperBrugsenParser
             }
         }
         return null

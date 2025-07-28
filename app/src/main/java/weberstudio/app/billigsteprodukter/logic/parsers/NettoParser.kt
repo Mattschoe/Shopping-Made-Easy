@@ -1,5 +1,6 @@
 package weberstudio.app.billigsteprodukter.logic.parsers
 
+import android.R
 import android.graphics.Point
 import android.graphics.PointF
 import com.google.mlkit.vision.text.Text
@@ -58,6 +59,10 @@ object NettoParser : StoreParser {
                 val buffer = 0.1f //Allows for a tiny slope
                 if (forwardDotProduct < lineHeight * buffer) continue
 
+                //Parser til produkt så længe at raycast hit er langt nok væk for at det faktisk kan være en pris og ikke noise
+                val minNameToPriceOffset = lineHeight * 1.0f //How long away the price raycast hit needs to be to be accounted for. Lower = More forgiving, Higher = Less Forgiving. FX: 0.8 = "Atleast 0.8x the line height away"
+                if (forwardDotProduct < minNameToPriceOffset) continue
+
                 //Finder den korrekte produktpris
                 val productName = lineA.text
                 val productPrice: Float
@@ -69,15 +74,16 @@ object NettoParser : StoreParser {
                     continue
                 }
 
+
                 //Hvis det er en "3 x 9.95" parser vi den sidste linjes navn
-                if (productName.contains("X ") || productName.contains(" X")) {
-                    val lastLineProductName = parsedLines.getOrNull(i-1)
-                    if (lastLineProductName == null) println("Couldn't access the previous product from product $productName!")
+                if (isQuantityLine(productName)) {
+                    val parentLine = parsedLines.filter { it.center.y < lineA.center.y } .minByOrNull { abs(lineA.center.y - it.center.y) } //Finder den linje som er lige over "RABAT" og snupper navnet fra den
+                    if (parentLine == null) println("Couldn't access the previous product from product $productName!")
                     else {
                         try {
                             //If we successfully got the actual product we save that instead of the original "2 x 25,5", and divide the price of the product by the amount
                             val productPrice = normalizeText(lineB.text).toFloat()/normalizeText(lineA.text[0].toString()).toFloat()
-                            parsedProducts.add(ParsedProduct(lastLineProductName.text, productPrice))
+                            parsedProducts.add(ParsedProduct(parentLine.text, productPrice))
                             break //Only connects one line to another, not multiple
                         } catch (_: NumberFormatException) {
                             println("Error dividing the product price with the amount!")
@@ -85,10 +91,12 @@ object NettoParser : StoreParser {
                     }
                 }
 
+                /*
                 //Hvis det er en "RABAT" så opdaterer vi lige prisen på det sidste parsed produkt
                 if (fuzzyMatcher.match(productName, listOf("RABAT"), 0.85f, 0.15f)) {
                     parsedProducts.last().price -= productPrice
                 }
+                 */
 
                 //Hvis det er en "Rabat" så trækker vi det lige fra det sidste produkt
                 parsedProducts.add(ParsedProduct(productName, productPrice))
@@ -105,7 +113,7 @@ object NettoParser : StoreParser {
         }
 
         //region Filtering and returning
-        //Hvis der er mere end to produkter (så ét produkt og ét stopord), så gemmer vi alle dem som har den samme pris som stop ordet (Så hvis "Total" fucker f.eks.)
+        //Hvis der er mere end to produkter (så ét produkt og ét stopord), så gemmer vi alle dem som har den samme pris som stop ordene (Så hvis "Total" fucker f.eks.)
         val stopWordPrices = if (products.size > 2) {
             products
                 .filter { isStopWord(it.name) }
@@ -115,9 +123,8 @@ object NettoParser : StoreParser {
             emptySet()
         }
 
-
         //Returner kun produkter som ikke er stop ordet, eller som har den samme pris som stop ordet (så hvis "Total" fucker f.eks.)
-        val filteredList = products.filter { product -> !isStopWord(product.name) && product.price !in stopWordPrices }.toHashSet()
+        val filteredList = products.filter { product -> !isStopWord(product.name) && product.price !in stopWordPrices && !fuzzyMatcher.match(product.name, listOf("RABAT"), 0.8f, 0.2f) }.toHashSet()
 
         return filteredList
         //endregion
@@ -182,7 +189,7 @@ object NettoParser : StoreParser {
      * Checks and see if word given as argument is a stop word using fuzzy search
      */
     private fun isStopWord(input: String): Boolean {
-        val stopWords = listOf("TOTAL", "BETALINGSKORT", "MOMS UDGØR", "RABAT",)
+        val stopWords = listOf("TOTAL", "BETALINGSKORT", "MOMS UDGØR")
 
         return stopWords.any { stopWord ->
             val jaroSimilarity = fuzzyMatcherJaro.apply(input, stopWord) ?: 0.0
@@ -198,7 +205,6 @@ object NettoParser : StoreParser {
             false
         }
     }
-
     /**
      * Øhhhh, såe hvis useren vender kamerat 180 grader og tager billedet så sørger denne her for vi stadig korrekt kan parse produkterne
      */
@@ -206,12 +212,34 @@ object NettoParser : StoreParser {
         val raw = abs(a - b) % Math.PI.toFloat()
         return min(raw, Math.PI.toFloat() - raw)
     }
-
-
-    fun euclidDistance(p1: Point, p2: Point): Float {
+    private fun euclidDistance(p1: Point, p2: Point): Float {
         val dx = (p2.x - p1.x).toFloat()
         val dy = (p2.y - p1.y).toFloat()
         return hypot(dx, dy) // same as sqrt(dx*dx + dy*dy)
+    }
+    /**
+     * Checks whether the given string is reminiscent of a quantity line, aka a line like "2 x 14,00"
+     */
+    private fun isQuantityLine(line: String): Boolean {
+        //Snupper alle numberTokens (digits) og checker der mindst to (en mængde og en pris pr. enhed)
+        val numberToken = Regex("""\d+[.,]?\d*""")
+        val rawTokens = numberToken.findAll(line).map { it.value }.toList()
+        if (rawTokens.size < 2) return false
+
+        //Finder linjers position så vi kan se på teksten imellem dem (som helst skal være " x "
+        val amount = rawTokens[0]
+        val pricePerUnit = rawTokens[1]
+        val amountIndex = line.indexOf(amount).takeIf { it >= 0 } ?: return false
+        val pricePerUnitIndex = line.indexOf(pricePerUnit, startIndex = amountIndex + amount.length).takeIf { it >= 0 } ?: return false
+
+        //Checker om nogle karakterene er den seperator vi ønsker
+        val textSeperator = line.substring(amountIndex + amount.length, pricePerUnitIndex)
+        return textSeperator.any() { ch ->
+            ch.equals('x', ignoreCase = true) ||
+                    ch == '*' ||
+                    ch == 'x'
+            //Add flere her hvis er
+        }
     }
 
     override fun toString(): String {

@@ -3,6 +3,7 @@ package weberstudio.app.billigsteprodukter.logic.parsers
 import android.graphics.Point
 import android.graphics.PointF
 import com.google.mlkit.vision.text.Text
+import org.apache.commons.lang3.tuple.MutablePair
 import org.apache.commons.text.similarity.JaroWinklerSimilarity
 import org.apache.commons.text.similarity.LevenshteinDistance
 import weberstudio.app.billigsteprodukter.logic.FuzzyMatcher
@@ -12,6 +13,8 @@ import weberstudio.app.billigsteprodukter.logic.exceptions.ParsingException
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.ceil
+import kotlin.math.hypot
+import kotlin.math.min
 import kotlin.math.sqrt
 
 object NettoParser : StoreParser {
@@ -24,27 +27,36 @@ object NettoParser : StoreParser {
         val parsedLines = processImageText(receipt)
 
         val angleTolerance = Math.toRadians(10.0).toFloat()  //A tolerance for ray hit
-        val verticalBounds = 20f //Kigger kun på de linjer hvor deres centrum er verticalTolerance pixels væk fra hinanden, på den måde slipper vi for alt for mange checks
 
+        val parsedProducts = ArrayList<ParsedProduct>()
         for (i in parsedLines.indices) {
             val lineA = parsedLines[i]
+
+            //Kigger kun på de linjer hvor deres centrum er verticalTolerance pixels væk fra hinanden, på den måde slipper vi for alt for mange checks
+            val corners = lineA.corners
+            val lineHeight = ((euclidDistance(corners[0], corners[3]) + euclidDistance(corners[1], corners[2]))/2f)
+            val verticalBounds = lineHeight * 0.5f //Halvdelen af linjens højde
 
             for (j in parsedLines.indices) {
                 if (i == j) continue
                 val lineB = parsedLines[j]
 
                 //Skipper hvis de ikke er inde for tolerancen
-                val angleDifference = abs(lineA.angle - lineB.angle)
+                val angleDifference = angleDifferenceModulosPi(lineA.angle, lineB.angle)
                 if (angleDifference > angleTolerance) continue
 
                 //Skipper hvis de ikke er inde for samme "Row" i kvitteringen
-                val verticalDifference = abs(lineA.center.y - lineB.center.y)
-                if (verticalDifference > verticalBounds) continue
+                val dx = lineB.center.x - lineA.center.x
+                val dy = lineB.center.y - lineA.center.y
+                val upX = -lineA.direction.y
+                val upY = lineA.direction.x
+                val rowOffset = abs(upX * dx + upY * dy)
+                if (rowOffset > verticalBounds) continue
 
                 //Accepterer kun "hits" hvor linje B er "hen ad" linje A. På den måde kan vi checke kvitteringen korrekt ind selvom billedet bliver taget 180 grader
-                val deltaX = lineB.center.x - lineA.center.x
-                val deltaY = lineB.center.y - lineA.center.y
-                if (lineA.direction.x * deltaX + lineA.direction.y * deltaY <= 0) continue
+                val forwardDotProduct = lineA.direction.x * dx + lineA.direction.y * dy
+                val buffer = 0.1f //Allows for a tiny slope
+                if (forwardDotProduct < lineHeight * buffer) continue
 
                 //Finder den korrekte produktpris
                 val productName = lineA.text
@@ -65,7 +77,7 @@ object NettoParser : StoreParser {
                         try {
                             //If we successfully got the actual product we save that instead of the original "2 x 25,5", and divide the price of the product by the amount
                             val productPrice = normalizeText(lineB.text).toFloat()/normalizeText(lineA.text[0].toString()).toFloat()
-                            products.add(Product(lastLineProductName.text, productPrice, Store.Netto))
+                            parsedProducts.add(ParsedProduct(lastLineProductName.text, productPrice))
                             break //Only connects one line to another, not multiple
                         } catch (_: NumberFormatException) {
                             println("Error dividing the product price with the amount!")
@@ -73,10 +85,19 @@ object NettoParser : StoreParser {
                     }
                 }
 
-                //Hvis det er en "Rabat" så trækker vi det lige fra det sidste produkt
+                //Hvis det er en "RABAT" så opdaterer vi lige prisen på det sidste parsed produkt
+                if (fuzzyMatcher.match(productName, listOf("RABAT"), 0.85f, 0.15f)) {
+                    parsedProducts.last().price -= productPrice
+                }
 
-                products.add(Product(productName, productPrice, Store.Netto))
+                //Hvis det er en "Rabat" så trækker vi det lige fra det sidste produkt
+                parsedProducts.add(ParsedProduct(productName, productPrice))
             }
+        }
+
+        //Omdanner de parsedProducts om til Products
+        for (parsedProduct in parsedProducts) {
+            products.add(Product(parsedProduct.name, parsedProduct.price, Store.Netto))
         }
 
         if (products.isEmpty()) {
@@ -136,9 +157,9 @@ object NettoParser : StoreParser {
         return allLines
     }
 
-    private fun calculateAngle(p1: Point, p2: Point): Float {
-        val dx = (p2.x - p1.x).toFloat()
-        val dy = (p2.y - p1.y).toFloat()
+    private fun calculateAngle(p0: Point, p1: Point): Float {
+        val dx = (p1.x - p0.x).toFloat()
+        val dy = (p1.y - p0.y).toFloat()
         return atan2(dy, dx) //Angle in radians
     }
 
@@ -161,7 +182,7 @@ object NettoParser : StoreParser {
      * Checks and see if word given as argument is a stop word using fuzzy search
      */
     private fun isStopWord(input: String): Boolean {
-        val stopWords = listOf("TOTAL", "BETALINGSKORT", "MOMS UDGØR",)
+        val stopWords = listOf("TOTAL", "BETALINGSKORT", "MOMS UDGØR", "RABAT",)
 
         return stopWords.any { stopWord ->
             val jaroSimilarity = fuzzyMatcherJaro.apply(input, stopWord) ?: 0.0
@@ -178,6 +199,21 @@ object NettoParser : StoreParser {
         }
     }
 
+    /**
+     * Øhhhh, såe hvis useren vender kamerat 180 grader og tager billedet så sørger denne her for vi stadig korrekt kan parse produkterne
+     */
+    private fun angleDifferenceModulosPi(a: Float, b: Float): Float {
+        val raw = abs(a - b) % Math.PI.toFloat()
+        return min(raw, Math.PI.toFloat() - raw)
+    }
+
+
+    fun euclidDistance(p1: Point, p2: Point): Float {
+        val dx = (p2.x - p1.x).toFloat()
+        val dy = (p2.y - p1.y).toFloat()
+        return hypot(dx, dy) // same as sqrt(dx*dx + dy*dy)
+    }
+
     override fun toString(): String {
         return "Netto"
     }
@@ -189,5 +225,6 @@ object NettoParser : StoreParser {
         val direction: PointF,
         val corners: Array<Point>
     )
+    data class ParsedProduct(val name: String, var price: Float)
 }
 

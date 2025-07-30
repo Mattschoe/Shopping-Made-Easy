@@ -13,10 +13,12 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
 import weberstudio.app.billigsteprodukter.R
 import weberstudio.app.billigsteprodukter.logic.CameraViewModel
 import weberstudio.app.billigsteprodukter.ui.components.QuickActionsButton
@@ -28,6 +30,7 @@ import weberstudio.app.billigsteprodukter.ui.components.SaveImage
  */
 @Composable
 fun NavigationDrawerUI(modifier: Modifier = Modifier, onDestinationClicked: (PageNavigation) -> Unit) {
+    val cameraScope = rememberCoroutineScope()
     Column(
         modifier
             .padding(12.dp),
@@ -56,9 +59,8 @@ fun NavigationDrawerUI(modifier: Modifier = Modifier, onDestinationClicked: (Pag
         //"Scan kvittering"
         SaveImage(
             onImageCaptured = {
-                uri, context -> CameraViewModel().processImage(uri, context)
-            },
-            onImageProcessed = { onDestinationClicked(PageNavigation.ReceiptScanning) }
+                uri, context -> cameraScope.launch { CameraViewModel().processImage(uri, context) }
+            }
         ) { modifier, launchCamera ->
             QuickActionsButton(
                 "Scan kvittering",

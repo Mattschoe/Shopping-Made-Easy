@@ -13,6 +13,9 @@ import androidx.navigation.NavController
 import weberstudio.app.billigsteprodukter.logic.CameraViewModel
 import weberstudio.app.billigsteprodukter.ui.components.SaveImage
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.launch
 import weberstudio.app.billigsteprodukter.logic.Product
 import weberstudio.app.billigsteprodukter.ui.ParsingState
 import weberstudio.app.billigsteprodukter.ui.components.ErrorMessageLarge
@@ -30,10 +33,14 @@ import weberstudio.app.billigsteprodukter.ui.navigation.PageNavigation
 fun ReceiptScanningContent(modifier: Modifier = Modifier, navController: NavController, cameraViewModel: CameraViewModel, receiptViewModel: ReceiptScanningViewModel) {
     //region Checks for parsing errors first:
     val parsingState by cameraViewModel.getParserState()
+    val cameraScope = rememberCoroutineScope()
     val launchCamera = launchCamera(
-        onImageCaptured = { uri, context -> cameraViewModel.processImage(uri, context) },
-        onImageProcessed = { navController.navigate(PageNavigation.ReceiptScanning.route) }
+        onImageCaptured = { uri, context ->
+            cameraScope.launch { cameraViewModel.processImage(uri, context) }
+        }
     )
+
+    //What to show depending on the state of parsing
     if (parsingState is ParsingState.InProgress) CircularProgressIndicator()
     else if (parsingState is ParsingState.Error) {
         val errorMessage = (parsingState as ParsingState.Error).message

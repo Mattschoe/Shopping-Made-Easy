@@ -10,10 +10,12 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import kotlinx.coroutines.launch
 import weberstudio.app.billigsteprodukter.logic.CameraViewModel
 import weberstudio.app.billigsteprodukter.ui.ParsingState
 import weberstudio.app.billigsteprodukter.ui.components.ErrorMessageLarge
@@ -30,11 +32,7 @@ import weberstudio.app.billigsteprodukter.ui.navigation.PageNavigation
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainPageContent(modifier: Modifier = Modifier, navController: NavController, viewModel: CameraViewModel) {
-    val parsingState by viewModel.getParserState()
-    val launchCamera = launchCamera(
-        onImageCaptured = { uri, context -> viewModel.processImage(uri, context) },
-        onImageProcessed = { navController.navigate(PageNavigation.ReceiptScanning.route) }
-    )
+    val cameraScope = rememberCoroutineScope()
 
     //Main page
     Column(
@@ -45,13 +43,12 @@ fun MainPageContent(modifier: Modifier = Modifier, navController: NavController,
     ) {
         //Save receipt
         SaveImage(
-            onImageCaptured = { uri, context -> viewModel.processImage(uri, context) },
-            onImageProcessed = {
-                try {
+            onImageCaptured = { uri, context ->
+                cameraScope.launch {
+                    viewModel.processImage(uri, context)
                     navController.navigate(PageNavigation.ReceiptScanning.route)
-                } catch (e: Exception) {
-                    println(e)
-                } }
+                }
+            }
         ) { modifier, launchCamera ->
             SaveImageButton(
                 modifier = Modifier
@@ -72,22 +69,6 @@ fun MainPageContent(modifier: Modifier = Modifier, navController: NavController,
             modifier = Modifier
                 .weight(0.75f)
                 .fillMaxWidth()
-        )
-    }
-
-    //Checks for error in parsing
-    if (parsingState is ParsingState.InProgress) CircularProgressIndicator()
-    else if (parsingState is ParsingState.Error) {
-        val errorMessage = (parsingState as ParsingState.Error).message
-        ErrorMessageLarge(
-            "Fejl i scanning!",
-            errorMessage,
-            onDismissRequest = {
-                viewModel.clearParserState()
-                navController.popBackStack()
-           },
-            onConfirmError = { launchCamera() }, //Launches camera again if user clicks "Prøv igen"
-            onDismissError = { } //Goes back to last screen if user presses "Cancel"
         )
     }
 }

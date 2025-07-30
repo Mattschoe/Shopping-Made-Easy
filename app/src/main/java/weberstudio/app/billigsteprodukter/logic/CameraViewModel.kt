@@ -8,17 +8,21 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.android.gms.tasks.Task
+import com.google.android.gms.tasks.Tasks
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.Text
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import weberstudio.app.billigsteprodukter.data.ReceiptRepository
 import weberstudio.app.billigsteprodukter.logic.exceptions.ParsingException
 import weberstudio.app.billigsteprodukter.logic.parsers.ParserFactory
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser
 import weberstudio.app.billigsteprodukter.ui.ParsingState
 import java.io.File
+import kotlin.random.Random
 
 
 class CameraViewModel: ViewModel() {
@@ -29,7 +33,7 @@ class CameraViewModel: ViewModel() {
      * @param imageURI the URI of the image that needs processing
      * @param context
      */
-    fun processImage(imageURI: Uri, context: Context) {
+    suspend fun processImage(imageURI: Uri, context: Context) {
         println("Processing Image..")
         parsingState.value = ParsingState.InProgress
         //Tries to read image
@@ -41,19 +45,23 @@ class CameraViewModel: ViewModel() {
             val image = InputImage.fromBitmap(bitmap, 0)
 
             //Tries to process image
-            textRecognizer.process(image)
-                .addOnSuccessListener { imageText ->
-                    parsingState.value = ParsingState.Error("Test error")
-                    processImageInfo(imageText)
-                    textRecognizer.close()
-                }
-                .addOnFailureListener { e ->
-                    parsingState.value = ParsingState.Error("MLKit Text recognition failed! $e")
-                    textRecognizer.close()
-                }
+            try {
+                val imageText = textRecognizer.process(image).await() //Venter på at vi har læst billedet før vi proceeder
+
+                //Success
+                println("Result Success!")
+                parsingState.value = ParsingState.Success
+                processImageInfo(imageText)
+                textRecognizer.close()
+            } catch (e: Exception) {
+                //Failure
+                ParsingState.Error("MLKit Text recognition failed! $e")
+                textRecognizer.close()
+            }
         } catch(e: Exception) {
             parsingState.value = ParsingState.Error("Error loading image!: ${e.message}")
         }
+        println("Result after!")
         println("Finished parsing with parsing-state: ${parsingState.value}")
     }
 

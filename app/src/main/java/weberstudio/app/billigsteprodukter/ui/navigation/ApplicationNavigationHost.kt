@@ -3,6 +3,7 @@ package weberstudio.app.billigsteprodukter.ui.navigation
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -11,7 +12,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
 import weberstudio.app.billigsteprodukter.logic.CameraViewModel
-import weberstudio.app.billigsteprodukter.logic.Store
 import weberstudio.app.billigsteprodukter.ui.components.PageShell
 import weberstudio.app.billigsteprodukter.ui.pages.database.DataBaseViewModel
 import weberstudio.app.billigsteprodukter.ui.pages.database.DatabaseContent
@@ -40,7 +40,8 @@ fun ApplicationNavigationHost(navController: NavHostController = rememberNavCont
         ) {
             //Main Screen
             composable(PageNavigation.Home.route) { backStackEntry ->
-                val cameraViewModel: CameraViewModel = viewModel(backStackEntry) //Sørger for at lifecycle af viewmodel bliver locked til denne navigation
+                val parentBackStackEntry = remember(backStackEntry) { navController.getBackStackEntry("receiptRoute") } //Holder cameraViewModel i navigation subgraph scopet så det er den samme viewModel instance vi accesser i alle composables inde i subgraph'en
+                val cameraViewModel: CameraViewModel = viewModel(parentBackStackEntry)
                 PageShell(navController, title = "Forside") { padding ->
                     MainPageContent(Modifier.padding(padding), navController, cameraViewModel)
                 }
@@ -48,7 +49,8 @@ fun ApplicationNavigationHost(navController: NavHostController = rememberNavCont
 
             //Receipt Content
             composable(PageNavigation.ReceiptScanning.route) { backStackEntry ->
-                val cameraViewModel: CameraViewModel = viewModel(backStackEntry)
+                val parentBackStackEntry = remember(backStackEntry) { navController.getBackStackEntry("receiptRoute") }
+                val cameraViewModel: CameraViewModel = viewModel(parentBackStackEntry)
                 PageShell(navController, title = "Kvitteringsoversigt") { padding ->
                     val receiptViewModel: ReceiptScanningViewModel = viewModel(backStackEntry)
                     ReceiptScanningContent(Modifier.padding(padding), navController, cameraViewModel, receiptViewModel)

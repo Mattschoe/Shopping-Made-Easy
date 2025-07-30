@@ -23,12 +23,10 @@ import java.io.File
  * Reads and saves a image of a receipt.
  * @param uiContent the onClick UI that activates the SaveImage function
  * @param onImageProcessed determines what to do after the image has been taken and processed. Often used to navigate to a different page
- * @param latestParams returns the latest parameters for *URI* and *Context*. Usefull for error handling
  */
 @Composable
 fun SaveImage(modifier: Modifier = Modifier,
               onImageCaptured: (Uri, Context) -> Unit,
-              onImageProcessed: () -> Unit,
               uiContent: @Composable (modifier: Modifier, onClick: () -> Unit) -> Unit = { _, _ -> }
     ) {
     val context = LocalContext.current
@@ -45,7 +43,6 @@ fun SaveImage(modifier: Modifier = Modifier,
     ) { success ->
         if (success) {
             onImageCaptured(imageURI, context)
-            onImageProcessed()
         } else {
             Toast.makeText(context, "Image capture failed!", Toast.LENGTH_SHORT).show()
         }
@@ -84,7 +81,7 @@ fun SaveImageButton(modifier: Modifier, onClick: () -> Unit) {
  * Returns *imageLauncher.launch(imageURI)* which launches the camera. Useful for launching the camera on error handling
  */
 @Composable
-fun launchCamera(onImageCaptured: (Uri, Context) -> Unit, onImageProcessed: () -> Unit): () -> Unit {
+fun launchCamera(onImageCaptured: (Uri, Context) -> Unit): () -> Unit {
     val context = LocalContext.current
     val imageURI = remember { //Uses "remember" so we dont calculate this every recomposition
         File(context.cacheDir, "tempImage.jpg")
@@ -99,7 +96,6 @@ fun launchCamera(onImageCaptured: (Uri, Context) -> Unit, onImageProcessed: () -
     ) { success ->
         if (success) {
             onImageCaptured(imageURI, context)
-            onImageProcessed()
         } else {
             Toast.makeText(context, "Image capture failed!", Toast.LENGTH_SHORT).show()
         }

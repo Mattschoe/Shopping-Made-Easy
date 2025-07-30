@@ -31,10 +31,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-
+@Preview
+@Composable
+fun Test() {
+    ProductCard(name = "Spaghetti Bolognese m. Parmasan", price = "399.99kr", isFavorite = false, onFavoriteClick = { } )
+}
 
 @Composable
 fun ProductCard(modifier: Modifier  = Modifier, name: String, price: String, isFavorite: Boolean, onFavoriteClick: () -> Unit) {

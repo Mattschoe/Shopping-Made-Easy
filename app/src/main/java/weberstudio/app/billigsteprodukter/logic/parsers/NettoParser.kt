@@ -1,10 +1,8 @@
 package weberstudio.app.billigsteprodukter.logic.parsers
 
-import android.R
 import android.graphics.Point
 import android.graphics.PointF
 import com.google.mlkit.vision.text.Text
-import org.apache.commons.lang3.tuple.MutablePair
 import org.apache.commons.text.similarity.JaroWinklerSimilarity
 import org.apache.commons.text.similarity.LevenshteinDistance
 import weberstudio.app.billigsteprodukter.logic.FuzzyMatcher
@@ -13,7 +11,6 @@ import weberstudio.app.billigsteprodukter.logic.Store
 import weberstudio.app.billigsteprodukter.logic.exceptions.ParsingException
 import kotlin.math.abs
 import kotlin.math.atan2
-import kotlin.math.ceil
 import kotlin.math.hypot
 import kotlin.math.min
 import kotlin.math.sqrt
@@ -60,7 +57,7 @@ object NettoParser : StoreParser {
                 if (forwardDotProduct < lineHeight * buffer) continue
 
                 //Parser til produkt så længe at raycast hit er langt nok væk for at det faktisk kan være en pris og ikke noise
-                val minNameToPriceOffset = lineHeight * 1.0f //How long away the price raycast hit needs to be to be accounted for. Lower = More forgiving, Higher = Less Forgiving. FX: 0.8 = "Atleast 0.8x the line height away"
+                val minNameToPriceOffset = lineHeight * 3.0f //How long away the price raycast hit needs to be to be accounted for. Lower = More forgiving, Higher = Less Forgiving. FX: 0.8 = "Atleast 0.8x the line height away"
                 if (forwardDotProduct < minNameToPriceOffset) continue
 
                 //Finder den korrekte produktpris
@@ -77,14 +74,19 @@ object NettoParser : StoreParser {
 
                 //Hvis det er en "3 x 9.95" parser vi den sidste linjes navn
                 if (isQuantityLine(productName)) {
-                    val parentLine = parsedLines.filter { it.center.y < lineA.center.y } .minByOrNull { abs(lineA.center.y - it.center.y) } //Finder den linje som er lige over "RABAT" og snupper navnet fra den
+                    //Finder den linje som er lige over "RABAT" og snupper navnet fra den
+                    val parentLine = parsedLines.filter { otherLine ->
+                        otherLine !== lineA &&
+                        otherLine.center.y < lineA.center.y &&
+                        abs(otherLine.center.x - lineA.center.x) < 80f //Skal være inde for en tolerance (floaten) af x-kordinat før vi overhovedet kigger på den
+                    } .maxByOrNull { it.center.y }
                     if (parentLine == null) println("Couldn't access the previous product from product $productName!")
                     else {
                         try {
                             //If we successfully got the actual product we save that instead of the original "2 x 25,5", and divide the price of the product by the amount
                             val productPrice = normalizeText(lineB.text).toFloat()/normalizeText(lineA.text[0].toString()).toFloat()
                             parsedProducts.add(ParsedProduct(parentLine.text, productPrice))
-                            break //Only connects one line to another, not multiple
+                            break //Success, so we break out of inner loop
                         } catch (_: NumberFormatException) {
                             println("Error dividing the product price with the amount!")
                         }
@@ -100,6 +102,7 @@ object NettoParser : StoreParser {
 
                 //Hvis det er en "Rabat" så trækker vi det lige fra det sidste produkt
                 parsedProducts.add(ParsedProduct(productName, productPrice))
+                break //Success, so we break out of inner loop
             }
         }
 

@@ -97,6 +97,16 @@ class CameraViewModel: ViewModel() {
     fun getParserState(): State<ParsingState> = parsingState
 
     /**
+     * Adds a singular product to the repo and current receipt
+     */
+    fun addProductToCurrentReceipt(productName: String, productPrice: Float, store: Store) {
+        val product = Product(productName, productPrice, store)
+        viewModelScope.launch {
+            receiptRepo.addProductToReceipt(product)
+        }
+    }
+
+    /**
      * Clears the state of the parser, preparing it for next scan
      */
     fun clearParserState() {

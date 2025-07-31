@@ -13,11 +13,16 @@ import androidx.navigation.NavController
 import weberstudio.app.billigsteprodukter.logic.CameraViewModel
 import weberstudio.app.billigsteprodukter.ui.components.SaveImage
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
 import weberstudio.app.billigsteprodukter.logic.Product
 import weberstudio.app.billigsteprodukter.ui.ParsingState
+import weberstudio.app.billigsteprodukter.ui.components.AddProductDialog
+import weberstudio.app.billigsteprodukter.ui.components.AddProductToReceipt
 import weberstudio.app.billigsteprodukter.ui.components.ErrorMessageLarge
 import weberstudio.app.billigsteprodukter.ui.components.LogoBarHandler
 import weberstudio.app.billigsteprodukter.ui.components.ProductRow
@@ -59,6 +64,8 @@ fun ReceiptScanningContent(modifier: Modifier = Modifier, navController: NavCont
 
 
     val products by receiptViewModel.lastReceipt.collectAsState()
+    var showAddProductDialog by rememberSaveable { mutableStateOf(false) }
+
     //UI
     LazyColumn {
         stickyHeader{
@@ -67,10 +74,23 @@ fun ReceiptScanningContent(modifier: Modifier = Modifier, navController: NavCont
                 TotalBar()
             }
         }
+        item {
+            AddProductToReceipt(addProductToReceipt = { showAddProductDialog = true } )
+        }
         items(products) { product ->
             ProductRow(product.name, DecimalFormat("#.##").format(product.price) + "kr") {
-
             }
         }
     }
+
+    //Hidden UI
+    AddProductDialog(
+        showDialog = showAddProductDialog,
+        onDismiss = { showAddProductDialog = false },
+        onConfirm = { name, price, store ->
+            cameraViewModel.addProductToCurrentReceipt(name, price, store)
+            showAddProductDialog = false
+        },
+        standardStore =
+    )
 }

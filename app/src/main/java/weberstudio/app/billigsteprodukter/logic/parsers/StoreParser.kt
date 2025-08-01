@@ -14,6 +14,8 @@ interface StoreParser {
     @Throws(ParsingException::class)
     fun parse(receipt: Text): HashSet<Product>
 
-    //Returns the name of the store
+    /**
+     * Returns the name of the store
+     */
     override fun toString(): String
 }

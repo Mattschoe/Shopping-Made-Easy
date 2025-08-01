@@ -20,6 +20,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
 import weberstudio.app.billigsteprodukter.logic.Product
+import weberstudio.app.billigsteprodukter.logic.Store
 import weberstudio.app.billigsteprodukter.ui.ParsingState
 import weberstudio.app.billigsteprodukter.ui.components.AddProductDialog
 import weberstudio.app.billigsteprodukter.ui.components.AddProductToReceipt
@@ -45,20 +46,27 @@ fun ReceiptScanningContent(modifier: Modifier = Modifier, navController: NavCont
         }
     )
 
+    var store: Store? = null
+
     //What to show depending on the state of parsing
-    if (parsingState is ParsingState.InProgress) CircularProgressIndicator()
-    else if (parsingState is ParsingState.Error) {
-        val errorMessage = (parsingState as ParsingState.Error).message
-        ErrorMessageLarge(
-            "Fejl i scanning!",
-            errorMessage,
-            onDismissRequest = {
-                cameraViewModel.clearParserState()
-                navController.navigate(PageNavigation.Home.route)
-            },
-            onConfirmError = { launchCamera() }, //Launches camera again if user clicks "Prøv igen"
-            onDismissError = { } //Goes back to last screen if user presses "Cancel"
-        )
+    when (parsingState) {
+        ParsingState.InProgress -> { CircularProgressIndicator() }
+        is ParsingState.Error -> {
+            val errorMessage = (parsingState as ParsingState.Error).message
+            ErrorMessageLarge(
+                "Fejl i scanning!",
+                errorMessage,
+                onDismissRequest = {
+                    cameraViewModel.clearParserState()
+                    navController.navigate(PageNavigation.Home.route)
+                },
+                onConfirmError = { launchCamera() }, //Launches camera again if user clicks "Prøv igen"
+                onDismissError = { } //Goes back to last screen if user presses "Cancel"
+            )
+        }
+        is ParsingState.Success -> { store = (parsingState as ParsingState.Success).parsedStore }
+        else -> println(parsingState)
+
     }
     //endregion
 
@@ -91,6 +99,6 @@ fun ReceiptScanningContent(modifier: Modifier = Modifier, navController: NavCont
             cameraViewModel.addProductToCurrentReceipt(name, price, store)
             showAddProductDialog = false
         },
-        standardStore =
+        standardStore = store
     )
 }

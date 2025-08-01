@@ -50,7 +50,6 @@ class CameraViewModel: ViewModel() {
 
                 //Success
                 println("Result Success!")
-                parsingState.value = ParsingState.Success
                 processImageInfo(imageText)
                 textRecognizer.close()
             } catch (e: Exception) {
@@ -77,10 +76,12 @@ class CameraViewModel: ViewModel() {
             val parser: StoreParser? = ParserFactory.parseReceipt(imageText)
             if (parser != null) {
                 println("Adding products to $parser")
+                val store: Store? = Store.fromName(parser.toString())
+                if (store == null) throw ParsingException("Couldn't find store from ${parser.toString()}!")
                 try {
                     val parsedText = parser.parse(imageText)
                     viewModelScope.launch { receiptRepo.addReceiptProducts(parsedText) } //Saves to repository
-                    parsingState.value = ParsingState.Success
+                    parsingState.value = ParsingState.Success(store)
                 } catch (e: ParsingException) {
                     parsingState.value = ParsingState.Error("Fejl med at scanne kvittering, $e")  //TODO: Denne her Error dukker ikke op på UI
                     return@runCatching

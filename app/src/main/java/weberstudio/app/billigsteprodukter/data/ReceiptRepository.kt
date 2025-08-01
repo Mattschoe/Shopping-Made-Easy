@@ -5,6 +5,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import weberstudio.app.billigsteprodukter.logic.Product
@@ -43,10 +45,13 @@ object ReceiptRepository {
     }
 
     /**
-     * Adds a extra product to the repo and to the current receipt
+     * Adds a extra product to the repo and to the current receipt if its part of the same store as the lastReceipt
      */
     suspend fun addProductToReceipt(product: Product) {
-        _lastReceipt.update { currentList -> currentList + product }
+        val lastReceiptStore = _lastReceipt.value.first().store
+        if (product.store == lastReceiptStore) {
+            _lastReceipt.update { currentList -> currentList + product }
+        }
         updateProduct(product)
         refreshStream()
     }

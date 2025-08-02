@@ -39,10 +39,7 @@ class CameraViewModel: ViewModel() {
         //Tries to read image
         try {
             val textRecognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
-            //OBS: Jeg har ingen fucking ide, men hvis vi ikke loader det som et bitmap og så inputImage så er det kun sådan 50/50 om den faktisk går ned i en listener, omfg
-            val imageFile = File(context.cacheDir, "tempImage.jpg")
-            val bitmap = BitmapFactory.decodeFile(imageFile.absolutePath)
-            val image = InputImage.fromBitmap(bitmap, 0)
+            val image = InputImage.fromFilePath(context, imageURI)
 
             //Tries to process image
             try {

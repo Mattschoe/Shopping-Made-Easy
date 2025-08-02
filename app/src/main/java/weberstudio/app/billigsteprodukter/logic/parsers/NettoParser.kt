@@ -2,6 +2,7 @@ package weberstudio.app.billigsteprodukter.logic.parsers
 
 import android.graphics.Point
 import android.graphics.PointF
+import android.util.Log
 import com.google.mlkit.vision.text.Text
 import org.apache.commons.text.similarity.JaroWinklerSimilarity
 import org.apache.commons.text.similarity.LevenshteinDistance
@@ -9,10 +10,14 @@ import weberstudio.app.billigsteprodukter.logic.FuzzyMatcher
 import weberstudio.app.billigsteprodukter.logic.Product
 import weberstudio.app.billigsteprodukter.logic.Store
 import weberstudio.app.billigsteprodukter.logic.exceptions.ParsingException
+import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.atan2
+import kotlin.math.cos
 import kotlin.math.hypot
+import kotlin.math.log
 import kotlin.math.min
+import kotlin.math.sin
 import kotlin.math.sqrt
 
 object NettoParser : StoreParser {
@@ -27,6 +32,7 @@ object NettoParser : StoreParser {
         val angleTolerance = Math.toRadians(10.0).toFloat()  //A tolerance for ray hit
 
         val parsedProducts = ArrayList<ParsedProduct>()
+        var controlLine: ParsedLine? = null
         for (i in parsedLines.indices) {
             val lineA = parsedLines[i]
 
@@ -38,6 +44,12 @@ object NettoParser : StoreParser {
             for (j in parsedLines.indices) {
                 if (i == j) continue
                 val lineB = parsedLines[j]
+
+
+                //Tries to get a controlLine
+                if (controlLine == null && (fuzzyMatcher.match(lineB.text, listOf("RABAT"), 0.85f, 0.15f) || isStopWord(lineB.text))) {
+                    controlLine = lineB
+                }
 
                 //Skipper hvis de ikke er inde for tolerancen
                 val angleDifference = angleDifferenceModulosPi(lineA.angle, lineB.angle)
@@ -67,20 +79,18 @@ object NettoParser : StoreParser {
                 try {
                     productPrice = lineB.text.toFloat()
                 } catch (_: NumberFormatException) {
-                    println("Couldn't convert ${lineB.text} to Float!")
+                    Log.d("ERROR", "Couldn't convert ${lineB.text} to Float!")
                     continue
                 }
 
 
                 //Hvis det er en "3 x 9.95" parser vi den sidste linjes navn
                 if (isQuantityLine(productName)) {
+                    if (controlLine == null) { Log.d("ERROR", "Control line not yet found!"); break } //TODO: Her skal der være en måde at kaste en Error fordi vi ikke har fundet kontrollinjen endnu som vises på UI'en som et udråbstegn.
+
                     //Finder den linje som er lige over "RABAT" og snupper navnet fra den
-                    val parentLine = parsedLines.filter { otherLine ->
-                        otherLine !== lineA &&
-                        otherLine.center.y < lineA.center.y &&
-                        abs(otherLine.center.x - lineA.center.x) < 80f //Skal være inde for en tolerance (floaten) af x-kordinat før vi overhovedet kigger på den
-                    } .maxByOrNull { it.center.y }
-                    if (parentLine == null) println("Couldn't access the previous product from product $productName!")
+                    val parentLine = findLineAboveUsingReference(parsedLines, lineA, controlLine) //OBS: BLACK MAGIC FUCKERY
+                    if (parentLine == null) { Log.d("ERROR", "Couldn't access the previous product from product $productName!"); break }
                     else {
                         try {
                             //If we successfully got the actual product we save that instead of the original "2 x 25,5", and divide the price of the product by the amount
@@ -88,7 +98,7 @@ object NettoParser : StoreParser {
                             parsedProducts.add(ParsedProduct(parentLine.text, productPrice))
                             break //Success, so we break out of inner loop
                         } catch (_: NumberFormatException) {
-                            println("Error dividing the product price with the amount!")
+                            Log.d("ERROR", "Error dividing the product price with the amount!")
                         }
                     }
                 }
@@ -128,6 +138,8 @@ object NettoParser : StoreParser {
 
         //Returner kun produkter som ikke er stop ordet, eller som har den samme pris som stop ordet (så hvis "Total" fucker f.eks.)
         val filteredList = products.filter { product -> !isStopWord(product.name) && product.price !in stopWordPrices && !fuzzyMatcher.match(product.name, listOf("RABAT"), 0.8f, 0.2f) }.toHashSet()
+
+        if (filteredList.isEmpty()) throw ParsingException("Final list couldn't be read. Please try again")
 
         return filteredList
         //endregion
@@ -243,6 +255,35 @@ object NettoParser : StoreParser {
                     ch == 'x'
             //Add flere her hvis er
         }
+    }
+    /**
+     * Given a list of lines, it finds the one line above the *quantityLine* who is just “above” it.
+     * OBS: DET HER ER BLACK MAGIC SHIT OG GG MED AT FORSTÅ DET
+     * @param referenceLine the line that controls which way is up and down on the Y-axis. Often provided fro either the storebrand, "Total", "Betalingskort" and "Moms" lines.
+     */
+    fun findLineAboveUsingReference(allLines: List<ParsedLine>, quantityLine: ParsedLine, referenceLine: ParsedLine): ParsedLine? {
+        // 1) Compute the "upward" unit vector (from quantityLine → referenceLine)
+        val vUpX = referenceLine.center.x - quantityLine.center.x
+        val vUpY = referenceLine.center.y - quantityLine.center.y
+        val vLen = hypot(vUpX, vUpY)
+        if (vLen == 0f) return null  // Avoid division by zero if same point
+        val upX = vUpX / vLen
+        val upY = vUpY / vLen
+
+        // 2) Project all other lines onto this vector
+        return allLines
+            .asSequence()
+            .filter { it != quantityLine }
+            .map { line ->
+                val toLineX = line.center.x - quantityLine.center.x
+                val toLineY = line.center.y - quantityLine.center.y
+                val dot = toLineX * upX + toLineY * upY  // signed projection
+                val dist = hypot(toLineX, toLineY)
+                Triple(line, dot, dist)
+            }
+            .filter { (_, dot, _) -> dot > 0f }  // Only lines "above" in projected direction
+            .minByOrNull { (_, _, dist) -> dist }
+            ?.first
     }
 
     override fun toString(): String {

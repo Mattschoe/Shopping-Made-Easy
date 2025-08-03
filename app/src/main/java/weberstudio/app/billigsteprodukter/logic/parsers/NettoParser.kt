@@ -21,100 +21,142 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 object NettoParser : StoreParser {
+    //region FIELDS
     private val fuzzyMatcherJaro = JaroWinklerSimilarity()
     private val fuzzyMatcherLeven = LevenshteinDistance()
     private val fuzzyMatcher = FuzzyMatcher()
+    //endregion
 
     override fun parse(receipt: Text): HashSet<Product> {
-        val products: HashSet<Product> = HashSet<Product>()
+        val includeRABAT = false
         val parsedLines = processImageText(receipt)
-
-        val angleTolerance = Math.toRadians(10.0).toFloat()  //A tolerance for ray hit
-
         val parsedProducts = ArrayList<ParsedProduct>()
+        val parseAfterControlLineFound = ArrayList<Pair<ParsedLine, ParsedLine>>() //Line combos vi parser senere efter at have fundet controllinjen
+
+        //region PARSES LINES INTO PRODUCTS
         var controlLine: ParsedLine? = null
         for (i in parsedLines.indices) {
             val lineA = parsedLines[i]
-
-            //Kigger kun på de linjer hvor deres centrum er verticalTolerance pixels væk fra hinanden, på den måde slipper vi for alt for mange checks
-            val corners = lineA.corners
-            val lineHeight = ((euclidDistance(corners[0], corners[3]) + euclidDistance(corners[1], corners[2]))/2f)
-            val verticalBounds = lineHeight * 0.5f //Halvdelen af linjens højde
 
             for (j in parsedLines.indices) {
                 if (i == j) continue
                 val lineB = parsedLines[j]
 
+                if (doesLinesCollide(lineA, lineB)) {
+                    //Tries to get a controlLine
+                    if (controlLine == null && (fuzzyMatcher.match(lineA.text, listOf("NETTO"), 0.85f, 0.15f) || isStopWord(lineA.text))) controlLine = lineA
+                    if (controlLine == null && (fuzzyMatcher.match(lineB.text, listOf("NETTO"), 0.85f, 0.15f) || isStopWord(lineB.text))) controlLine = lineB
 
-                //Tries to get a controlLine
-                if (controlLine == null && (fuzzyMatcher.match(lineB.text, listOf("RABAT"), 0.85f, 0.15f) || isStopWord(lineB.text))) {
-                    controlLine = lineB
+                    //Enten parser produkterne, eller gemmer parsningen til efter vi har fundet kontrollinjen.
+                    if (controlLine == null) parseAfterControlLineFound.add(Pair(lineA, lineB))
+                    else parsedProducts.add(parseLinesToProduct(lineA, lineB, controlLine, includeRABAT, parsedLines, parsedProducts))
                 }
-
-                //Skipper hvis de ikke er inde for tolerancen
-                val angleDifference = angleDifferenceModulosPi(lineA.angle, lineB.angle)
-                if (angleDifference > angleTolerance) continue
-
-                //Skipper hvis de ikke er inde for samme "Row" i kvitteringen
-                val dx = lineB.center.x - lineA.center.x
-                val dy = lineB.center.y - lineA.center.y
-                val upX = -lineA.direction.y
-                val upY = lineA.direction.x
-                val rowOffset = abs(upX * dx + upY * dy)
-                if (rowOffset > verticalBounds) continue
-
-                //Accepterer kun "hits" hvor linje B er "hen ad" linje A. På den måde kan vi checke kvitteringen korrekt ind selvom billedet bliver taget 180 grader
-                val forwardDotProduct = lineA.direction.x * dx + lineA.direction.y * dy
-                val buffer = 0.1f //Allows for a tiny slope
-                if (forwardDotProduct < lineHeight * buffer) continue
-
-                //Parser til produkt så længe at raycast hit er langt nok væk for at det faktisk kan være en pris og ikke noise
-                val minNameToPriceOffset = lineHeight * 3.0f //How long away the price raycast hit needs to be to be accounted for. Lower = More forgiving, Higher = Less Forgiving. FX: 0.8 = "Atleast 0.8x the line height away"
-                if (forwardDotProduct < minNameToPriceOffset) continue
-
-                //Finder den korrekte produktpris
-                val productName = lineA.text
-                val productPrice: Float
-
-                try {
-                    productPrice = lineB.text.toFloat()
-                } catch (_: NumberFormatException) {
-                    Log.d("ERROR", "Couldn't convert ${lineB.text} to Float!")
-                    continue
-                }
-
-
-                //Hvis det er en "3 x 9.95" parser vi den sidste linjes navn
-                if (isQuantityLine(productName)) {
-                    if (controlLine == null) { Log.d("ERROR", "Control line not yet found!"); break } //TODO: Her skal der være en måde at kaste en Error fordi vi ikke har fundet kontrollinjen endnu som vises på UI'en som et udråbstegn.
-
-                    //Finder den linje som er lige over "RABAT" og snupper navnet fra den
-                    val parentLine = findLineAboveUsingReference(parsedLines, lineA, controlLine) //OBS: BLACK MAGIC FUCKERY
-                    if (parentLine == null) { Log.d("ERROR", "Couldn't access the previous product from product $productName!"); break }
-                    else {
-                        try {
-                            //If we successfully got the actual product we save that instead of the original "2 x 25,5", and divide the price of the product by the amount
-                            val productPrice = normalizeText(lineB.text).toFloat()/normalizeText(lineA.text[0].toString()).toFloat()
-                            parsedProducts.add(ParsedProduct(parentLine.text, productPrice))
-                            break //Success, so we break out of inner loop
-                        } catch (_: NumberFormatException) {
-                            Log.d("ERROR", "Error dividing the product price with the amount!")
-                        }
-                    }
-                }
-
-                /*
-                //Hvis det er en "RABAT" så opdaterer vi lige prisen på det sidste parsed produkt
-                if (fuzzyMatcher.match(productName, listOf("RABAT"), 0.85f, 0.15f)) {
-                    parsedProducts.last().price -= productPrice
-                }
-                 */
-
-                //Hvis det er en "Rabat" så trækker vi det lige fra det sidste produkt
-                parsedProducts.add(ParsedProduct(productName, productPrice))
-                break //Success, so we break out of inner loop
             }
         }
+        if (controlLine == null) throw ParsingException("No control line found!")
+
+        //Parser de linjecomboer vi missede fordi kontrollinjen endnu ik var fundet
+        parseAfterControlLineFound.forEach { pair -> parsedProducts.add(parseLinesToProduct(pair.first, pair.second, controlLine, includeRABAT, parsedLines, parsedProducts)) }
+        //endregion
+
+        return parsedProductsToFilteredProductList(parsedProducts)
+    }
+
+    /**
+     * Parses lines to product
+     * @param lineA product name
+     * @param lineB product price
+     * @param controlLine the line that tells the function where either up or down is. Normally either the storelogo name or the "TOTAL"/"BETALINGSKORT" line
+     * @param includeRABAT should the "Rabat" lines be calculated and deducted?
+     * @param parsedLines the lines parsed so far. Used to find the line above a quantity line
+     * @param parsedProducts the products parsed so far. Used if *includeRABAT* is true to deduct the discount
+     */
+    private fun parseLinesToProduct(lineA: ParsedLine, lineB: ParsedLine, controlLine: ParsedLine, includeRABAT: Boolean, parsedLines: List<ParsedLine>, parsedProducts: List<ParsedProduct>): ParsedProduct {
+        //Snupper navn og pris
+        val productName = lineA.text
+        val productPrice: Float
+
+        //Prøver at converte prisen til Float
+        try {
+            productPrice = lineB.text.toFloat()
+        } catch (_: NumberFormatException) {
+            //TODO: Det her skal give et ("!") ude på UI'en for useren
+            Log.d("ERROR", "Couldn't convert ${lineB.text} to Float!")
+            return ParsedProduct(productName, 0.0f)
+        }
+
+        //region QUANTITY LINE
+        // Hvis det er en "3 x 9.95" parser vi den sidste linjes navn
+        if (isQuantityLine(productName)) {
+            //Finder den linje som er lige over "RABAT" og snupper navnet fra den
+            val parentLine = findLineAboveUsingReference(parsedLines, lineA, controlLine) //OBS: BLACK MAGIC FUCKERY
+            if (parentLine == null) {
+                //TODO: Det her skal give et ("!") ude på UI'en for useren
+                Log.d("ERROR", "Couldn't access the previous product from product $productName!");
+                return ParsedProduct(productName, productPrice) //Returnerer bare quantity line så vi kan se hvor fejlen er sket
+            } else {
+                try {
+                    //If we successfully got the actual product we save that instead of the original "2 x 25,5", and divide the price of the product by the amount
+                    val productPrice = normalizeText(lineB.text).toFloat()/normalizeText(lineA.text[0].toString()).toFloat()
+                    return ParsedProduct(parentLine.text, productPrice)
+                } catch (_: NumberFormatException) {
+                    Log.d("ERROR", "Error dividing the product price with the amount!")
+                }
+            }
+        }
+        //endregion
+
+        //region RABAT
+        //Hvis det er en "RABAT" så opdaterer vi lige prisen på det sidste parsed produkt
+        if (includeRABAT && fuzzyMatcher.match(productName, listOf("RABAT"), 0.85f, 0.15f)) {
+            parsedProducts.last().price -= productPrice //Hvis det er en "Rabat" så trækker vi det lige fra det sidste produkt
+        }
+        //endregion
+
+        return ParsedProduct(productName, productPrice)
+    }
+
+    /**
+     * Checks whether lineA and lineB collides. **ALSO** makes sure that lineB is along lineA, if thats not the case, or if lineA is down lineB it will return false.
+     */
+    private fun doesLinesCollide(lineA: ParsedLine, lineB: ParsedLine): Boolean {
+        //region SETTINGS
+        //Kigger kun på de linjer hvor deres centrum er verticalTolerance pixels væk fra hinanden, på den måde slipper vi for alt for mange checks
+        val angleTolerance = Math.toRadians(10.0).toFloat()  //A tolerance for ray hit
+        val corners = lineA.corners
+        val lineHeight = ((euclidDistance(corners[0], corners[3]) + euclidDistance(corners[1], corners[2]))/2f)
+        val verticalBounds = lineHeight * 0.5f //Halvdelen af linjens højde
+        //endregion
+
+        //Skipper hvis de ikke er inde for tolerancen
+        val angleDifference = angleDifferenceModulosPi(lineA.angle, lineB.angle)
+        if (angleDifference > angleTolerance) return false
+
+        //Skipper hvis de ikke er inde for samme "Row" i kvitteringen
+        val dx = lineB.center.x - lineA.center.x
+        val dy = lineB.center.y - lineA.center.y
+        val upX = -lineA.direction.y
+        val upY = lineA.direction.x
+        val rowOffset = abs(upX * dx + upY * dy)
+        if (rowOffset > verticalBounds) return false
+
+        //Accepterer kun "hits" hvor linje B er "hen ad" linje A. På den måde kan vi checke kvitteringen korrekt ind selvom billedet bliver taget 180 grader
+        val forwardDotProduct = lineA.direction.x * dx + lineA.direction.y * dy
+        val buffer = 0.1f //Allows for a tiny slope
+        if (forwardDotProduct < lineHeight * buffer) return false
+
+        //Parser til produkt så længe at raycast hit er langt nok væk for at det faktisk kan være en pris og ikke noise
+        val minNameToPriceOffset = lineHeight * 3.0f //How long away the price raycast hit needs to be to be accounted for. Lower = More forgiving, Higher = Less Forgiving. FX: 0.8 = "Atleast 0.8x the line height away"
+        if (forwardDotProduct < minNameToPriceOffset) return false
+
+        return true
+    }
+
+    /**
+     * Filters the products parsed and returns a filtered set which is cleaned up and ready to be given to the database
+     */
+    private fun parsedProductsToFilteredProductList(parsedProducts: List<ParsedProduct>): HashSet<Product> {
+        val products: HashSet<Product> = HashSet<Product>()
 
         //Omdanner de parsedProducts om til Products
         for (parsedProduct in parsedProducts) {
@@ -137,12 +179,11 @@ object NettoParser : StoreParser {
         }
 
         //Returner kun produkter som ikke er stop ordet, eller som har den samme pris som stop ordet (så hvis "Total" fucker f.eks.)
-        val filteredList = products.filter { product -> !isStopWord(product.name) && product.price !in stopWordPrices && !fuzzyMatcher.match(product.name, listOf("RABAT"), 0.8f, 0.2f) }.toHashSet()
+        val filteredSet = products.filter { product -> !isStopWord(product.name) && product.price !in stopWordPrices && !fuzzyMatcher.match(product.name, listOf("RABAT"), 0.8f, 0.2f) }.toHashSet()
 
-        if (filteredList.isEmpty()) throw ParsingException("Final list couldn't be read. Please try again")
+        if (filteredSet.isEmpty()) throw ParsingException("Final list couldn't be read. Please try again")
 
-        return filteredList
-        //endregion
+        return filteredSet
     }
 
     /**
@@ -179,27 +220,6 @@ object NettoParser : StoreParser {
         return allLines
     }
 
-    private fun calculateAngle(p0: Point, p1: Point): Float {
-        val dx = (p1.x - p0.x).toFloat()
-        val dy = (p1.y - p0.y).toFloat()
-        return atan2(dy, dx) //Angle in radians
-    }
-
-    /**
-     * Normalizes the text to uppercase + no danish
-     */
-    private fun normalizeText(text: String): String {
-            //TODO: Det her skal standardiseres igennem hele codebasen og ændres til Compose best practice
-            return text
-                .replace(Regex("[^A-Za-z0-9 ,.]"), "") //Limits to a-z, digits and whitespaces
-                .uppercase()
-                .replace("Æ", "AE")
-                .replace("Ø", "OE")
-                .replace("Å", "AA")
-                .replace(",", ".") //Ændrer "12,50" til "12.50" så vi kan parse korrekt senere
-                .trim()
-        }
-
     /**
      * Checks and see if word given as argument is a stop word using fuzzy search
      */
@@ -219,18 +239,6 @@ object NettoParser : StoreParser {
 
             false
         }
-    }
-    /**
-     * Øhhhh, såe hvis useren vender kamerat 180 grader og tager billedet så sørger denne her for vi stadig korrekt kan parse produkterne
-     */
-    private fun angleDifferenceModulosPi(a: Float, b: Float): Float {
-        val raw = abs(a - b) % Math.PI.toFloat()
-        return min(raw, Math.PI.toFloat() - raw)
-    }
-    private fun euclidDistance(p1: Point, p2: Point): Float {
-        val dx = (p2.x - p1.x).toFloat()
-        val dy = (p2.y - p1.y).toFloat()
-        return hypot(dx, dy) // same as sqrt(dx*dx + dy*dy)
     }
     /**
      * Checks whether the given string is reminiscent of a quantity line, aka a line like "2 x 14,00"
@@ -261,7 +269,7 @@ object NettoParser : StoreParser {
      * OBS: DET HER ER BLACK MAGIC SHIT OG GG MED AT FORSTÅ DET
      * @param referenceLine the line that controls which way is up and down on the Y-axis. Often provided fro either the storebrand, "Total", "Betalingskort" and "Moms" lines.
      */
-    fun findLineAboveUsingReference(allLines: List<ParsedLine>, quantityLine: ParsedLine, referenceLine: ParsedLine): ParsedLine? {
+    private fun findLineAboveUsingReference(allLines: List<ParsedLine>, quantityLine: ParsedLine, referenceLine: ParsedLine): ParsedLine? {
         // 1) Compute the "upward" unit vector (from quantityLine → referenceLine)
         val vUpX = referenceLine.center.x - quantityLine.center.x
         val vUpY = referenceLine.center.y - quantityLine.center.y
@@ -286,10 +294,41 @@ object NettoParser : StoreParser {
             ?.first
     }
 
+    //region MATH SUPPORT FUNCTIONS
+    /**
+     * Øhhhh, såe hvis useren vender kamerat 180 grader og tager billedet så sørger denne her for vi stadig korrekt kan parse produkterne
+     */
+    private fun angleDifferenceModulosPi(a: Float, b: Float): Float {
+        val raw = abs(a - b) % Math.PI.toFloat()
+        return min(raw, Math.PI.toFloat() - raw)
+    }
+    private fun calculateAngle(p0: Point, p1: Point): Float {
+        val dx = (p1.x - p0.x).toFloat()
+        val dy = (p1.y - p0.y).toFloat()
+        return atan2(dy, dx) //Angle in radians
+    }
+    private fun euclidDistance(p1: Point, p2: Point): Float {
+        val dx = (p2.x - p1.x).toFloat()
+        val dy = (p2.y - p1.y).toFloat()
+        return hypot(dx, dy) // same as sqrt(dx*dx + dy*dy)
+    }
+    //endregion
+
+    //region SUPPORT DATA CLASS/FUNCTIONS
     override fun toString(): String {
         return "Netto"
     }
-
+    private fun normalizeText(text: String): String {
+        //TODO: Det her skal standardiseres igennem hele codebasen og ændres til Compose best practice
+        return text
+            .replace(Regex("[^A-Za-z0-9 ,.]"), "") //Limits to a-z, digits and whitespaces
+            .uppercase()
+            .replace("Æ", "AE")
+            .replace("Ø", "OE")
+            .replace("Å", "AA")
+            .replace(",", ".") //Ændrer "12,50" til "12.50" så vi kan parse korrekt senere
+            .trim()
+    }
     data class ParsedLine(
         val text: String,
         val angle: Float,
@@ -298,5 +337,6 @@ object NettoParser : StoreParser {
         val corners: Array<Point>
     )
     data class ParsedProduct(val name: String, var price: Float)
+    //endregion
 }
 

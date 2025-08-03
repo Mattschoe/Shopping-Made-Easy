@@ -2,10 +2,20 @@ package weberstudio.app.billigsteprodukter.ui.pages.receiptScanning
 
 import android.icu.text.DecimalFormat
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
@@ -17,19 +27,21 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
-import weberstudio.app.billigsteprodukter.logic.Product
 import weberstudio.app.billigsteprodukter.logic.Store
 import weberstudio.app.billigsteprodukter.ui.ParsingState
 import weberstudio.app.billigsteprodukter.ui.components.AddProductDialog
-import weberstudio.app.billigsteprodukter.ui.components.AddProductToReceipt
+import weberstudio.app.billigsteprodukter.ui.components.AddProductToReceiptButton
 import weberstudio.app.billigsteprodukter.ui.components.ErrorMessageLarge
 import weberstudio.app.billigsteprodukter.ui.components.LogoBarHandler
 import weberstudio.app.billigsteprodukter.ui.components.ProductRow
-import weberstudio.app.billigsteprodukter.ui.components.TotalBar
+import weberstudio.app.billigsteprodukter.ui.components.TotalAndFilterRow
 import weberstudio.app.billigsteprodukter.ui.components.launchCamera
 import weberstudio.app.billigsteprodukter.ui.navigation.PageNavigation
+import weberstudio.app.billigsteprodukter.ui.theme.ThemeLightGrey
+import weberstudio.app.billigsteprodukter.ui.theme.ThemeTEMP
 
 /**
  * @param uiContent the UI that activates the [SaveImage] function
@@ -75,15 +87,34 @@ fun ReceiptScanningContent(modifier: Modifier = Modifier, navController: NavCont
     var showAddProductDialog by rememberSaveable { mutableStateOf(false) }
 
     //UI
-    LazyColumn {
-        stickyHeader{
-            Column {
-                LogoBarHandler(storeName = "Netto")
-                TotalBar()
+    LazyColumn(
+        modifier = modifier
+    ) {
+        stickyHeader {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.background) //Før padding så det dækker helt
+                    .padding(horizontal = 16.dp, vertical = 4.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    LogoBarHandler(modifier = Modifier.fillMaxSize(), storeName = store!!.name) //TODO: Lidt sketch at lave non-null kald uden checks, men øøhhhhh det et problem for senere ig
+                }
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    TotalAndFilterRow(modifier = Modifier.fillMaxSize(), totalPrice =  "193,5", filterMenuOnClick =  { })
+                }
             }
         }
         item {
-            AddProductToReceipt(addProductToReceipt = { showAddProductDialog = true } )
+            AddProductToReceiptButton(addProductToReceipt = { showAddProductDialog = true } )
         }
         items(products) { product ->
             ProductRow(product.name, DecimalFormat("#.##").format(product.price) + "kr") {

@@ -1,8 +1,8 @@
 package weberstudio.app.billigsteprodukter.logic.parsers
 
+import android.util.Log
 import com.google.mlkit.vision.text.Text
 import weberstudio.app.billigsteprodukter.logic.FuzzyMatcher
-import weberstudio.app.billigsteprodukter.ui.ParsingState
 
 ///Parses the given textblock into the correct store
 object ParserFactory {
@@ -12,14 +12,15 @@ object ParserFactory {
     fun parseReceipt(receipt: Text): StoreParser? {
         for (block in receipt.textBlocks) {
             for (line in block.lines) {
-                val lineText = normalizeText(line.text)
-
-                if (fuzzyMatcher.match(lineText, listOf("NETTO"), 0.85f, 0.3f)) return NettoParser
-                else if (fuzzyMatcher.match(lineText, listOf("REMA"), 0.85f, 0.3f)) return RemaParser
-                else if (fuzzyMatcher.match(lineText, listOf("COOP"), 0.85f, 0.3f)) return CoopParser
-                else if (fuzzyMatcher.match(lineText, listOf("MENU"), 0.85f, 0.3f)) return MenuParser
-                else if (fuzzyMatcher.match(lineText, listOf("LIDL"), 0.85f, 0.3f)) return LidlParser
-                else if (fuzzyMatcher.match(lineText, listOf("SUPERBRUGSEN"), 0.85f, 0.3f)) return SuperBrugsenParser
+                val lineWords = normalizeText(line.text).split(" ")
+                for (word in lineWords) {
+                    if (fuzzyMatcher.match(word, listOf("NETTO"), 0.85f, 0.3f)) return NettoParser
+                    else if (fuzzyMatcher.match(word, listOf("REMA"), 0.85f, 0.3f)) return RemaParser
+                    else if (fuzzyMatcher.match(word, listOf("365", "365 DISCOUNT"), 0.85f, 0.3f)) return CoopParserQuantityAbove
+                    else if (fuzzyMatcher.match(word, listOf("MENU"), 0.85f, 0.3f)) return MenuParser
+                    else if (fuzzyMatcher.match(word, listOf("LIDL"), 0.85f, 0.3f)) return LidlParser
+                    else if (fuzzyMatcher.match(word, listOf("SUPERBRUGSEN"), 0.85f, 0.3f)) return SuperBrugsenParser
+                }
             }
         }
         return null

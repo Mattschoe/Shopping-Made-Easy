@@ -2,6 +2,7 @@ package weberstudio.app.billigsteprodukter.logic.parsers
 
 import android.graphics.Point
 import android.graphics.PointF
+import android.util.Log
 import com.google.mlkit.vision.text.Text
 import weberstudio.app.billigsteprodukter.logic.Product
 import weberstudio.app.billigsteprodukter.logic.exceptions.ParsingException
@@ -27,10 +28,9 @@ interface StoreParser {
 
     /**
      * Given a list of lines, it finds the one line above the *quantityLine* who is just “above” it.
-     * OBS: DET HER ER BLACK MAGIC SHIT OG GG MED AT FORSTÅ DET
-     * @param referenceLine the line that controls which way is up and down on the Y-axis. Often provided from either the storebrand, "Total", "Betalingskort" and "Moms" lines.
+     * @param referenceLine the line that controls which way is up and down on the Y-axis. Often provided from the storebrand)
      */
-    fun findLineAboveUsingReference(allLines: List<ParsedLine>, quantityLine: ParsedLine, referenceLine: ParsedLine): ParsedLine? {
+    fun getLineAboveUsingReference(allLines: List<ParsedLine>, quantityLine: ParsedLine, referenceLine: ParsedLine): ParsedLine? {
         // 1) Compute the "upward" unit vector (from quantityLine → referenceLine)
         val vUpX = referenceLine.center.x - quantityLine.center.x
         val vUpY = referenceLine.center.y - quantityLine.center.y
@@ -48,6 +48,38 @@ interface StoreParser {
                 val toLineY = line.center.y - quantityLine.center.y
                 val dot = toLineX * upX + toLineY * upY  // signed projection
                 val dist = hypot(toLineX, toLineY)
+                Triple(line, dot, dist)
+            }
+            .filter { (_, dot, _) -> dot < 0f }  // Only lines "below" in projected direction
+            .minByOrNull { (_, _, dist) -> dist }
+            ?.first
+    }
+
+    /**
+     * Given a list of lines, it finds the one line **BELOW** the *quantityLine* who is just “below” it.
+     * OBS: DET HER ER BLACK MAGIC SHIT OG GG MED AT FORSTÅ DET
+     * @param referenceLine the line that controls which way is up and down on the Y-axis. Often provided from either the "Total", "Betalingskort" and "Moms" lines.
+     */
+    fun getLineBelowUsingReference(allLines: List<ParsedLine>, quantityLine: ParsedLine, referenceLine: ParsedLine): ParsedLine? {
+        Log.d("DEBUG", "Quantity line: ${quantityLine.text}")
+        // 1) Compute the "upward" unit vector (from quantityLine → referenceLine)
+        val vUpX = referenceLine.center.x - quantityLine.center.x
+        val vUpY = referenceLine.center.y - quantityLine.center.y
+        val vLen = hypot(vUpX, vUpY)
+        if (vLen == 0f) return null  // Avoid division by zero if same point
+        val upX = vUpX / vLen
+        val upY = vUpY / vLen
+
+        // 2) Project all other lines onto this vector
+        return allLines
+            .asSequence()
+            .filter { it != quantityLine }
+            .map { line ->
+                val toLineX = line.center.x - quantityLine.center.x
+                val toLineY = line.center.y - quantityLine.center.y
+                val dot = toLineX * upX + toLineY * upY  // signed projection
+                val dist = hypot(toLineX, toLineY)
+                Log.d("DEBUG", "${line.text} | $dot | $dist")
                 Triple(line, dot, dist)
             }
             .filter { (_, dot, _) -> dot > 0f }  // Only lines "above" in projected direction
@@ -89,6 +121,31 @@ interface StoreParser {
         if (forwardDotProduct < minNameToPriceOffset) return false
 
         return true
+    }
+
+    /**
+     * Checks whether the given string is reminiscent of a quantity line, aka a line like "2 x 14,00"
+     */
+    fun isQuantityLine(line: String): Boolean {
+        //Snupper alle numberTokens (digits) og checker der mindst to (en mængde og en pris pr. enhed)
+        val numberToken = Regex("""\d+[.,]?\d*""")
+        val rawTokens = numberToken.findAll(line).map { it.value }.toList()
+        if (rawTokens.size < 2) return false
+
+        //Finder linjers position så vi kan se på teksten imellem dem (som helst skal være " x "
+        val amount = rawTokens[0]
+        val pricePerUnit = rawTokens[1]
+        val amountIndex = line.indexOf(amount).takeIf { it >= 0 } ?: return false
+        val pricePerUnitIndex = line.indexOf(pricePerUnit, startIndex = amountIndex + amount.length).takeIf { it >= 0 } ?: return false
+
+        //Checker om nogle karakterene er den seperator vi ønsker
+        val textSeperator = line.substring(amountIndex + amount.length, pricePerUnitIndex)
+        return textSeperator.any() { ch ->
+            ch.equals('x', ignoreCase = true) ||
+                    ch == '*' ||
+                    ch == 'x'
+            //Add flere her hvis er
+        }
     }
 
     //region SUPPORT DATA CLASS/FUNCTIONS

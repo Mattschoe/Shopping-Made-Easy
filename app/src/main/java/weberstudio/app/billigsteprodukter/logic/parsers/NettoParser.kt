@@ -35,11 +35,11 @@ object NettoParser : StoreParser {
                 if (i == j) continue
                 val lineB = parsedLines[j]
 
-                if (doesLinesCollide(lineA, lineB)) {
-                    //Tries to get a controlLine
-                    if (controlLine == null && (fuzzyMatcher.match(lineA.text, listOf("NETTO"), 0.85f, 0.15f) || isStopWord(lineA.text))) controlLine = lineA
-                    if (controlLine == null && (fuzzyMatcher.match(lineB.text, listOf("NETTO"), 0.85f, 0.15f) || isStopWord(lineB.text))) controlLine = lineB
+                //Tries to get a controlLine
+                if (controlLine == null && (fuzzyMatcher.match(lineA.text, listOf("NETTO"), 0.85f, 0.15f) || isStopWord(lineA.text))) controlLine = lineA
+                if (controlLine == null && (fuzzyMatcher.match(lineB.text, listOf("NETTO"), 0.85f, 0.15f) || isStopWord(lineB.text))) controlLine = lineB
 
+                if (doesLinesCollide(lineA, lineB)) {
                     //Enten parser produkterne, eller gemmer parsningen til efter vi har fundet kontrollinjen.
                     if (controlLine == null) parseAfterControlLineFound.add(Pair(lineA, lineB))
                     else parsedProducts.add(parseLinesToProduct(lineA, lineB, controlLine, includeRABAT, parsedLines, parsedProducts))
@@ -82,7 +82,7 @@ object NettoParser : StoreParser {
         // Hvis det er en "3 x 9.95" parser vi den sidste linjes navn
         if (isQuantityLine(productName)) {
             //Finder den linje som er lige over "RABAT" og snupper navnet fra den
-            val parentLine = findLineAboveUsingReference(parsedLines, lineA, controlLine) //OBS: BLACK MAGIC FUCKERY
+            val parentLine = getLineAboveUsingReference(parsedLines, lineA, controlLine) //OBS: BLACK MAGIC FUCKERY
             if (parentLine == null) {
                 //TODO: Det her skal give et ("!") ude på UI'en for useren
                 Log.d("ERROR", "Couldn't access the previous product from product $productName!");
@@ -195,31 +195,6 @@ object NettoParser : StoreParser {
             } //LMAO good luck adjusting lel
 
             false
-        }
-    }
-
-    /**
-     * Checks whether the given string is reminiscent of a quantity line, aka a line like "2 x 14,00"
-     */
-    private fun isQuantityLine(line: String): Boolean {
-        //Snupper alle numberTokens (digits) og checker der mindst to (en mængde og en pris pr. enhed)
-        val numberToken = Regex("""\d+[.,]?\d*""")
-        val rawTokens = numberToken.findAll(line).map { it.value }.toList()
-        if (rawTokens.size < 2) return false
-
-        //Finder linjers position så vi kan se på teksten imellem dem (som helst skal være " x "
-        val amount = rawTokens[0]
-        val pricePerUnit = rawTokens[1]
-        val amountIndex = line.indexOf(amount).takeIf { it >= 0 } ?: return false
-        val pricePerUnitIndex = line.indexOf(pricePerUnit, startIndex = amountIndex + amount.length).takeIf { it >= 0 } ?: return false
-
-        //Checker om nogle karakterene er den seperator vi ønsker
-        val textSeperator = line.substring(amountIndex + amount.length, pricePerUnitIndex)
-        return textSeperator.any() { ch ->
-            ch.equals('x', ignoreCase = true) ||
-                    ch == '*' ||
-                    ch == 'x'
-            //Add flere her hvis er
         }
     }
 

@@ -31,13 +31,22 @@ object CoopParserQuantityBelow : StoreParser {
     override fun parse(receipt: Text): HashSet<Product> {
         val includeRABAT = false
         val parsedLines = processImageText(receipt)
+        var controlLine: ParsedLine? = null //A line thats "Above" all products. Often coming from StoreLogo text
         val parsedProducts = ArrayList<ParsedProduct>()
-        val parseAfterControlLineFound = ArrayList<Pair<ParsedLine, ParsedLine>>() //Line combos vi parser senere efter at have fundet controllinjen
-        val line2Marked = HashMap<ParsedLine, Boolean>() //Given any line it returns if the line has been used before to create a product. This will prevent repeats inside same product "Rows"
 
+        //region FINDS CONTROLLINE
+        for (line in parsedLines) {
+            //Tries to get a controlLine
+            if (controlLine == null && (fuzzyMatcher.match(line.text, listOf("DET RIGTIGE STED AT SPARE", "365", "365 DISCOUNT"), 0.85f, 0.15f))) controlLine = line
+        }
+        if (controlLine == null) {
+            Log.d("ERROR", "Couldn't find any control line!")
+            throw ParsingException("No control line found!")
+        }
+        //endregion
 
         //region PARSES LINES INTO PRODUCTS
-        var controlLine: ParsedLine? = null
+        //Parser til produkt hvis linjer collider, aka de er på samme "Row" i kvitteringen
         for (i in parsedLines.indices) {
             val lineA = parsedLines[i]
 
@@ -45,21 +54,12 @@ object CoopParserQuantityBelow : StoreParser {
                 if (i == j) continue
                 val lineB = parsedLines[j]
 
-                //Tries to get a controlLine
-                if (controlLine == null && (fuzzyMatcher.match(lineA.text, listOf("DET RIGTIGE STED AT SPARE", "365", "365 DISCOUNT"), 0.85f, 0.15f))) controlLine = lineA
-                if (controlLine == null && (fuzzyMatcher.match(lineB.text, listOf("DET RIGTIGE STED AT SPARE", "365", "365 DISCOUNT"), 0.85f, 0.15f))) controlLine = lineB
-
                 if (doesLinesCollide(lineA, lineB)) {
-                    //Enten parser produkterne, eller gemmer parsningen til efter vi har fundet kontrollinjen.
-                    if (controlLine == null) parseAfterControlLineFound.add(Pair(lineA, lineB))
-                    else parsedProducts.add(parseLinesToProduct(lineA, lineB, controlLine, includeRABAT, parsedLines, parsedProducts, line2Marked))
+                    parsedProducts.add(parseLinesToProduct(lineA, lineB, controlLine, includeRABAT, parsedLines, parsedProducts))
+                    break
                 }
             }
         }
-        if (controlLine == null) throw ParsingException("No control line found!")
-
-        //Parser de linjecomboer vi missede fordi kontrollinjen endnu ik var fundet
-        parseAfterControlLineFound.forEach { pair -> parsedProducts.add(parseLinesToProduct(pair.first, pair.second, controlLine, includeRABAT, parsedLines, parsedProducts, line2Marked)) }
         //endregion
 
         return parsedProductsToFilteredProductList(parsedProducts)
@@ -74,7 +74,7 @@ object CoopParserQuantityBelow : StoreParser {
      * @param parsedLines the lines parsed so far. Used to find the line above a quantity line
      * @param parsedProducts the products parsed so far. Used if *includeRABAT* is true to deduct the discount
      */
-    private fun parseLinesToProduct(lineA: ParsedLine, lineB: ParsedLine, controlLine: ParsedLine, includeRABAT: Boolean, parsedLines: List<ParsedLine>, parsedProducts: List<ParsedProduct>, line2Marked: HashMap<ParsedLine, Boolean>): ParsedProduct {
+    private fun parseLinesToProduct(lineA: ParsedLine, lineB: ParsedLine, controlLine: ParsedLine, includeRABAT: Boolean, parsedLines: List<ParsedLine>, parsedProducts: List<ParsedProduct>): ParsedProduct {
         //Snupper navn og pris
         val productName = lineA.text
         val productPrice: Float
@@ -85,7 +85,6 @@ object CoopParserQuantityBelow : StoreParser {
         } catch (_: NumberFormatException) {
             //TODO: Det her skal give et ("!") ude på UI'en for useren
             Log.d("ERROR", "Couldn't convert ${lineB.text} to Float!")
-            line2Marked.getOrPut(lineA) { true }
             return ParsedProduct(productName, 0.0f)
         }
 
@@ -97,13 +96,11 @@ object CoopParserQuantityBelow : StoreParser {
             if (parentLine == null) {
                 //TODO: Det her skal give et ("!") ude på UI'en for useren
                 Log.d("ERROR", "Couldn't access the previous product from product $productName!");
-                line2Marked.getOrPut(lineA) { true }
                 return ParsedProduct(productName, productPrice) //Returnerer bare quantity line så vi kan se hvor fejlen er sket
             } else {
                 try {
                     //If we successfully got the actual product we save that instead of the original "2 x 25,5", and divide the price of the product by the amount
                     val productPrice = normalizeText(lineB.text).toFloat()/normalizeText(lineA.text[0].toString()).toFloat()
-                    line2Marked.getOrPut(lineA) { true }
                     return ParsedProduct(parentLine.text, productPrice)
                 } catch (_: NumberFormatException) {
                     Log.d("ERROR", "Error dividing the product price with the amount!")
@@ -119,7 +116,6 @@ object CoopParserQuantityBelow : StoreParser {
         }
         //endregion
 
-        line2Marked.getOrPut(lineA) { true }
         return ParsedProduct(productName, productPrice)
     }
 
@@ -280,6 +276,7 @@ object CoopParserQuantityAbove : StoreParser {
             }
         }
         //endregion
+
         return parsedProductsToFilteredProductList(parsedProducts)
     }
 

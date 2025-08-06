@@ -19,7 +19,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import kotlinx.coroutines.launch
-import weberstudio.app.billigsteprodukter.logic.CameraViewModel
 import weberstudio.app.billigsteprodukter.ui.ParsingState
 import weberstudio.app.billigsteprodukter.ui.components.AddProductDialog
 import weberstudio.app.billigsteprodukter.ui.components.ErrorMessageLarge

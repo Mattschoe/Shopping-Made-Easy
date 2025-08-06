@@ -20,7 +20,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
-import weberstudio.app.billigsteprodukter.logic.CameraViewModel
 import weberstudio.app.billigsteprodukter.ui.components.SaveImage
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf

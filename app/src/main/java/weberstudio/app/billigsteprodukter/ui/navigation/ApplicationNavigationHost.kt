@@ -11,7 +11,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
-import weberstudio.app.billigsteprodukter.logic.CameraViewModel
 import weberstudio.app.billigsteprodukter.ui.components.PageShell
 import weberstudio.app.billigsteprodukter.ui.pages.database.DataBaseViewModel
 import weberstudio.app.billigsteprodukter.ui.pages.database.DatabaseContent

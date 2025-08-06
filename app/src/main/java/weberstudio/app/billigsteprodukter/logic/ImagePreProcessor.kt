@@ -15,6 +15,11 @@ import android.renderscript.Element
 import android.renderscript.RenderScript
 import android.renderscript.ScriptIntrinsicBlur
 import com.google.mlkit.vision.common.InputImage
+import org.opencv.android.Utils
+import org.opencv.core.Core
+import org.opencv.core.Mat
+import org.opencv.core.Size
+import org.opencv.imgproc.Imgproc
 
 object ImagePreprocessor {
 
@@ -58,40 +63,42 @@ object ImagePreprocessor {
         return src
     }
 
+
     /**
-     * Adaptive thresholding via OpenCV
+     * Apply CLAHE on the grayscale channel to enhance local contrast
      */
-    /*private fun adaptiveThreshold(src: Bitmap, blockSize: Int = 15, cValue: Double = 5.0): Bitmap {
+    private fun applyClaheGray(src: Bitmap): Bitmap {
+        // Convert Bitmap to Mat
         val mat = Mat()
         Utils.bitmapToMat(src, mat)
+
+        // Convert RGBA -> Gray
         Imgproc.cvtColor(mat, mat, Imgproc.COLOR_RGBA2GRAY)
-        Imgproc.adaptiveThreshold(
-            mat,
-            mat,
-            255.0,
-            Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C,
-            Imgproc.THRESH_BINARY,
-            if (blockSize % 2 == 0) blockSize + 1 else blockSize,
-            cValue
-        )
+
+        // Create CLAHE and apply
+        val clahe = Imgproc.createCLAHE(4.0, org.opencv.core.Size(8.0, 8.0))
+        clahe.apply(mat, mat)
+
+        // Convert back to RGBA for InputImage compatibility
         Imgproc.cvtColor(mat, mat, Imgproc.COLOR_GRAY2RGBA)
-        val outBmp = Bitmap.createBitmap(src.width, src.height, Bitmap.Config.ARGB_8888)
-        Utils.matToBitmap(mat, outBmp)
+        val resultBmp = Bitmap.createBitmap(src.width, src.height, Bitmap.Config.ARGB_8888)
+        Utils.matToBitmap(mat, resultBmp)
+
         mat.release()
-        return outBmp
-    } */
+        return resultBmp
+    }
 
     /**
      * Full pipeline: load, preprocess, and wrap in InputImage
      */
-    /* fun preprocessForMlKit(context: Context, imageUri: Uri): InputImage {
+    fun preprocessForMlKit(context: Context, imageUri: Uri): InputImage {
         // Load
         val original = loadBitmap(context, imageUri)
         // Preprocess
         val gray = toGrayscale(original)
         val blurred = blurBitmap(context, gray, radius = 2f)
-        val binarized = adaptiveThreshold(blurred, blockSize = 15, cValue = 5.0)
+        val enhanced = applyClaheGray(blurred)
         // Wrap for ML Kit
-        return InputImage.fromBitmap(binarized, 0)
-    } */
+        return InputImage.fromBitmap(enhanced, 0)
+    }
 }

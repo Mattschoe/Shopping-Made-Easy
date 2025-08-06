@@ -39,8 +39,7 @@ class CameraViewModel: ViewModel() {
         //Tries to read image
         try {
             val textRecognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
-            val image = InputImage.fromFilePath(context, imageURI)
-            //val image = ImagePreprocessor.preprocessForMlKit(context, imageURI)
+            val image = ImagePreprocessor.preprocessForMlKit(context, imageURI)
 
             //Tries to process image
             try {

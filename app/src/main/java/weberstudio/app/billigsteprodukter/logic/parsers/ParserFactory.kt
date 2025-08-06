@@ -1,5 +1,6 @@
 package weberstudio.app.billigsteprodukter.logic.parsers
 
+import android.util.Log
 import com.google.mlkit.vision.text.Text
 import weberstudio.app.billigsteprodukter.logic.components.FuzzyMatcher
 
@@ -13,12 +14,13 @@ object ParserFactory {
             for (line in block.lines) {
                 val lineWords = normalizeText(line.text).split(" ")
                 for (word in lineWords) {
+                    Log.d("STORELOG", word)
                     if (fuzzyMatcher.match(word, listOf("NETTO"), 0.85f, 0.3f)) return NettoParser
                     else if (fuzzyMatcher.match(word, listOf("REMA"), 0.85f, 0.3f)) return RemaParser
                     else if (fuzzyMatcher.match(word, listOf("365", "365 DISCOUNT"), 0.85f, 0.3f)) return CoopParserQuantityAbove
                     else if (fuzzyMatcher.match(word, listOf("MENU"), 0.85f, 0.3f)) return MenuParser
                     else if (fuzzyMatcher.match(word, listOf("LIDL"), 0.85f, 0.3f)) { return LidlParser }
-                    else if (fuzzyMatcher.match(word, listOf("SUPERBRUGSEN"), 0.85f, 0.3f)) return SuperBrugsenParser
+                    else if (fuzzyMatcher.match(word, listOf("SUPERBRUGSEN", "BRUGSEN"), 0.85f, 0.3f)) return SuperBrugsenParser
                 }
             }
         }

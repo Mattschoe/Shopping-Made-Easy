@@ -1,5 +1,6 @@
 package weberstudio.app.billigsteprodukter.logic
 
+
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -14,12 +15,9 @@ import android.renderscript.Element
 import android.renderscript.RenderScript
 import android.renderscript.ScriptIntrinsicBlur
 import com.google.mlkit.vision.common.InputImage
-import org.opencv.android.Utils
-import org.opencv.core.CvType
-import org.opencv.core.Mat
-import org.opencv.imgproc.Imgproc
 
 object ImagePreprocessor {
+
     /**
      * Load a Bitmap from the given URI
      */
@@ -63,7 +61,7 @@ object ImagePreprocessor {
     /**
      * Adaptive thresholding via OpenCV
      */
-    private fun adaptiveThreshold(src: Bitmap, blockSize: Int = 15, cValue: Double = 5.0): Bitmap {
+    /*private fun adaptiveThreshold(src: Bitmap, blockSize: Int = 15, cValue: Double = 5.0): Bitmap {
         val mat = Mat()
         Utils.bitmapToMat(src, mat)
         Imgproc.cvtColor(mat, mat, Imgproc.COLOR_RGBA2GRAY)
@@ -81,12 +79,12 @@ object ImagePreprocessor {
         Utils.matToBitmap(mat, outBmp)
         mat.release()
         return outBmp
-    }
+    } */
 
     /**
      * Full pipeline: load, preprocess, and wrap in InputImage
      */
-    fun preprocessForMlKit(context: Context, imageUri: Uri): InputImage {
+    /* fun preprocessForMlKit(context: Context, imageUri: Uri): InputImage {
         // Load
         val original = loadBitmap(context, imageUri)
         // Preprocess
@@ -95,5 +93,5 @@ object ImagePreprocessor {
         val binarized = adaptiveThreshold(blurred, blockSize = 15, cValue = 5.0)
         // Wrap for ML Kit
         return InputImage.fromBitmap(binarized, 0)
-    }
+    } */
 }

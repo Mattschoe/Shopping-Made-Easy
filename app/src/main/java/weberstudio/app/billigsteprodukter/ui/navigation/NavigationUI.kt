@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 import weberstudio.app.billigsteprodukter.R
+import weberstudio.app.billigsteprodukter.logic.CameraViewModel
 import weberstudio.app.billigsteprodukter.ui.components.QuickActionsButton
 import weberstudio.app.billigsteprodukter.ui.components.SaveImage
 

@@ -1,4 +1,4 @@
-package weberstudio.app.billigsteprodukter.logic
+package weberstudio.app.billigsteprodukter.logic.components
 
 import org.apache.commons.text.similarity.JaroWinklerSimilarity
 import org.apache.commons.text.similarity.LevenshteinDistance

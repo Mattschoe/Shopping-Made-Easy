@@ -1,8 +1,7 @@
 package weberstudio.app.billigsteprodukter.logic.parsers
 
-import android.util.Log
 import com.google.mlkit.vision.text.Text
-import weberstudio.app.billigsteprodukter.logic.FuzzyMatcher
+import weberstudio.app.billigsteprodukter.logic.components.FuzzyMatcher
 
 ///Parses the given textblock into the correct store
 object ParserFactory {

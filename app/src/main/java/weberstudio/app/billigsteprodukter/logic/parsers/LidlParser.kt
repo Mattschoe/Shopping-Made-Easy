@@ -143,8 +143,11 @@ object LidlParser: StoreParser {
         //Returner kun produkter som ikke er stop ordet, eller som har den samme pris som stop ordet (så hvis "Total" fucker f.eks.)
         val filteredSet = products.filter { product ->
             !isStopWord(product.name) &&
-                    product.price !in stopWordPrices &&
-                    !fuzzyMatcher.match(product.name, listOf("RABAT", "LIDL PLUS-TILBUD"), 0.8f, 0.2f) }.toHashSet()
+            product.price !in stopWordPrices &&
+            !isQuantityLine(product.name) &&
+            !product.name.matches(Regex("[0-9]+")) && //Hvis det bare er tal
+            !fuzzyMatcher.match(product.name, listOf("RABAT", "LIDL PLUS-TILBUD"), 0.8f, 0.2f) }.toHashSet()
+
 
         if (filteredSet.isEmpty()) {
             Log.d("ERROR", "Filtered set of products is empty!. Please try again")

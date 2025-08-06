@@ -100,7 +100,7 @@ object CoopParserQuantityBelow : StoreParser {
             } else {
                 try {
                     //If we successfully got the actual product we save that instead of the original "2 x 25,5", and divide the price of the product by the amount
-                    val productPrice = normalizeText(lineB.text).toFloat()/normalizeText(lineA.text[0].toString()).toFloat()
+                    val productPrice = productPrice/normalizeText(lineA.text[0].toString()).toFloat()
                     return ParsedProduct(parentLine.text, productPrice)
                 } catch (_: NumberFormatException) {
                     Log.d("ERROR", "Error dividing the product price with the amount!")
@@ -248,7 +248,7 @@ object CoopParserQuantityAbove : StoreParser {
         }
         //endregion
 
-        //region MARKS CONTROLLINES
+        //region MARKS QUANTITYLINES
         //Hvis linje er en quantity så markerer vi den under den som en der skal have dens pris ændret senere
         for (line in parsedLines) {
             if (isQuantityLine(line.text)) {
@@ -312,7 +312,7 @@ object CoopParserQuantityAbove : StoreParser {
             } else {
                 try {
                     //Hvis det lykkedes at snuppe quantity linjen, så beregner vi enhedsprisen ud fra det.
-                    val productPrice = normalizeText(lineB.text).toFloat()/normalizeText(quantityLine.text[0].toString()).toFloat()
+                    val productPrice = productPrice/normalizeText(quantityLine.text[0].toString()).toFloat()
                     return ParsedProduct(lineA.text, productPrice)
                 } catch (_: NumberFormatException) {
                     //TODO: Det her skal give et ("!") ude på UI'en for useren

@@ -21,4 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "BilligsteProdukter"
 include(":app")
- 
+include(":opencv")

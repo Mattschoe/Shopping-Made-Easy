@@ -33,28 +33,11 @@ fun ApplicationNavigationHost(navController: NavHostController = rememberNavCont
         modifier = Modifier
             .fillMaxSize()
     ) {
-        //Receipt navigation route
-        navigation(
-            route = "receiptRoute",
-            startDestination = PageNavigation.Home.route
-        ) {
-            //Main Screen
-            composable(PageNavigation.Home.route) { backStackEntry ->
-                val parentBackStackEntry = remember(backStackEntry) { navController.getBackStackEntry("receiptRoute") } //Holder cameraViewModel i navigation subgraph scopet så det er den samme viewModel instance vi accesser i alle composables inde i subgraph'en
-                val cameraViewModel: CameraViewModel = viewModel(parentBackStackEntry)
-                PageShell(navController, title = "Forside") { padding ->
-                    MainPageContent(Modifier.padding(padding), navController, cameraViewModel)
-                }
-            }
-
-            //Receipt Content
-            composable(PageNavigation.ReceiptScanning.route) { backStackEntry ->
-                val parentBackStackEntry = remember(backStackEntry) { navController.getBackStackEntry("receiptRoute") }
-                val cameraViewModel: CameraViewModel = viewModel(parentBackStackEntry)
-                PageShell(navController, title = "Kvitteringsoversigt") { padding ->
-                    val receiptViewModel: ReceiptScanningViewModel = viewModel(backStackEntry)
-                    ReceiptScanningContent(Modifier.padding(padding), navController, cameraViewModel, receiptViewModel)
-                }
+        //Main Screen
+        composable(PageNavigation.Home.route) { backStackEntry ->
+            val cameraViewModel: CameraViewModel = viewModel()
+            PageShell(navController, title = "Forside") { padding ->
+                MainPageContent(Modifier.padding(padding), navController, cameraViewModel)
             }
         }
 
@@ -84,6 +67,31 @@ fun ApplicationNavigationHost(navController: NavHostController = rememberNavCont
         composable(PageNavigation.Settings.route) {
             PageShell(navController, title = "Indstillinger") { padding ->
                 SettingsPageContent(Modifier.padding(padding))
+            }
+        }
+
+        //Receipt navigation route
+        navigation(
+            route = "receiptRoute",
+            startDestination = PageNavigation.ReceiptHome.route
+        ) {
+            //Receipt Main page
+            composable(PageNavigation.ReceiptHome.route) { backStackEntry ->
+                val parentBackStackEntry = remember(backStackEntry) { navController.getBackStackEntry("receiptRoute") }
+                val cameraViewModel: CameraViewModel = viewModel(parentBackStackEntry)
+                PageShell(navController, title = "Forside") { padding ->
+                    MainPageContent(Modifier.padding(padding), navController, cameraViewModel)
+                }
+            }
+
+            //Receipt Content
+            composable(PageNavigation.ReceiptScanning.route) { backStackEntry ->
+                val parentBackStackEntry = remember(backStackEntry) { navController.getBackStackEntry("receiptRoute") }
+                val cameraViewModel: CameraViewModel = viewModel(parentBackStackEntry)
+                PageShell(navController, title = "Kvitteringsoversigt") { padding ->
+                    val receiptViewModel: ReceiptScanningViewModel = viewModel(backStackEntry)
+                    ReceiptScanningContent(Modifier.padding(padding), navController, cameraViewModel, receiptViewModel)
+                }
             }
         }
     }

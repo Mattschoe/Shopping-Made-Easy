@@ -96,7 +96,7 @@ interface StoreParser {
         val angleTolerance = Math.toRadians(10.0).toFloat()  //A tolerance for ray hit
         val corners = lineA.corners
         val lineHeight = ((euclidDistance(corners[0], corners[3]) + euclidDistance(corners[1], corners[2]))/2f)
-        val verticalBounds = lineHeight * 0.7f //Halvdelen af linjens højde
+        val verticalBounds = lineHeight * 0.6f //Halvdelen af linjens højde
         //endregion
 
         //Skipper hvis de ikke er inde for tolerancen

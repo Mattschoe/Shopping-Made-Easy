@@ -102,7 +102,7 @@ fun ReceiptScanningContent(modifier: Modifier = Modifier, navController: NavCont
                         .fillMaxSize(),
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    LogoBarHandler(modifier = Modifier.fillMaxSize(), storeName = store!!.name) //TODO: Lidt sketch at lave non-null kald uden checks, men øøhhhhh det et problem for senere ig
+                    if (store != null) LogoBarHandler(modifier = Modifier.fillMaxSize(), storeName = store.name)
                 }
                 Row(
                     modifier = Modifier

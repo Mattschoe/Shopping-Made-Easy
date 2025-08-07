@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -58,7 +59,7 @@ class CameraViewModel: ViewModel() {
             parsingState.value = ParsingState.Error("Error loading image!: ${e.message}")
         }
         println("Result after!")
-        println("Finished parsing with parsing-state: ${parsingState.value}")
+        Log.d("STATUS", "Finished parsing with parsing-state: ${parsingState.value}")
     }
 
     /**

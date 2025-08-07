@@ -14,7 +14,6 @@ object ParserFactory {
             for (line in block.lines) {
                 val lineWords = normalizeText(line.text).split(" ")
                 for (word in lineWords) {
-                    Log.d("STORELOG", word)
                     if (fuzzyMatcher.match(word, listOf("NETTO"), 0.85f, 0.3f)) return NettoParser
                     else if (fuzzyMatcher.match(word, listOf("REMA"), 0.85f, 0.3f)) return RemaParser
                     else if (fuzzyMatcher.match(word, listOf("365", "365 DISCOUNT"), 0.85f, 0.3f)) return CoopParserQuantityAbove

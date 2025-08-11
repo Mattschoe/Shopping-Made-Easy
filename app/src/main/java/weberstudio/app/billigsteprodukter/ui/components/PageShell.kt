@@ -1,6 +1,5 @@
 package weberstudio.app.billigsteprodukter.ui.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ModalDrawerSheet
@@ -15,7 +14,6 @@ import kotlinx.coroutines.launch
 import weberstudio.app.billigsteprodukter.ui.navigation.NavigationDrawerUI
 import weberstudio.app.billigsteprodukter.ui.navigation.NavigationUI
 import weberstudio.app.billigsteprodukter.ui.pages.home.MainPageContent
-import weberstudio.app.billigsteprodukter.ui.theme.ThemeTEMP
 
 /**
  * The shell of each page in the app. Has to be applied to every page in the app
@@ -23,9 +21,15 @@ import weberstudio.app.billigsteprodukter.ui.theme.ThemeTEMP
  * @param title the title of the page
  * @param modifier the modifier that's going to be propagated to page
  * @param pageContent the content that has to be displayed on the page. F.ex. [MainPageContent] for the "Home" page
+ * @param floatingActionButton an **optional** action button layered on top of the UI.
  */
 @Composable
-fun PageShell(navController: NavHostController, title: String, modifier: Modifier = Modifier, pageContent: @Composable (PaddingValues) -> Unit) {
+fun PageShell(navController: NavHostController,
+              title: String,
+              modifier: Modifier = Modifier,
+              pageContent: @Composable (PaddingValues) -> Unit,
+              floatingActionButton: (@Composable () -> Unit)? = null,
+) {
     //Navigation drawer
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -51,7 +55,8 @@ fun PageShell(navController: NavHostController, title: String, modifier: Modifie
             //Top bar UI
             topBar = {
                 NavigationUI(title, onMenuClick = { scope.launch { drawerState.open()} })
-            }
+            },
+            floatingActionButton = { if (floatingActionButton != null) floatingActionButton() }
         ) { innerPadding ->
             pageContent(innerPadding) //Shows the page given as parameter
         }

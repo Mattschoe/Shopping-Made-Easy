@@ -1,5 +1,8 @@
 package weberstudio.app.billigsteprodukter.logic
 
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
+
 /**
  * A product in a store.
  */
@@ -15,7 +18,8 @@ data class Product(
 /**
  * Unique identifier for "one product in one store"
  */
+@Parcelize
 data class ProductID(
     val store: Store,
     val name: String
-)
+): Parcelable

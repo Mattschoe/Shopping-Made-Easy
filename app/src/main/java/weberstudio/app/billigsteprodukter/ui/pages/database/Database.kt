@@ -61,7 +61,7 @@ import weberstudio.app.billigsteprodukter.ui.components.StoreScopeDropDownMenu
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DatabaseContent(
-    modifier: Modifier = Modifier,
+    modifier: Modifier,
     viewModel: DataBaseViewModel,
 ) {
     //TODO: Det her skal ændres siden det bare er alfabetisk rækkefølge, bliver nødt til at finde en måde at sortere dem ud efter dem som har mest data eller lade useren "hjerte" deres yndlingsstore

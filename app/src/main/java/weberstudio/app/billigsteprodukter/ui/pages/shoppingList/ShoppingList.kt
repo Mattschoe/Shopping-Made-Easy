@@ -1,9 +1,205 @@
 package weberstudio.app.billigsteprodukter.ui.pages.shoppingList
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Card
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import weberstudio.app.billigsteprodukter.R
+import weberstudio.app.billigsteprodukter.logic.Product
+import weberstudio.app.billigsteprodukter.logic.Store
+import weberstudio.app.billigsteprodukter.ui.components.DefaultProductCard
+import weberstudio.app.billigsteprodukter.ui.components.ReceiptTotalCard
+import weberstudio.app.billigsteprodukter.ui.components.SearchBar
+@Composable
+fun ShoppingListContent(modifier: Modifier, viewModel: ShoppingListViewModel, ) {
+    val visibleStores by viewModel.store2ProductsAdded2Store.collectAsState()
+    val isStoreExpanded by viewModel.isStoreExpanded.collectAsState()
+    val selectedProducts by viewModel.selectedProducts.collectAsState()
+
+
+    Column(
+        modifier = modifier
+            .border(2.dp, Color.Magenta)
+    ) {
+        //region TITLE
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(2.dp, Color.Black)
+        ) {
+            //Text
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+            ) {
+                //Indkøbsliste navn
+                Row {
+                    Text(
+                        text = "Mit Indkøb",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                    IconButton(
+                        modifier = Modifier
+                            .size(24.dp),
+                        onClick = {  } //Skift titlen på "Mit Indkøb"
+                    ) {
+                        Icon(imageVector = ImageVector.vectorResource(R.drawable.edit_icon), "Ændrer overskrift")
+                    }
+                }
+                Text(
+                    text = "Oprettet den 7/8",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.Gray,
+                )
+            }
+
+            //Sort by icon
+            IconButton(
+                modifier = Modifier
+                    .size(72.dp),
+                onClick = { } //Sort order
+            ) {
+                Icon(imageVector = ImageVector.vectorResource(R.drawable.sortascending_icon), "Sorter efter")
+            }
+        }
+        //endregion
+
+        //region SEARCH + TOTAL ROW
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(2.dp, Color.Red)
+        ) {
+            SearchBar(Modifier.weight(1f), searchQuery =  "TEMP", onQueryChange =  {})
+            ReceiptTotalCard(totalPrice = "193,95")
+        }
+        //endregion
+
+        //region SHOPPING LIST
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .border(2.dp, Color.Green)
+        ) {
+            visibleStores.forEach { store2ProductList ->
+                val store = store2ProductList.key
+                val expanded = isStoreExpanded[store.ID] == true
+                val (total, checkedOff) = viewModel.getTotalAndCheckedOff(store)
+                item(key = store.ID) {
+                    StoreDropDown(
+                        store = store,
+                        isExpanded = isStoreExpanded[store.ID] == true,
+                        onToggle = { viewModel.toggleStore(store, expanded) },
+                        total = total,
+                        checkedOff = checkedOff
+                    )
+                }
+
+                if (expanded) {
+                    items(
+                        items = store2ProductList.value,
+                        key = { product -> product.ID }
+                    ) { product ->
+                        ShoppingListProductCardU(
+                            product = product,
+                            selected = selectedProducts.contains(product),
+                            onToggle = { viewModel.toggleProduct(product) },
+                        )
+                    }
+                }
+            }
+        }
+        //endregion
+    }
+}
 
 @Composable
-fun ShoppingListContent(modifier: Modifier = Modifier) {
+fun StoreDropDown(modifier: Modifier = Modifier, store: Store, isExpanded: Boolean, onToggle: () -> Unit, total: Int, checkedOff: Int) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp)
+            .clickable { onToggle() }
+            .animateContentSize(), // smooth size change when toggling
+    ) {
+        Row(modifier = Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(text = store.name, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+            Text(text = if (isExpanded) "▲" else "▼")
+            Text(text = "$checkedOff/$total", style = MaterialTheme.typography.titleMedium)
+        }
+    }
+}
 
+@Composable
+fun ShoppingListProductCardU(modifier: Modifier = Modifier, product: Product, selected: Boolean = false, onToggle: () -> Unit) {
+    val backgroundColor by animateColorAsState(
+        targetValue = if (selected) Color.Green else Color.LightGray
+    )
+
+    DefaultProductCard(
+        modifier = modifier
+            .fillMaxSize()
+            .background(backgroundColor)
+            .clickable { onToggle() } //Gør hele produkt row klikbart
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(horizontal = 12.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Checkbox(
+                checked = selected,
+                onCheckedChange = { onToggle() }
+            )
+
+            Spacer(modifier = Modifier.width(width = 12.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                //Produktnavn
+                Text(
+                    text = product.name,
+                    style = MaterialTheme.typography.bodyLarge
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+
+                //Produktdetaljer
+                Text(
+                    text = "${product.price} | 1kg", //TODO: Her skal prober enhed tilføjes når den funktionalitet er implementeret
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+        }
+    }
 }

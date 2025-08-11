@@ -50,6 +50,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import weberstudio.app.billigsteprodukter.logic.Receipt
 import weberstudio.app.billigsteprodukter.ui.theme.ThemeBlack
@@ -126,14 +127,18 @@ fun ReceiptTotalCard(modifier: Modifier = Modifier, totalPrice: String) {
                 text = "Total:",
                 style = MaterialTheme.typography.bodyMedium, //TODO: Change later to app font
                 fontWeight = FontWeight.Bold,
-                color = Color.Black
+                color = Color.Black,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
             Spacer(modifier = Modifier.width(4.dp))
             Text(
                 text = "${totalPrice}kr",
                 style = MaterialTheme.typography.bodyMedium, //TODO: Change later to app font
                 fontWeight = FontWeight.Normal,
-                color = Color.Red
+                color = Color.Red,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }
@@ -178,120 +183,4 @@ fun AddProductToReceiptButton(modifier: Modifier = Modifier, addProductToReceipt
             )
         }
     }
-}
-
-/**
- * Prompts the user for product info which can be used to create a product
- * @param onConfirm the name and price given by user if they accept.
- * @param standardStore if you want to specifiy the standard store displayed on the store dropdown
- */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun AddProductDialog(showDialog: Boolean, onDismiss: () -> Unit, onConfirm: (name: String, price: Float, store: Store) -> Unit, standardStore: Store? = null) {
-    if (!showDialog) return
-
-    //Local UI state
-    var productName by rememberSaveable { mutableStateOf("") }
-    var productPriceText by rememberSaveable { mutableStateOf("") }
-    var storeDropdownExpanded by remember { mutableStateOf(false) }
-    var selectedStore by rememberSaveable { mutableStateOf<Store?>(standardStore) }
-
-    //UI Settings
-    val fieldsShape = RoundedCornerShape(24.dp)
-    val fieldsColors = TextFieldDefaults.colors(
-        focusedContainerColor = Color(0xFFDFFFD6),
-        unfocusedContainerColor = Color(0xFFDFFFD6)
-    )
-
-    //UI
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(16.dp),
-        title = { Text("Opret produkt") },
-        text = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                //Name of product
-                OutlinedTextField(
-                    value = productName,
-                    onValueChange = { productName = it },
-                    placeholder = { Text("Navn...") },
-                    singleLine = true,
-                    shape = fieldsShape,
-                    colors = fieldsColors,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    //Price
-                    OutlinedTextField(
-                        value = productPriceText,
-                        onValueChange = { productPriceText = it },
-                        placeholder = { Text("Pris...") },
-                        singleLine = true,
-                        shape = fieldsShape,
-                        colors = fieldsColors,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier
-                            .weight(1f)
-                    )
-
-                    //Store dropdown
-                    ExposedDropdownMenuBox(
-                        expanded = storeDropdownExpanded,
-                        onExpandedChange = { storeDropdownExpanded = !storeDropdownExpanded },
-                        modifier = Modifier
-                            .weight(2f)
-                            .fillMaxWidth()
-                    ) {
-                        OutlinedTextField(
-                            value = selectedStore?.name ?: "Vælg butik",
-                            onValueChange = { /* READ ONLY */},
-                            readOnly = true,
-                            trailingIcon = { Icon(Icons.Default.ArrowDropDown, contentDescription = null) },
-                            shape = fieldsShape,
-                            colors = fieldsColors,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .menuAnchor()
-                        )
-                        ExposedDropdownMenu(
-                            expanded = storeDropdownExpanded,
-                            onDismissRequest = { storeDropdownExpanded = false },
-                        ) {
-                            Store.entries.forEach { store ->
-                                DropdownMenuItem(
-                                    onClick = {
-                                        selectedStore = store
-                                        storeDropdownExpanded = false
-                                    },
-                                    text = { Text(store.name) }
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = {
-                val price = productPriceText.toFloatOrNull() ?: return@TextButton
-                val store = selectedStore ?: return@TextButton
-                onConfirm(productName.trim(), price, store)
-            }) {
-                Text("Tilføj")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Annuller")
-            }
-        }
-    )
 }

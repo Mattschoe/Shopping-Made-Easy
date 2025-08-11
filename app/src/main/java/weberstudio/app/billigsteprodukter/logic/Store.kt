@@ -9,14 +9,14 @@ enum class Store(
     @DrawableRes val image: Int,
     val contentDescription: String
 ) {
-    Bilka(0, R.drawable.storelogo_bilka, "Bilka Logo"),
-    Coop365(0, R.drawable.storelogo_coop365, "Coop365 Logo"),
-    Foetex(0, R.drawable.storelogo_foetex, "Føtex Logo"),
-    Lidl(0, R.drawable.storelogo_lidl, "Lidl Logo"),
-    Menu(0, R.drawable.storelogo_menu, "Menu Logo"),
-    Netto(0, R.drawable.storelogo_netto, "Netto Logo"),
-    Rema1000(0, R.drawable.storelogo_rema1000, "Rema 1000 Logo"),
-    SuperBrugsen(0, R.drawable.storelogo_superbrugsen, "SuperBrugsen Logo");
+    Bilka(1, R.drawable.storelogo_bilka, "Bilka Logo"),
+    Coop365(2, R.drawable.storelogo_coop365, "Coop365 Logo"),
+    Foetex(3, R.drawable.storelogo_foetex, "Føtex Logo"),
+    Lidl(4, R.drawable.storelogo_lidl, "Lidl Logo"),
+    Menu(5, R.drawable.storelogo_menu, "Menu Logo"),
+    Netto(6, R.drawable.storelogo_netto, "Netto Logo"),
+    Rema1000(7, R.drawable.storelogo_rema1000, "Rema 1000 Logo"),
+    SuperBrugsen(8, R.drawable.storelogo_superbrugsen, "SuperBrugsen Logo");
 
     companion object {
         /**
@@ -25,6 +25,15 @@ enum class Store(
          */
         fun fromName(storeName: String): Store? =
             Store.entries.firstOrNull() { it.name.equals(storeName, ignoreCase = true) }
+
+        /**
+         * Returns the store enum from the ID given as argument
+         */
+        fun fromID(ID: Int): Store? =
+            Store.entries.firstOrNull() { it.ID == ID }
     }
+
+
 }
+
 

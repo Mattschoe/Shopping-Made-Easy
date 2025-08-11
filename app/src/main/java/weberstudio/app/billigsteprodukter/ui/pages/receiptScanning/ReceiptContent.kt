@@ -3,9 +3,7 @@ package weberstudio.app.billigsteprodukter.ui.pages.receiptScanning
 import android.icu.text.DecimalFormat
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,21 +11,18 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.ui.Modifier
-import androidx.navigation.NavController
-import weberstudio.app.billigsteprodukter.ui.components.SaveImage
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import kotlinx.coroutines.launch
 import weberstudio.app.billigsteprodukter.logic.CameraViewModel
 import weberstudio.app.billigsteprodukter.logic.Store
@@ -37,11 +32,10 @@ import weberstudio.app.billigsteprodukter.ui.components.AddProductToReceiptButto
 import weberstudio.app.billigsteprodukter.ui.components.ErrorMessageLarge
 import weberstudio.app.billigsteprodukter.ui.components.LogoBarHandler
 import weberstudio.app.billigsteprodukter.ui.components.ProductRow
+import weberstudio.app.billigsteprodukter.ui.components.SaveImage
 import weberstudio.app.billigsteprodukter.ui.components.TotalAndFilterRow
 import weberstudio.app.billigsteprodukter.ui.components.launchCamera
 import weberstudio.app.billigsteprodukter.ui.navigation.PageNavigation
-import weberstudio.app.billigsteprodukter.ui.theme.ThemeLightGrey
-import weberstudio.app.billigsteprodukter.ui.theme.ThemeTEMP
 
 /**
  * @param uiContent the UI that activates the [SaveImage] function

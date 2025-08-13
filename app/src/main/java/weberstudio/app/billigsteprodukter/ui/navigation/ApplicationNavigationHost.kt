@@ -11,12 +11,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import weberstudio.app.billigsteprodukter.logic.CameraViewModel
-import weberstudio.app.billigsteprodukter.logic.Store
 import weberstudio.app.billigsteprodukter.ui.components.AddFAB
 import weberstudio.app.billigsteprodukter.ui.components.AddProductToListDialog
 import weberstudio.app.billigsteprodukter.ui.components.PageShell
@@ -27,8 +28,10 @@ import weberstudio.app.billigsteprodukter.ui.pages.map.MapContent
 import weberstudio.app.billigsteprodukter.ui.pages.receiptScanning.ReceiptScanningContent
 import weberstudio.app.billigsteprodukter.ui.pages.receiptScanning.ReceiptScanningViewModel
 import weberstudio.app.billigsteprodukter.ui.pages.settings.SettingsPageContent
-import weberstudio.app.billigsteprodukter.ui.pages.shoppingList.ShoppingListContent
-import weberstudio.app.billigsteprodukter.ui.pages.shoppingList.ShoppingListViewModel
+import weberstudio.app.billigsteprodukter.ui.pages.shoppingList.ShoppingListUndermenuContent
+import weberstudio.app.billigsteprodukter.ui.pages.shoppingList.ShoppingListUndermenuViewModel
+import weberstudio.app.billigsteprodukter.ui.pages.shoppingList.ShoppingListsPage
+import weberstudio.app.billigsteprodukter.ui.pages.shoppingList.ShoppingListsViewModel
 
 /**
  * The host that's responsible for navigation between pages in the application
@@ -51,16 +54,45 @@ fun ApplicationNavigationHost(navController: NavHostController = rememberNavCont
             )
         }
 
-        //Shopping List
+        //Shopping List Main menu
         composable(PageNavigation.ShoppingList.route) { backStackEntry ->
-            val viewModel: ShoppingListViewModel = viewModel()
+            val viewModel: ShoppingListsViewModel = viewModel()
+            PageShell(
+                navController,
+                title = "Indkøbslister",
+                pageContent = { padding ->
+                    ShoppingListsPage(
+                        modifier = Modifier.padding(padding),
+                        navController = navController,
+                        viewModel = viewModel
+                    )
+                }
+            )
+        }
+
+        //Shopping List Under menu
+        composable(
+            PageNavigation.ShoppingListUndermenu.route,
+            arguments = listOf(navArgument("listID") { type = NavType.StringType})
+        ) { backStackEntry ->
+            val viewModel: ShoppingListUndermenuViewModel = viewModel()
+            val listID = backStackEntry.arguments?.getString("listID")
+            val shoppingListName = if (listID != null) viewModel.getShoppingListName(listID) else "Indkøbsliste"
             var showAddDialog by rememberSaveable { mutableStateOf(false) }
+
 
             PageShell(
                 navController,
-                title = "Indkøbsliste",
-                pageContent = { padding -> ShoppingListContent(Modifier.padding(padding), viewModel) },
-                floatingActionButton = { AddFAB(onClick = { showAddDialog = true }) }
+                title = "$shoppingListName",
+                pageContent = { padding ->
+                    ShoppingListUndermenuContent(
+                        listID = listID,
+                        modifier = Modifier.padding(padding),
+                        navController = navController,
+                        viewModel = viewModel
+                    )
+                },
+                floatingActionButton = { AddFAB(onClick = { showAddDialog = true}) }
             )
 
             AddProductToListDialog(

@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import weberstudio.app.billigsteprodukter.data.ReceiptRepository
-import weberstudio.app.billigsteprodukter.logic.Product
+import weberstudio.app.billigsteprodukter.data.Product
 
 class ReceiptScanningViewModel: ViewModel() {
     private val receiptRepo: ReceiptRepository = ReceiptRepository

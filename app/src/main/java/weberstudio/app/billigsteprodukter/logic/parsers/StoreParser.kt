@@ -4,7 +4,7 @@ import android.graphics.Point
 import android.graphics.PointF
 import android.util.Log
 import com.google.mlkit.vision.text.Text
-import weberstudio.app.billigsteprodukter.logic.Product
+import weberstudio.app.billigsteprodukter.data.Product
 import weberstudio.app.billigsteprodukter.logic.exceptions.ParsingException
 import kotlin.jvm.Throws
 import kotlin.math.abs

@@ -1,6 +1,5 @@
 package weberstudio.app.billigsteprodukter.data
 
-import weberstudio.app.billigsteprodukter.logic.Product
 import weberstudio.app.billigsteprodukter.logic.Store
 import weberstudio.app.billigsteprodukter.ui.pages.shoppingList.ShoppingList
 

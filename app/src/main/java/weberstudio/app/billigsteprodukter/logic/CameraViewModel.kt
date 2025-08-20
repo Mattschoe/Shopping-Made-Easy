@@ -1,29 +1,23 @@
 package weberstudio.app.billigsteprodukter.logic
 
 import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.android.gms.tasks.Task
-import com.google.android.gms.tasks.Tasks
-import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.Text
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import weberstudio.app.billigsteprodukter.data.Product
 import weberstudio.app.billigsteprodukter.data.ReceiptRepository
 import weberstudio.app.billigsteprodukter.logic.exceptions.ParsingException
 import weberstudio.app.billigsteprodukter.logic.parsers.ParserFactory
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser
 import weberstudio.app.billigsteprodukter.ui.ParsingState
-import java.io.File
-import kotlin.random.Random
 
 
 class CameraViewModel: ViewModel() {

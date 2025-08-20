@@ -12,6 +12,7 @@ activityCompose = "1.10.1"
 composeBom = "2024.09.00"
 navigationCompose = "2.9.3"
 navigationComposeVersion = "2.9.2"
+roomRuntime = "2.7.2"
 textRecognition = "16.0.1"
 
 [libraries]
@@ -19,6 +20,7 @@ androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = 
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 androidx-navigation-compose-v292 = { module = "androidx.navigation:navigation-compose", version.ref = "navigationComposeVersion" }
 androidx-navigation-fragment = { module = "androidx.navigation:navigation-fragment", version.ref = "navigationCompose" }
+androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomRuntime" }
 commons-text = { module = "org.apache.commons:commons-text", version.ref = "commonsText" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }

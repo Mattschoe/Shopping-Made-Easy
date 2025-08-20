@@ -49,7 +49,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import weberstudio.app.billigsteprodukter.R
-import weberstudio.app.billigsteprodukter.logic.Product
+import weberstudio.app.billigsteprodukter.data.Product
 import weberstudio.app.billigsteprodukter.logic.Store
 import weberstudio.app.billigsteprodukter.ui.components.AddListDialog
 import weberstudio.app.billigsteprodukter.ui.components.DefaultProductCard
@@ -283,7 +283,7 @@ fun ShoppingListUndermenuContent(modifier: Modifier, listID: String?, navControl
                 if (expanded) {
                     items(
                         items = store2ProductList.value,
-                        key = { product -> product.ID }
+                        key = { product -> product.businessID }
                     ) { product ->
                         ShoppingListProductCardU(
                             product = product,

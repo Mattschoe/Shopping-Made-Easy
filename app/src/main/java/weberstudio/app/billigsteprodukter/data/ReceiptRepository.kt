@@ -6,8 +6,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
-import weberstudio.app.billigsteprodukter.logic.Product
-import weberstudio.app.billigsteprodukter.logic.ProductID
 import weberstudio.app.billigsteprodukter.logic.Store
 
 object ReceiptRepository {
@@ -28,7 +26,7 @@ object ReceiptRepository {
      * Adds the products from a parsed receipt into the list of products. Also dedupes the products via product.id
      */
     suspend fun addReceiptProducts(products: Set<Product>) {
-        products.forEach { ID2Product[it.ID] = it } //Overrider produktet med den nye hvis der allerede er et med samme ID
+        products.forEach { ID2Product[it.businessID] = it } //Overrider produktet med den nye hvis der allerede er et med samme ID
         refreshStream()
         _lastReceipt.emit(products.toList()) //Opdaterer den sidste modtaget kvittering
     }
@@ -37,7 +35,7 @@ object ReceiptRepository {
      * Updates one product, useful if user has corrected a products price or name
      */
     suspend fun updateProduct(product: Product) {
-        ID2Product[product.ID] = product
+        ID2Product[product.businessID] = product
         refreshStream()
     }
 
@@ -57,7 +55,7 @@ object ReceiptRepository {
      * Remove one product from list
      */
     suspend fun removeProduct(product: Product) {
-        ID2Product.remove(product.ID)
+        ID2Product.remove(product.businessID)
         refreshStream()
     }
 
@@ -74,7 +72,7 @@ object ReceiptRepository {
     fun getProductsByStore(store: Store): Flow<List<Product>> =
         productStream
             .map { allProducts ->
-                allProducts.filter { it.ID.store == store }
+                allProducts.filter { it.businessID.store == store }
             }
             .distinctUntilChanged()
 

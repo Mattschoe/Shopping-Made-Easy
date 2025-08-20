@@ -52,7 +52,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import weberstudio.app.billigsteprodukter.logic.Receipt
 import weberstudio.app.billigsteprodukter.ui.theme.ThemeBlack
 import weberstudio.app.billigsteprodukter.ui.theme.ThemeLightGreen
 import weberstudio.app.billigsteprodukter.ui.theme.ThemeLightGrey

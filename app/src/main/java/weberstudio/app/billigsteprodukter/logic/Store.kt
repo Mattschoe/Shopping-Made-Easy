@@ -2,7 +2,6 @@ package weberstudio.app.billigsteprodukter.logic
 
 import androidx.annotation.DrawableRes
 import weberstudio.app.billigsteprodukter.R
-import weberstudio.app.billigsteprodukter.ui.components.StoreImage
 
 enum class Store(
     val ID: Int,
@@ -32,8 +31,6 @@ enum class Store(
         fun fromID(ID: Int): Store? =
             Store.entries.firstOrNull() { it.ID == ID }
     }
-
-
 }
 
 

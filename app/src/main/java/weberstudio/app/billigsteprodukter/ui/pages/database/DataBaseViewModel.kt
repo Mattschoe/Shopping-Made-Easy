@@ -12,11 +12,10 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import org.apache.commons.text.similarity.JaroWinklerDistance
 import org.apache.commons.text.similarity.JaroWinklerSimilarity
 import org.apache.commons.text.similarity.LevenshteinDistance
 import weberstudio.app.billigsteprodukter.data.ReceiptRepository
-import weberstudio.app.billigsteprodukter.logic.Product
+import weberstudio.app.billigsteprodukter.data.Product
 import weberstudio.app.billigsteprodukter.logic.Store
 
 /**
@@ -94,7 +93,7 @@ class DataBaseViewModel(): ViewModel() {
     fun toggleFavorite(product: Product) {
         val toggledFavoriteStatus = !product.isFavorite
         viewModelScope.launch {
-            productRepo.setProductFavorite(product.ID, toggledFavoriteStatus)
+            productRepo.setProductFavorite(product.businessID, toggledFavoriteStatus)
         }
     }
 

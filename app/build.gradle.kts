@@ -62,4 +62,7 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
 
     implementation("org.opencv:opencv:4.12.0")
+
+
+    implementation(libs.androidx.room.runtime)
 }

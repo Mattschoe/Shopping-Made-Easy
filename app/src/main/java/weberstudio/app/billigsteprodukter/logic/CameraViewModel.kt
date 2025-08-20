@@ -13,7 +13,7 @@ import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import weberstudio.app.billigsteprodukter.data.Product
-import weberstudio.app.billigsteprodukter.data.ReceiptRepository
+import weberstudio.app.billigsteprodukter.data.OfflineReceiptRepository
 import weberstudio.app.billigsteprodukter.logic.exceptions.ParsingException
 import weberstudio.app.billigsteprodukter.logic.parsers.ParserFactory
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser
@@ -21,7 +21,7 @@ import weberstudio.app.billigsteprodukter.ui.ParsingState
 
 
 class CameraViewModel: ViewModel() {
-    private val receiptRepo: ReceiptRepository = ReceiptRepository
+    private val receiptRepo: OfflineReceiptRepository = OfflineReceiptRepository
     private val parsingState = mutableStateOf<ParsingState>(ParsingState.NotActivated)
 
     /**

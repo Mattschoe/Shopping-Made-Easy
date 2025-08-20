@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.apache.commons.text.similarity.JaroWinklerSimilarity
 import org.apache.commons.text.similarity.LevenshteinDistance
-import weberstudio.app.billigsteprodukter.data.ReceiptRepository
+import weberstudio.app.billigsteprodukter.data.OfflineReceiptRepository
 import weberstudio.app.billigsteprodukter.data.Product
 import weberstudio.app.billigsteprodukter.logic.Store
 
@@ -26,7 +26,7 @@ class DataBaseViewModel(): ViewModel() {
     private val _searchQuery = MutableStateFlow("")
     private val _searchAllStores = MutableStateFlow(false)
 
-    private val productRepo: ReceiptRepository = ReceiptRepository
+    private val productRepo: OfflineReceiptRepository = OfflineReceiptRepository
     private val fuzzyMatcherLeven = LevenshteinDistance()
     private val fuzzyMatcherJaro = JaroWinklerSimilarity()
 

@@ -9,6 +9,7 @@ import weberstudio.app.billigsteprodukter.data.Product
 import weberstudio.app.billigsteprodukter.logic.Store
 import weberstudio.app.billigsteprodukter.logic.components.FuzzyMatcher
 import weberstudio.app.billigsteprodukter.logic.exceptions.ParsingException
+import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ParsedImageText
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ParsedLine
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ParsedProduct
 import kotlin.math.hypot
@@ -28,7 +29,7 @@ object CoopParserQuantityBelow : StoreParser {
     private val fuzzyMatcher = FuzzyMatcher()
     //endregion
 
-    override fun parse(receipt: Text): HashSet<Product> {
+    override fun parse(receipt: Text): ParsedImageText {
         val includeRABAT = false
         val parsedLines = processImageText(receipt)
         var controlLine: ParsedLine? = null //A line thats "Above" all products. Often coming from StoreLogo text
@@ -62,7 +63,8 @@ object CoopParserQuantityBelow : StoreParser {
         }
         //endregion
 
-        return parsedProductsToFilteredProductList(parsedProducts)
+        val (filteredProducts, receiptTotal) = parsedProductsToFilteredProductList(parsedProducts)
+        return ParsedImageText(Store.Coop365, filteredProducts, receiptTotal)
     }
 
     /**
@@ -122,12 +124,12 @@ object CoopParserQuantityBelow : StoreParser {
     /**
      * Filters the products parsed and returns a filtered set which is cleaned up and ready to be given to the database
      */
-    private fun parsedProductsToFilteredProductList(parsedProducts: List<ParsedProduct>): HashSet<Product> {
+    private fun parsedProductsToFilteredProductList(parsedProducts: List<ParsedProduct>): Pair<HashSet<Product>, Float> {
         val products: HashSet<Product> = HashSet<Product>()
 
         //Omdanner de parsedProducts om til Products
         for (parsedProduct in parsedProducts) {
-            products.add(Product(parsedProduct.name, parsedProduct.price, Store.Coop365))
+            products.add(Product(name = parsedProduct.name, price = parsedProduct.price, store = Store.Coop365))
         }
 
         if (products.isEmpty()) {
@@ -153,7 +155,7 @@ object CoopParserQuantityBelow : StoreParser {
 
         if (filteredSet.isEmpty()) throw ParsingException("Filtered set of products is empty!. Please try again")
 
-        return filteredSet
+        return Pair(filteredSet, stopWordPrices.first())
     }
 
     /**
@@ -230,7 +232,7 @@ object CoopParserQuantityAbove : StoreParser {
     private val fuzzyMatcher = FuzzyMatcher()
     //endregion
 
-    override fun parse(receipt: Text): HashSet<Product> {
+    override fun parse(receipt: Text): ParsedImageText {
         val includeRABAT = false
         val parsedLines = processImageText(receipt)
         var controlLine: ParsedLine? = null //A line thats "Above" all products. Often coming from StoreLogo text
@@ -277,7 +279,8 @@ object CoopParserQuantityAbove : StoreParser {
         }
         //endregion
 
-        return parsedProductsToFilteredProductList(parsedProducts)
+        val (filteredProducts, receiptTotal) = parsedProductsToFilteredProductList(parsedProducts)
+        return ParsedImageText(Store.Coop365, filteredProducts, receiptTotal)
     }
 
     /**
@@ -336,12 +339,12 @@ object CoopParserQuantityAbove : StoreParser {
     /**
      * Filters the products parsed and returns a filtered set which is cleaned up and ready to be given to the database
      */
-    private fun parsedProductsToFilteredProductList(parsedProducts: List<ParsedProduct>): HashSet<Product> {
+    private fun parsedProductsToFilteredProductList(parsedProducts: List<ParsedProduct>): Pair<HashSet<Product>, Float> {
         val products: HashSet<Product> = HashSet<Product>()
 
         //Omdanner de parsedProducts om til Products
         for (parsedProduct in parsedProducts) {
-            products.add(Product(parsedProduct.name, parsedProduct.price, Store.Coop365))
+            products.add(Product(name = parsedProduct.name, price =  parsedProduct.price, store = Store.Coop365))
         }
 
         if (products.isEmpty()) {
@@ -371,7 +374,7 @@ object CoopParserQuantityAbove : StoreParser {
             throw ParsingException("Filtered set of products is empty!. Please try again")
         }
 
-        return filteredSet
+        return Pair(filteredSet, stopWordPrices.first())
     }
 
     /**

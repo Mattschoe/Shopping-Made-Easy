@@ -11,6 +11,7 @@ import weberstudio.app.billigsteprodukter.logic.components.FuzzyMatcher
 import weberstudio.app.billigsteprodukter.logic.exceptions.ParsingException
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ParsedLine
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ParsedProduct
+import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ParsedImageText
 import kotlin.math.sqrt
 import kotlin.text.Regex
 
@@ -21,7 +22,7 @@ object LidlParser: StoreParser {
     private val fuzzyMatcher = FuzzyMatcher()
     //endregion
 
-    override fun parse(receipt: Text): HashSet<Product> {
+    override fun parse(receipt: Text): ParsedImageText {
         val includeRABAT = false
         val parsedLines = processImageText(receipt)
         val parsedProducts = ArrayList<ParsedProduct>()
@@ -55,14 +56,15 @@ object LidlParser: StoreParser {
 
                 if (doesLinesCollide(lineA, lineB)) {
                     if (product2Quantity.get(lineA) == lineB) continue //If lineA is a in the map and the value is lineB, we skip it so it parses with the price and not the quantity
-                    parsedProducts.add(parseLinesToProduct(lineA, lineB, includeRABAT, parsedLines, parsedProducts, product2Quantity))
+                    parsedProducts.add(parseLinesToProduct(lineA, lineB, includeRABAT, parsedProducts, product2Quantity))
                     break
                 }
             }
         }
         //endregion
 
-        return parsedProductsToFilteredProductList(parsedProducts)
+        val (filteredProducts, receiptTotal) = parsedProductsToFilteredProductList(parsedProducts)
+        return ParsedImageText(Store.Lidl, filteredProducts, receiptTotal)
     }
 
     /**
@@ -74,7 +76,7 @@ object LidlParser: StoreParser {
      * @param parsedLines the lines parsed so far. Used to find the line above a quantity line
      * @param parsedProducts the products parsed so far. Used if *includeRABAT* is true to deduct the discount
      */
-    private fun parseLinesToProduct(lineA: ParsedLine, lineB: ParsedLine, includeRABAT: Boolean, parsedLines: List<ParsedLine>, parsedProducts: List<ParsedProduct>, product2Quantity: Map<ParsedLine, ParsedLine>): ParsedProduct {
+    private fun parseLinesToProduct(lineA: ParsedLine, lineB: ParsedLine, includeRABAT: Boolean, parsedProducts: List<ParsedProduct>, product2Quantity: Map<ParsedLine, ParsedLine>): ParsedProduct {
         //Snupper navn og pris
         val productName = lineA.text
         val productPrice = productPriceToFloat(lineB.text)
@@ -114,14 +116,14 @@ object LidlParser: StoreParser {
     }
 
     /**
-     * Filters the products parsed and returns a filtered set which is cleaned up and ready to be given to the database
+     * Filters the products parsed and returns a filtered set and the total price read on receipt
      */
-    private fun parsedProductsToFilteredProductList(parsedProducts: List<ParsedProduct>): HashSet<Product> {
+    private fun parsedProductsToFilteredProductList(parsedProducts: List<ParsedProduct>): Pair<HashSet<Product>, Float> {
         val products: HashSet<Product> = HashSet<Product>()
 
         //Omdanner de parsedProducts om til Products
         for (parsedProduct in parsedProducts) {
-            products.add(Product(parsedProduct.name, parsedProduct.price, Store.Lidl))
+            products.add(Product(name = parsedProduct.name, price = parsedProduct.price, store = Store.Lidl))
         }
 
         if (products.isEmpty()) {
@@ -154,7 +156,7 @@ object LidlParser: StoreParser {
             throw ParsingException("Filtered set of products is empty!. Please try again")
         }
 
-        return filteredSet
+        return Pair(filteredSet, stopWordPrices.first())
     }
 
     /**

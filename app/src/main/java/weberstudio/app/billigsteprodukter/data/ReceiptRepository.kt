@@ -1,2 +1,68 @@
 package weberstudio.app.billigsteprodukter.data
 
+import kotlinx.coroutines.flow.Flow
+import weberstudio.app.billigsteprodukter.logic.Store
+
+interface ReceiptRepository {
+    //region STREAMS
+    /**
+     * Stream of all products across receipts and stores.
+     */
+    val productStream: Flow<List<Product>>
+
+    /**
+     * Stream of the last receipt received.
+     */
+    val lastReceipt: Flow<List<Product>>
+    //endregion
+
+    //region RECEIPT OPERATIONS
+    /**
+     * Adds the products from a parsed receipt into the database.
+     * Creates a new receipt and associates all products with it.
+     */
+    suspend fun addReceiptProducts(store: Store, products: Set<Product>)
+
+    /**
+     * Get receipts within a date range for budget tracking.
+     */
+    fun getReceiptsBetweenDates(startDate: Long, endDate: Long): Flow<List<ReceiptWithProducts>>
+
+    /**
+     * Get a specific receipt with all its products.
+     */
+    suspend fun getReceiptWithProducts(receiptId: Long): ReceiptWithProducts?
+    //endregion
+
+    //region PRODUCT OPERATION
+    /**
+     * Updates one product, useful if user has corrected a product's price or name.
+     */
+    suspend fun updateProduct(product: Product)
+
+    /**
+     * Adds an extra product to the repo and to the current receipt if it's part of the same store as the lastReceipt.
+     */
+    suspend fun addProductToReceipt(product: Product)
+
+    /**
+     * Remove one product from the database.
+     */
+    suspend fun removeProduct(product: Product)
+
+    /**
+     * Returns all products from the specified store.
+     */
+    fun getProductsByStore(store: Store): Flow<List<Product>>
+
+    /**
+     * Set a product's favorite status using its business ID.
+     */
+    suspend fun setProductFavorite(store: Store, name: String, isFavorite: Boolean)
+
+    /**
+     * Get all favorite products.
+     */
+    fun getFavoriteProducts(): Flow<List<Product>>
+    //endregion
+}

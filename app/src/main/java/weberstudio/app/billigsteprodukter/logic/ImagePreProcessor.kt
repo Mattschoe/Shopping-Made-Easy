@@ -16,9 +16,7 @@ import android.renderscript.RenderScript
 import android.renderscript.ScriptIntrinsicBlur
 import com.google.mlkit.vision.common.InputImage
 import org.opencv.android.Utils
-import org.opencv.core.Core
 import org.opencv.core.Mat
-import org.opencv.core.Size
 import org.opencv.imgproc.Imgproc
 
 object ImagePreprocessor {

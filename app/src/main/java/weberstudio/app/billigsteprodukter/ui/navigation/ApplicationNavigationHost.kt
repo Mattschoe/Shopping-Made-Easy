@@ -1,5 +1,6 @@
 package weberstudio.app.billigsteprodukter.ui.navigation
 
+import android.app.Application
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -9,6 +10,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -46,7 +48,11 @@ fun ApplicationNavigationHost(navController: NavHostController = rememberNavCont
     ) {
         //Main Screen
         composable(PageNavigation.Home.route) { backStackEntry ->
-            val cameraViewModel: CameraViewModel = viewModel()
+            val context = LocalContext.current
+            val parentBackStackEntry = remember(backStackEntry) { navController.getBackStackEntry("receiptRoute") }
+            val cameraViewModel: CameraViewModel = viewModel(parentBackStackEntry) {
+                CameraViewModel(context.applicationContext as Application)
+            }
             PageShell(
                 navController,
                 title = "Forside",
@@ -141,7 +147,10 @@ fun ApplicationNavigationHost(navController: NavHostController = rememberNavCont
             //Receipt Main page
             composable(PageNavigation.ReceiptHome.route) { backStackEntry ->
                 val parentBackStackEntry = remember(backStackEntry) { navController.getBackStackEntry("receiptRoute") }
-                val cameraViewModel: CameraViewModel = viewModel(parentBackStackEntry)
+                val context = LocalContext.current
+                val cameraViewModel: CameraViewModel = viewModel(parentBackStackEntry) {
+                    CameraViewModel(context.applicationContext as Application)
+                }
                 PageShell(
                     navController,
                     title = "Forside",
@@ -152,7 +161,10 @@ fun ApplicationNavigationHost(navController: NavHostController = rememberNavCont
             //Receipt Content
             composable(PageNavigation.ReceiptScanning.route) { backStackEntry ->
                 val parentBackStackEntry = remember(backStackEntry) { navController.getBackStackEntry("receiptRoute") }
-                val cameraViewModel: CameraViewModel = viewModel(parentBackStackEntry)
+                val context = LocalContext.current
+                val cameraViewModel: CameraViewModel = viewModel(parentBackStackEntry) {
+                    CameraViewModel(context.applicationContext as Application)
+                }
                 PageShell(
                     navController,
                     title = "Kvitteringsoversigt",

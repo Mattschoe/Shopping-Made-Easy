@@ -60,7 +60,7 @@ data class Receipt(
 )
 
 /**
- * Represents a *Receipt containing products*. Is a helper class for easily receiving both the receipt class and the products inside that receipt in a singular database call.
+ * Represents a *Receipt containing products*. Is a helper class for easily reading/querying both the receipt class and the products inside that receipt in a singular database call. It is **NOT** meant for creating data
  */
 data class ReceiptWithProducts(
     @Embedded val receipt: Receipt,

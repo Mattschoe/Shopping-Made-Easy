@@ -83,8 +83,6 @@ fun DatabaseContent(
     }
     //endregion
 
-
-
     //UI
     Column(
         modifier = modifier
@@ -159,41 +157,6 @@ fun DatabaseContent(
                     onFavoriteClick = { viewModel.toggleFavorite(product) }
                 )
             }
-
-            /* TESTING
-            item {
-                ProductCard(
-                    name = "Kikærter",
-                    price = "15.95kr", //TODO Product skal være en string og ikke float
-                    isFavorite = false,
-                    onFavoriteClick = { println("Tiløk") }
-                )
-            }
-            item {
-                ProductCard(
-                    name = "Tomat på dåse",
-                    price = "3x5.95kr", //TODO Product skal være en string og ikke float
-                    isFavorite = false,
-                    onFavoriteClick = { println("Tiløk") }
-                )
-            }
-            item {
-                ProductCard(
-                    name = "Spaghetti",
-                    price = "9.95kr", //TODO Product skal være en string og ikke float
-                    isFavorite = false,
-                    onFavoriteClick = { println("Tiløk") }
-                )
-            }
-            item {
-                ProductCard(
-                    name = "Chili con carne - Frost",
-                    price = "49.99kr", //TODO Product skal være en string og ikke float
-                    isFavorite = false,
-                    onFavoriteClick = { println("Tiløk") }
-                )
-            }
-            */
         }
     }
 }

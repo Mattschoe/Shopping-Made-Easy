@@ -85,8 +85,11 @@ class DataBaseViewModel(application: Application): AndroidViewModel(application)
                 val query = rawQuery.trim().lowercase()
 
                 when {
-                    query.isBlank() -> flowOf(emptyList())
-                    query.length < minimumQueryLength -> flowOf(emptyList())
+                    query.isBlank() || query.length < minimumQueryLength -> {
+                        // Show all products from current store when no search query
+                        if (useAll) receiptRepo.searchProductsContaining(query) // You might need to add this method
+                        else receiptRepo.getProductsByStore(currentStore.value)
+                    }
                     useAll -> receiptRepo.searchProductsContaining(query)
                     else -> receiptRepo.searchProductsByStoreContaining(currentStore.value, query)
                 }
@@ -95,8 +98,13 @@ class DataBaseViewModel(application: Application): AndroidViewModel(application)
             .map { products ->
                 //Ranks the product so they are in correct order. For more see: calculateMatchScore()
                 val query = _searchQuery.value.trim().lowercase()
-                if (query.isBlank()) return@map products
 
+                // If no search query, return products as-is (maybe with a limit)
+                if (query.isBlank() || query.length < minimumQueryLength) {
+                    return@map products.take(itemLimit)
+                }
+
+                // Otherwise, rank and filter by search relevance
                 products
                     .map { it to calculateMatchScore(it.name, query) }
                     .filter { it.second > 0 }

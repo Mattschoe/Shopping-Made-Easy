@@ -6,11 +6,6 @@ import weberstudio.app.billigsteprodukter.logic.Store
 interface ReceiptRepository {
     //region STREAMS
     /**
-     * Stream of all products across receipts and stores.
-     */
-    val productStream: Flow<List<Product>>
-
-    /**
      * Stream of the last receipt received.
      */
     val lastReceipt: Flow<List<Product>>
@@ -18,10 +13,10 @@ interface ReceiptRepository {
 
     //region RECEIPT OPERATIONS
     /**
-     * Adds the products from a parsed receipt into the database.
-     * Creates a new receipt and associates all products with it.
+     * Adds the products from a parsed receipt into the database. Creates a new receipt and associates all products with it.
+     * @param receiptTotal the total price read from the receipt
      */
-    suspend fun addReceiptProducts(store: Store, products: Set<Product>)
+    suspend fun addReceiptProducts(store: Store, products: Set<Product>, receiptTotal: Float)
 
     /**
      * Get receipts within a date range for budget tracking.
@@ -42,8 +37,9 @@ interface ReceiptRepository {
 
     /**
      * Adds an extra product to the repo and to the current receipt if it's part of the same store as the lastReceipt.
+     * @return false if stores don't match
      */
-    suspend fun addProductToReceipt(product: Product)
+    suspend fun addProductToCurrentReceipt(product: Product): Boolean
 
     /**
      * Remove one product from the database.

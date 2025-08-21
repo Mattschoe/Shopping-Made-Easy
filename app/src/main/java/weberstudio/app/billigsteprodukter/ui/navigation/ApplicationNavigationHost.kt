@@ -49,8 +49,7 @@ fun ApplicationNavigationHost(navController: NavHostController = rememberNavCont
         //Main Screen
         composable(PageNavigation.Home.route) { backStackEntry ->
             val context = LocalContext.current
-            val parentBackStackEntry = remember(backStackEntry) { navController.getBackStackEntry("receiptRoute") }
-            val cameraViewModel: CameraViewModel = viewModel(parentBackStackEntry) {
+            val cameraViewModel: CameraViewModel = viewModel(backStackEntry) {
                 CameraViewModel(context.applicationContext as Application)
             }
             PageShell(

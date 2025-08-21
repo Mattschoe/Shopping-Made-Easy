@@ -91,7 +91,7 @@ class ShoppingListUndermenuViewModel: ViewModel() {
      * Adds a product to the grocery list
      */
     fun addProduct(productName: String, store: Store) {
-        val product = Product(productName, 0.0f, store)
+        val product = Product(name = productName, price =  0.0f, store = store)
         updateFlows(store, product)
     }
 

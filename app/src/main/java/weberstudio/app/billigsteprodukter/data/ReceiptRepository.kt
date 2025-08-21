@@ -60,5 +60,15 @@ interface ReceiptRepository {
      * Get all favorite products.
      */
     fun getFavoriteProducts(): Flow<List<Product>>
+
+    /**
+     * Searches for products in the whole database, based on the query given as argument
+     */
+    fun searchProductsContaining(query: String): Flow<List<Product>>
+
+    /**
+     * Searches for products with the query, in the store given as argument.
+     */
+    fun searchProductsByStoreContaining(store: Store, query: String): Flow<List<Product>>
     //endregion
 }

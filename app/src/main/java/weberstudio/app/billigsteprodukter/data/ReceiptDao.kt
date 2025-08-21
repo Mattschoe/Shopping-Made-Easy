@@ -75,6 +75,12 @@ interface ReceiptDao {
 
     @Query("SELECT * FROM products where store = :store AND name = :name LIMIT 1")
     suspend fun getProductByBusinessID(store: Store, name: String): Product?
+
+    @Query("SELECT * FROM products WHERE LOWER(name) LIKE '%' || LOWER(:query) || '%' LIMIT 200")
+    fun searchProductsContaining(query: String): Flow<List<Product>>
+
+    @Query("SELECT * FROM products WHERE store = :store AND LOWER(name) LIKE '%' || LOWER(:query) || '%' LIMIT 200")
+    fun searchProductsByStoreContaining(store: Store, query: String): Flow<List<Product>>
     //endregion
 
     //region UTILITY

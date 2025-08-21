@@ -1,32 +1,39 @@
 package weberstudio.app.billigsteprodukter.ui.pages.database
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
 import org.apache.commons.text.similarity.JaroWinklerSimilarity
 import org.apache.commons.text.similarity.LevenshteinDistance
-import weberstudio.app.billigsteprodukter.data.OfflineReceiptRepository
+import weberstudio.app.billigsteprodukter.ReceiptApp
 import weberstudio.app.billigsteprodukter.data.Product
+import weberstudio.app.billigsteprodukter.data.ReceiptRepository
 import weberstudio.app.billigsteprodukter.logic.Store
 
 /**
  * ViewModel for pulling information to showcase the UI database
  */
-class DataBaseViewModel(): ViewModel() {
+class DataBaseViewModel(application: Application): AndroidViewModel(application) {
     private val _currentSelectedStore = MutableStateFlow<Store>(Store.Netto)
     private val _searchQuery = MutableStateFlow("")
     private val _searchAllStores = MutableStateFlow(false)
 
-    private val productRepo: OfflineReceiptRepository = OfflineReceiptRepository
+    private val receiptRepo: ReceiptRepository = (application as ReceiptApp).receiptRepository
     private val fuzzyMatcherLeven = LevenshteinDistance()
     private val fuzzyMatcherJaro = JaroWinklerSimilarity()
 
@@ -47,12 +54,12 @@ class DataBaseViewModel(): ViewModel() {
         return _currentSelectedStore
             //Cancels last product flow, and collects a new one
             .flatMapLatest { store ->
-                productRepo.getProductsByStore(store)
+                receiptRepo.getProductsByStore(store)
             }
             //
             .stateIn(
                 scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5_000), //Waits 5 seconds after all collectors go away
+                started = SharingStarted.Companion.WhileSubscribed(5_000), //Waits 5 seconds after all collectors go away
                 initialValue = emptyList()
             )
     }
@@ -62,27 +69,44 @@ class DataBaseViewModel(): ViewModel() {
      */
     @OptIn(ExperimentalCoroutinesApi::class)
     fun filteredProductsFlow(): StateFlow<List<Product>> {
-        //Retrieves either all products or just from the currentStore depending on _searchAllStores
-        val baseFlow: Flow<List<Product>> =
-            _searchAllStores
-                .flatMapLatest { useAll ->
-                    if (useAll) productRepo.productStream
-                    else getProductsFromCurrentStore()
-                }
-        return baseFlow
-            .combine(_searchQuery) { products, rawQuery ->
-                val query = rawQuery.trim().lowercase()
-                if (query.isBlank()) return@combine products
+        //region SETTINGS
+        val minimumQueryLength = 2 //How long the query has to be before search kicks in
+        val inputCooldown: Long = 300 //How long in MS from the user stops inputting 'till query starts
+        val itemLimit = 30 //How many items to retrieve from database
+        //endregion
 
-                //Sorterer og ranker produkterne
+        //Retrieves either all products or just from the currentStore depending on _searchAllStores
+        return searchAllStores
+            .combine(
+                _searchQuery
+                    .debounce(inputCooldown)
+                    .distinctUntilChanged()
+            ) { useAll, rawQuery ->
+                val query = rawQuery.trim().lowercase()
+
+                when {
+                    query.isBlank() -> flowOf(emptyList())
+                    query.length < minimumQueryLength -> flowOf(emptyList())
+                    useAll -> receiptRepo.searchProductsContaining(query)
+                    else -> receiptRepo.searchProductsByStoreContaining(currentStore.value, query)
+                }
+            }
+            .flatMapLatest { flow -> flow }
+            .map { products ->
+                //Ranks the product so they are in correct order. For more see: calculateMatchScore()
+                val query = _searchQuery.value.trim().lowercase()
+                if (query.isBlank()) return@map products
+
                 products
                     .map { it to calculateMatchScore(it.name, query) }
                     .filter { it.second > 0 }
                     .sortedByDescending { it.second }
                     .map { it.first }
-            }.stateIn(
+                    .take(itemLimit)
+            }
+            .stateIn(
                 scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5_000),
+                started = SharingStarted.Companion.WhileSubscribed(5_000),
                 initialValue = emptyList()
             )
     }
@@ -93,7 +117,7 @@ class DataBaseViewModel(): ViewModel() {
     fun toggleFavorite(product: Product) {
         val toggledFavoriteStatus = !product.isFavorite
         viewModelScope.launch {
-            productRepo.setProductFavorite(product.businessID, toggledFavoriteStatus)
+            receiptRepo.setProductFavorite(product.store, product.name, toggledFavoriteStatus)
         }
     }
 

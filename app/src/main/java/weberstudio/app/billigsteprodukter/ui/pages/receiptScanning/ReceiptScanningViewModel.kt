@@ -1,22 +1,16 @@
 package weberstudio.app.billigsteprodukter.ui.pages.receiptScanning
 
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import weberstudio.app.billigsteprodukter.ReceiptApp
 import weberstudio.app.billigsteprodukter.data.OfflineReceiptRepository
 import weberstudio.app.billigsteprodukter.data.Product
 
-class ReceiptScanningViewModel: ViewModel() {
-    private val receiptRepo: OfflineReceiptRepository = OfflineReceiptRepository
+class ReceiptScanningViewModel(application: Application): AndroidViewModel(application) {
+    private val receiptRepo: OfflineReceiptRepository = (application as ReceiptApp).receiptRepository
     val lastReceipt: StateFlow<List<Product>> = receiptRepo.lastReceipt
-
-    /**
-     * Adds the products from a parsed receipt into the list of products. This also updates the latest receipt
-     */
-    fun saveReceiptToRepository(products: Set<Product>) {
-        viewModelScope.launch {
-            receiptRepo.addReceiptProducts(products)
-        }
-    }
 }

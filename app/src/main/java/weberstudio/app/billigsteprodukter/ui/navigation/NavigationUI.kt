@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
 import weberstudio.app.billigsteprodukter.R
 import weberstudio.app.billigsteprodukter.logic.CameraViewModel
@@ -31,6 +32,8 @@ import weberstudio.app.billigsteprodukter.ui.components.SaveImage
 @Composable
 fun NavigationDrawerUI(modifier: Modifier = Modifier, onDestinationClicked: (PageNavigation) -> Unit) {
     val cameraScope = rememberCoroutineScope()
+    val cameraViewModel: CameraViewModel = viewModel()
+
     Column(
         modifier
             .padding(12.dp),
@@ -60,7 +63,7 @@ fun NavigationDrawerUI(modifier: Modifier = Modifier, onDestinationClicked: (Pag
         SaveImage(
             onImageCaptured = {
                 uri, context -> cameraScope.launch {
-                    CameraViewModel().processImage(uri, context)
+                    cameraViewModel.processImage(uri, context)
                     onDestinationClicked(PageNavigation.ReceiptScanning)
                 }
             }

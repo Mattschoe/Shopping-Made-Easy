@@ -1,5 +1,6 @@
 package weberstudio.app.billigsteprodukter.data
 
+import weberstudio.app.billigsteprodukter.data.ReceiptRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -71,6 +72,15 @@ class OfflineReceiptRepository(private val dao: ReceiptDao) : ReceiptRepository 
     override fun getFavoriteProducts(): Flow<List<Product>> {
         return dao.getFavoriteProducts()
     }
+
+    override fun searchProductsContaining(query: String): Flow<List<Product>> {
+        return dao.searchProductsContaining(query)
+    }
+
+    override fun searchProductsByStoreContaining(store: Store, query: String): Flow<List<Product>> {
+        return dao.searchProductsByStoreContaining(store, query)
+    }
+
 
     /**
      * Updates and refreshes the streams so the UI is informed of changes. Method should be called on any Insertion/Update/Deletion of [_lastReceipt]

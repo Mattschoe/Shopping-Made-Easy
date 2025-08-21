@@ -1,6 +1,5 @@
 package weberstudio.app.billigsteprodukter.logic.parsers
 
-import android.util.Log
 import com.google.mlkit.vision.text.Text
 import weberstudio.app.billigsteprodukter.logic.components.FuzzyMatcher
 

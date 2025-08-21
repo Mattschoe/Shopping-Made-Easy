@@ -31,7 +31,7 @@ import weberstudio.app.billigsteprodukter.logic.Store
 data class Product(
     @PrimaryKey(autoGenerate = true)
     val databaseID: Long = 0, //Database logic ID
-    val receiptID: Long?,
+    val receiptID: Long? = null,
     val name: String,
     val price: Float,
     val store: Store,

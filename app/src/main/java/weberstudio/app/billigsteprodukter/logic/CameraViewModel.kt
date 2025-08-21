@@ -1,27 +1,29 @@
 package weberstudio.app.billigsteprodukter.logic
 
+import android.app.Application
 import android.content.Context
 import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.mlkit.vision.text.Text
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import weberstudio.app.billigsteprodukter.data.Product
+import weberstudio.app.billigsteprodukter.ReceiptApp
 import weberstudio.app.billigsteprodukter.data.OfflineReceiptRepository
+import weberstudio.app.billigsteprodukter.data.Product
 import weberstudio.app.billigsteprodukter.logic.exceptions.ParsingException
 import weberstudio.app.billigsteprodukter.logic.parsers.ParserFactory
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser
 import weberstudio.app.billigsteprodukter.ui.ParsingState
 
 
-class CameraViewModel: ViewModel() {
-    private val receiptRepo: OfflineReceiptRepository = OfflineReceiptRepository
+class CameraViewModel(application: Application): AndroidViewModel(application) {
+    private val receiptRepo: OfflineReceiptRepository = (application as ReceiptApp).receiptRepository
     private val parsingState = mutableStateOf<ParsingState>(ParsingState.NotActivated)
 
     /**
@@ -72,7 +74,7 @@ class CameraViewModel: ViewModel() {
                 if (store == null) throw ParsingException("Couldn't find store from ${parser.toString()}!")
                 try {
                     val parsedText = parser.parse(imageText)
-                    viewModelScope.launch { receiptRepo.addReceiptProducts(parsedText) } //Saves to repository
+                    viewModelScope.launch { receiptRepo.addReceiptProducts(parsedText.store, parsedText.products, parsedText.total) } //Saves to repository
                     parsingState.value = ParsingState.Success(store)
                 } catch (e: ParsingException) {
                     parsingState.value = ParsingState.Error("Fejl med at scanne kvittering, $e")  //TODO: Denne her Error dukker ikke op på UI
@@ -92,10 +94,10 @@ class CameraViewModel: ViewModel() {
     /**
      * Adds a singular product to the repo and current receipt
      */
-    fun addProductToCurrentReceipt(productName: String, productPrice: Float, store: Store) {
-        val product = Product(productName, productPrice, store)
+    fun addProductToCurrentReceipt(productName: String, productPrice: Float, store: Store) { //TODO: Her kan man specify store produkt skal addes til, men det giver ingen mening da vi får en error hvis det ikke er den samme store som kvitteringen er fra?
+        val product = Product(name = productName, price = productPrice, store = store)
         viewModelScope.launch {
-            receiptRepo.addProductToReceipt(product)
+            receiptRepo.addProductToCurrentReceipt(product)
         }
     }
 
@@ -106,3 +108,4 @@ class CameraViewModel: ViewModel() {
         parsingState.value = ParsingState.Idle
     }
 }
+

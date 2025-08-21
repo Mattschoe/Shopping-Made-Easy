@@ -5,6 +5,7 @@ import android.graphics.PointF
 import android.util.Log
 import com.google.mlkit.vision.text.Text
 import weberstudio.app.billigsteprodukter.data.Product
+import weberstudio.app.billigsteprodukter.logic.Store
 import weberstudio.app.billigsteprodukter.logic.exceptions.ParsingException
 import kotlin.jvm.Throws
 import kotlin.math.abs
@@ -19,7 +20,7 @@ interface StoreParser {
      * @throws ParsingException if there has been a error while trying to parse the receipt. Most commonly it's because no anchor was found, or there was no text between the anchors
      */
     @Throws(ParsingException::class)
-    fun parse(receipt: Text): HashSet<Product>
+    fun parse(receipt: Text): ParsedImageText
 
     /**
      * Returns the name of the store
@@ -169,6 +170,7 @@ interface StoreParser {
         val corners: Array<Point>
     )
     data class ParsedProduct(val name: String, var price: Float)
+    data class ParsedImageText(val store: Store, val products: HashSet<Product>, val total: Float)
     //endregion
 
     //region MATH SUPPORT FUNCTIONS

@@ -1,6 +1,8 @@
-package weberstudio.app.billigsteprodukter.data
+package weberstudio.app.billigsteprodukter.data.receipt
 
 import kotlinx.coroutines.flow.Flow
+import weberstudio.app.billigsteprodukter.data.Product
+import weberstudio.app.billigsteprodukter.data.ReceiptWithProducts
 import weberstudio.app.billigsteprodukter.logic.Store
 
 interface ReceiptRepository {

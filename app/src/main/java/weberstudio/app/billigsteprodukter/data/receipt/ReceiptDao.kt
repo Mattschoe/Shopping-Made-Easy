@@ -1,4 +1,4 @@
-package weberstudio.app.billigsteprodukter.data
+package weberstudio.app.billigsteprodukter.data.receipt
 
 import androidx.room.Dao
 import androidx.room.Delete
@@ -7,6 +7,9 @@ import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
+import weberstudio.app.billigsteprodukter.data.Product
+import weberstudio.app.billigsteprodukter.data.Receipt
+import weberstudio.app.billigsteprodukter.data.ReceiptWithProducts
 import weberstudio.app.billigsteprodukter.logic.Store
 
 @Dao

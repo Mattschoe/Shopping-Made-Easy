@@ -1,10 +1,13 @@
-package weberstudio.app.billigsteprodukter.data
+package weberstudio.app.billigsteprodukter.data.receipt
 
 import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import weberstudio.app.billigsteprodukter.data.Converters
+import weberstudio.app.billigsteprodukter.data.Product
+import weberstudio.app.billigsteprodukter.data.Receipt
 
 @Database(entities = [Receipt::class, Product::class], version = 1, exportSchema =  false)
 @TypeConverters(Converters::class)

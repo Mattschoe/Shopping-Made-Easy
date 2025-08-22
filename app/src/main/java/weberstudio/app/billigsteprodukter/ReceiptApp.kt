@@ -1,8 +1,8 @@
 package weberstudio.app.billigsteprodukter
 
 import android.app.Application
-import weberstudio.app.billigsteprodukter.data.OfflineReceiptRepository
-import weberstudio.app.billigsteprodukter.data.ReceiptDatabase
+import weberstudio.app.billigsteprodukter.data.receipt.OfflineReceiptRepository
+import weberstudio.app.billigsteprodukter.data.receipt.ReceiptDatabase
 
 /**
  * A application that runs beside the program to access repo's/databases

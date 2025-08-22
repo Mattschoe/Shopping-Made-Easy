@@ -5,7 +5,7 @@ import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import weberstudio.app.billigsteprodukter.data.ShoppingListRepository
+import weberstudio.app.billigsteprodukter.data.shoppingList.ShoppingListRepository
 import weberstudio.app.billigsteprodukter.data.Product
 import weberstudio.app.billigsteprodukter.logic.Store
 import java.time.LocalDateTime

@@ -14,7 +14,7 @@ import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import weberstudio.app.billigsteprodukter.ReceiptApp
-import weberstudio.app.billigsteprodukter.data.OfflineReceiptRepository
+import weberstudio.app.billigsteprodukter.data.receipt.OfflineReceiptRepository
 import weberstudio.app.billigsteprodukter.data.Product
 import weberstudio.app.billigsteprodukter.logic.exceptions.ParsingException
 import weberstudio.app.billigsteprodukter.logic.parsers.ParserFactory

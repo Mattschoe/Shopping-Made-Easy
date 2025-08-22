@@ -1,9 +1,11 @@
-package weberstudio.app.billigsteprodukter.data
+package weberstudio.app.billigsteprodukter.data.receipt
 
-import weberstudio.app.billigsteprodukter.data.ReceiptRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import weberstudio.app.billigsteprodukter.data.Product
+import weberstudio.app.billigsteprodukter.data.Receipt
+import weberstudio.app.billigsteprodukter.data.ReceiptWithProducts
 import weberstudio.app.billigsteprodukter.logic.Store
 
 class OfflineReceiptRepository(private val dao: ReceiptDao) : ReceiptRepository {

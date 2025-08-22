@@ -26,7 +26,8 @@ import weberstudio.app.billigsteprodukter.ui.components.PageShell
 import weberstudio.app.billigsteprodukter.ui.pages.database.DataBaseViewModel
 import weberstudio.app.billigsteprodukter.ui.pages.database.DatabaseContent
 import weberstudio.app.billigsteprodukter.ui.pages.home.MainPageContent
-import weberstudio.app.billigsteprodukter.ui.pages.map.MapContent
+import weberstudio.app.billigsteprodukter.ui.pages.budget.BudgetPage
+import weberstudio.app.billigsteprodukter.ui.pages.budget.BudgetViewModel
 import weberstudio.app.billigsteprodukter.ui.pages.receiptScanning.ReceiptScanningContent
 import weberstudio.app.billigsteprodukter.ui.pages.receiptScanning.ReceiptScanningViewModel
 import weberstudio.app.billigsteprodukter.ui.pages.settings.SettingsPageContent
@@ -120,12 +121,13 @@ fun ApplicationNavigationHost(navController: NavHostController = rememberNavCont
             )
         }
 
-        //Map
-        composable(PageNavigation.Map.route) {
+        //Budget
+        composable(PageNavigation.Budget.route) { backStackEntry ->
+            val budgetViewModel: BudgetViewModel = viewModel(backStackEntry)
             PageShell(
                 navController,
-                title = "Kort",
-                pageContent = { padding -> MapContent(Modifier.padding(padding)) }
+                title = "Budget",
+                pageContent = { padding -> BudgetPage(Modifier.padding(padding), budgetViewModel) }
             )
         }
 

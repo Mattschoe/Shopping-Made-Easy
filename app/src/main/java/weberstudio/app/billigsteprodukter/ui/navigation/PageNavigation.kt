@@ -7,7 +7,7 @@ sealed class PageNavigation(val route: String) {
     object ShoppingList : PageNavigation("shoppingList")
     object ShoppingListUndermenu : PageNavigation("shoppingListDetail/{listID}")
     object Database : PageNavigation("database")
-    object Map : PageNavigation("map")
+    object Budget : PageNavigation("budget")
     object Settings : PageNavigation("settings")
     object ReceiptRoute : PageNavigation("receiptRoute")
 

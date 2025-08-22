@@ -91,7 +91,7 @@ fun NavigationDrawerUI(modifier: Modifier = Modifier, onDestinationClicked: (Pag
         QuickActionsButton(
             "Kort",
             R.drawable.map_icon,
-            { onDestinationClicked(PageNavigation.Map) },
+            { onDestinationClicked(PageNavigation.Budget) },
             modifier
         )
 

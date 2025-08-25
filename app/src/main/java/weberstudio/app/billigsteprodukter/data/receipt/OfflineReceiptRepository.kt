@@ -7,6 +7,10 @@ import weberstudio.app.billigsteprodukter.data.Product
 import weberstudio.app.billigsteprodukter.data.Receipt
 import weberstudio.app.billigsteprodukter.data.ReceiptWithProducts
 import weberstudio.app.billigsteprodukter.logic.Store
+import java.time.LocalDate
+import java.time.Month
+import java.time.Year
+import java.time.YearMonth
 
 class OfflineReceiptRepository(private val dao: ReceiptDao) : ReceiptRepository {
     private val _lastReceipt = MutableStateFlow<List<Product>>(emptyList())
@@ -16,7 +20,7 @@ class OfflineReceiptRepository(private val dao: ReceiptDao) : ReceiptRepository 
         //Creates receipt
         val receipt = Receipt(
             store = store,
-            date = System.currentTimeMillis(),
+            date = LocalDate.now(),
             total = receiptTotal
         )
 
@@ -24,10 +28,6 @@ class OfflineReceiptRepository(private val dao: ReceiptDao) : ReceiptRepository 
 
         dao.insertReceiptWithProducts(receipt, productsList)
         updateStreams(productsList)
-    }
-
-    override fun getReceiptsBetweenDates(startDate: Long, endDate: Long): Flow<List<ReceiptWithProducts>> {
-        return dao.getReceiptsBetweenDates(startDate, endDate)
     }
 
     override suspend fun getReceiptWithProducts(receiptID: Long): ReceiptWithProducts? {
@@ -83,6 +83,12 @@ class OfflineReceiptRepository(private val dao: ReceiptDao) : ReceiptRepository 
         return dao.searchProductsByStoreContaining(store, query)
     }
 
+    override suspend fun getReceiptsForMonth(month: Month, year: Year): Flow<List<ReceiptWithProducts>> {
+        val startDate = YearMonth.of(year.value, month).atDay(1).toEpochDay()
+        val endDate = YearMonth.of(year.value, month).atEndOfMonth().toEpochDay()
+        return dao.getReceiptsBetweenDates(startDate, endDate)
+    }
+
 
     /**
      * Updates and refreshes the streams so the UI is informed of changes. Method should be called on any Insertion/Update/Deletion of [_lastReceipt]
@@ -90,4 +96,6 @@ class OfflineReceiptRepository(private val dao: ReceiptDao) : ReceiptRepository 
     private suspend fun updateStreams(productsList: List<Product>) {
         _lastReceipt.emit(productsList)
     }
+
+
 }

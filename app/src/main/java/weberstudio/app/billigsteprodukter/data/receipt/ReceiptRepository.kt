@@ -4,6 +4,8 @@ import kotlinx.coroutines.flow.Flow
 import weberstudio.app.billigsteprodukter.data.Product
 import weberstudio.app.billigsteprodukter.data.ReceiptWithProducts
 import weberstudio.app.billigsteprodukter.logic.Store
+import java.time.Month
+import java.time.Year
 
 interface ReceiptRepository {
     //region STREAMS
@@ -23,7 +25,7 @@ interface ReceiptRepository {
     /**
      * Get receipts within a date range for budget tracking.
      */
-    fun getReceiptsBetweenDates(startDate: Long, endDate: Long): Flow<List<ReceiptWithProducts>>
+    suspend fun getReceiptsForMonth(month: Month, year: Year): Flow<List<ReceiptWithProducts>>
 
     /**
      * Get a specific receipt with all its products.

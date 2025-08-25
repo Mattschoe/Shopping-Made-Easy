@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -52,26 +53,36 @@ import java.util.Locale
 
 @Composable
 fun BudgetPage(modifier: Modifier = Modifier, viewModel: BudgetViewModel) {
-    BudgetUI(2000f, 1300f, onAddExpense = { arg1, arg2 ->  }, onMonthSelected = {} )
+    /*BudgetUI(
+        modifier = modifier,
+        currentBudget =  viewModel.currentBudget,
+        totalSpent = viewModel.totalSpent,
+        receipts = ,
+        onAddExpense = { arg1, arg2 ->  },
+        onMonthSelected = { month -> viewModel.changeMonth(month)}
+    ) */
 }
 
-//region UI½
+//region UI
 @Composable
 fun BudgetUI(
+    modifier: Modifier = Modifier,
     currentBudget: Float,
     totalSpent: Float,
+    receipts: List<Receipt>,
     selectedMonth: String = getCurrentMonth(),
     onAddExpense: (String, Float) -> Unit,
     onMonthSelected: (String) -> Unit
 ) {
     var showAddExpenseDialog by remember { mutableStateOf(false) }
     var showMonthPicker by remember { mutableStateOf(false) }
+    var showViewReceiptsDialog by remember { mutableStateOf(false) }
 
     val remaining = currentBudget - totalSpent
     val spentPercentage = if (currentBudget > 0) (totalSpent / currentBudget).coerceIn(0f, 1f) else 0f
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(Color.White) // TODO: Change to your app's background color
             .padding(16.dp)
@@ -93,6 +104,13 @@ fun BudgetUI(
             spentPercentage = spentPercentage
         )
 
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // View receipts button
+        ViewReceiptsButton(
+            onClick = { showViewReceiptsDialog = true }
+        )
+
         Spacer(modifier = Modifier.height(32.dp))
 
         // Tips section
@@ -101,7 +119,8 @@ fun BudgetUI(
         )
     }
 
-    // Add expense dialog
+    //region DIALOGS
+    //Add expense dialog
     if (showAddExpenseDialog) {
         AddExpenseDialog(
             onDismiss = { showAddExpenseDialog = false },
@@ -112,7 +131,7 @@ fun BudgetUI(
         )
     }
 
-    // Month picker dialog
+    //Month picker dialog
     if (showMonthPicker) {
         MonthPickerDialog(
             currentMonth = selectedMonth,
@@ -123,14 +142,21 @@ fun BudgetUI(
             }
         )
     }
+
+    //View receipts dialog
+    if (showViewReceiptsDialog) {
+        ViewReceiptsDialog(
+            onDismiss = { showViewReceiptsDialog = false },
+            receipts = receipts,
+            selectedMonth = selectedMonth
+        )
+    }
+    //endregion
+
 }
 
 @Composable
-private fun BudgetHeader(
-    selectedMonth: String,
-    onMonthClick: () -> Unit,
-    onAddClick: () -> Unit
-) {
+private fun BudgetHeader(selectedMonth: String, onMonthClick: () -> Unit, onAddClick: () -> Unit) {
     Text(
         text = "Budget",
         fontSize = 24.sp,
@@ -191,12 +217,7 @@ private fun BudgetHeader(
 }
 
 @Composable
-private fun BudgetCircle(
-    currentBudget: Float,
-    totalSpent: Float,
-    remaining: Float,
-    spentPercentage: Float
-) {
+private fun BudgetCircle(currentBudget: Float, totalSpent: Float, remaining: Float, spentPercentage: Float) {
     // Animation for the progress ring
     val animatedProgress by animateFloatAsState(
         targetValue = spentPercentage,
@@ -437,6 +458,76 @@ private fun MonthPickerDialog(currentMonth: String, onDismiss: () -> Unit, onMon
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun ViewReceiptsDialog(onDismiss: () -> Unit, receipts: List<Receipt>, selectedMonth: String) {
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(0.8f)
+                .padding(16.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color.White // TODO: Change to your app's dialog background
+            )
+        ) {
+            Column(
+                modifier = Modifier.padding(20.dp)
+            ) {
+                Text(
+                    text = "Udgifter for $selectedMonth",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black // TODO: Change to your app's primary text color
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // TODO: Customize this dialog content yourself
+                Text(
+                    text = "Crazy? I was crazy once. They locked me in a room. A rubber room. A rubber room with rats. And rats make me crazy. Crazy? I was crazy once. They locked me in a room. A rubber room. A rubber room with rats. And rats make me crazy",
+                    color = Color.Gray
+                )
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text(
+                            text = "Luk",
+                            color = Color.Gray // TODO: Change to your app's secondary text color
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ViewReceiptsButton(onClick: () -> Unit) {
+    Button(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(48.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Color(0xFF4CAF50) // TODO: Change to your app's accent color
+        ),
+        shape = RoundedCornerShape(8.dp)
+    ) {
+        Text(
+            text = "Se udgifter for måneden",
+            color = Color.White,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Medium
+        )
     }
 }
 //endregion

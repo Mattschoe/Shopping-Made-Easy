@@ -10,6 +10,9 @@ import androidx.room.Relation
 import androidx.room.TypeConverter
 import kotlinx.parcelize.Parcelize
 import weberstudio.app.billigsteprodukter.logic.Store
+import java.time.LocalDate
+import java.time.Month
+import java.time.Year
 
 /**
  * A product in a store.
@@ -55,7 +58,7 @@ data class Receipt(
     @PrimaryKey(autoGenerate = true)
     val receiptID: Long = 0,
     val store: Store,
-    val date: Long,
+    val date: LocalDate,
     val total: Float
 )
 
@@ -69,5 +72,14 @@ data class ReceiptWithProducts(
         entityColumn = "receiptID"
     )
     val products: List<Product>
+)
+
+@Entity(tableName = "budgets")
+data class Budget(
+    @PrimaryKey(autoGenerate = true)
+    val databaseID: Long = 0,
+    val month: Month,
+    val year: Year,
+    val budget: Float,
 )
 

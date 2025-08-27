@@ -1,6 +1,5 @@
 package weberstudio.app.billigsteprodukter.ui.pages.budget
 
-import android.util.Log
 import androidx.compose.animation.core.EaseOutCubic
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -54,6 +53,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -63,7 +63,6 @@ import java.text.DecimalFormat
 import java.text.NumberFormat
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.LocalTime
 import java.time.Month
 import java.time.Year
 import java.util.Locale
@@ -106,15 +105,10 @@ val BudgetGreen = Color(0xFF4CAF50)
  */
 @Composable
 fun PreBudgetPageUI(modifier: Modifier = Modifier, newBudget: (Budget) -> Unit) {
-    newBudget(Budget(
-        month = Month.from(LocalDateTime.now()),
-        year = Year.from(LocalDateTime.now()),
-        budget = 2500f
-    ))
-    /* var showDialog by remember { mutableStateOf(false) }
+    var showDialog by remember { mutableStateOf(false) }
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .padding(16.dp),
         contentAlignment = Alignment.Center
@@ -123,29 +117,17 @@ fun PreBudgetPageUI(modifier: Modifier = Modifier, newBudget: (Budget) -> Unit) 
             modifier = Modifier
                 .fillMaxWidth()
                 .height(300.dp),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = Color(0xFFF5F5F5)
-            )
+            shape = RoundedCornerShape(24.dp)
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.SpaceBetween
+                    .padding(24.dp)
             ) {
                 Text(
-                    text = "Budget",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black
-                )
-
-                Text(
                     text = "Hvad er budgettet på\nmad for denne måned?",
-                    fontSize = 16.sp,
-                    textAlign = TextAlign.Center,
+                    fontSize = 24.sp,
+                    textAlign = TextAlign.Left,
                     color = Color.Black,
                     lineHeight = 22.sp
                 )
@@ -172,24 +154,28 @@ fun PreBudgetPageUI(modifier: Modifier = Modifier, newBudget: (Budget) -> Unit) 
 
     if (showDialog) {
         BudgetDialog(
-            onDismiss = { showDialog = false }
+            onDismiss = { showDialog = false },
+            onClick = { budget ->
+                showDialog = false
+                newBudget(budget)
+            }
         )
     }
-
-     */
 }
 
 @Composable
-fun BudgetDialog(onDismiss: () -> Unit) {
+fun BudgetDialog(onDismiss: () -> Unit, onClick: (Budget) -> Unit) {
     var totalBudget by remember { mutableStateOf("") }
     var categories by remember { mutableStateOf(
         mutableListOf(
-            BudgetCategory("gal", "Gal"),
-            BudgetCategory("kod", "Kød"),
+            BudgetCategory("kol", "Køl"),
             BudgetCategory("frys", "Frys"),
-            BudgetCategory("tor", "Tör")
+            BudgetCategory("tor", "Tør")
         )
     ) }
+    val currentMonth by remember { mutableStateOf(Month.from(LocalDateTime.now())) }
+    val currentYear by remember { mutableStateOf(Year.from(LocalDateTime.now())) }
+
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -208,7 +194,7 @@ fun BudgetDialog(onDismiss: () -> Unit) {
             ) {
                 // Header
                 Text(
-                    text = "Budget for Januar 2025",
+                    text = "Budget for ${currentMonth.toDanishString()} $currentYear",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier.padding(bottom = 16.dp)
@@ -218,7 +204,7 @@ fun BudgetDialog(onDismiss: () -> Unit) {
                 BudgetInputField(
                     label = "Ialt",
                     value = totalBudget,
-                    onValueChange = { totalBudget = formatCurrency(it) },
+                    onValueChange = { totalBudget = formatCurrencyToString(it) },
                     totalBudget = parseAmount(totalBudget),
                     currentAmount = parseAmount(totalBudget),
                     modifier = Modifier.padding(bottom = 8.dp)
@@ -238,7 +224,7 @@ fun BudgetDialog(onDismiss: () -> Unit) {
                             onValueChange = { newValue ->
                                 val index = categories.indexOfFirst { it.id == category.id }
                                 if (index != -1) {
-                                    categories[index] = category.copy(amount = formatCurrency(newValue))
+                                    categories[index] = category.copy(amount = formatCurrencyToString(newValue))
                                 }
                             },
                             totalBudget = parseAmount(totalBudget),
@@ -291,7 +277,14 @@ fun BudgetDialog(onDismiss: () -> Unit) {
                     horizontalArrangement = Arrangement.End
                 ) {
                     IconButton(
-                        onClick = onDismiss,
+                        onClick = {
+                            val budget = Budget(
+                                month = currentMonth,
+                                year = currentYear,
+                                budget = formatCurrencyToFloat(totalBudget)
+                            )
+                            onClick(budget)
+                        },
                         modifier = Modifier
                             .size(48.dp)
                             .clip(RoundedCornerShape(24.dp))
@@ -312,6 +305,7 @@ fun BudgetDialog(onDismiss: () -> Unit) {
 
 @Composable
 fun BudgetInputField(
+    modifier: Modifier = Modifier,
     label: String,
     value: String,
     onValueChange: (String) -> Unit,
@@ -319,7 +313,6 @@ fun BudgetInputField(
     currentAmount: Double,
     showDelete: Boolean = false,
     onDelete: () -> Unit = {},
-    modifier: Modifier = Modifier
 ) {
     val percentage = if (totalBudget > 0) (currentAmount / totalBudget * 100) else 0.0
 
@@ -374,7 +367,7 @@ data class BudgetCategory(
 )
 
 //region HELPER FUNCTIONS
-fun formatCurrency(input: String): String {
+fun formatCurrencyToString(input: String): String {
     // Remove all non-digits
     val digitsOnly = input.filter { it.isDigit() }
 
@@ -386,6 +379,14 @@ fun formatCurrency(input: String): String {
 
     return formatted
 }
+
+fun formatCurrencyToFloat(input: String): Float {
+    return input.trim()
+        .replace(".", "")
+        .replace(",", ".")
+        .toFloat()
+}
+
 fun parseAmount(formattedAmount: String): Double {
     if (formattedAmount.isEmpty()) return 0.0
 

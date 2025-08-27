@@ -5,10 +5,11 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import androidx.room.migration.Migration
 import weberstudio.app.billigsteprodukter.data.Budget
 import weberstudio.app.billigsteprodukter.data.Converters
 
-@Database(entities = [Budget::class], version = 1, exportSchema = false)
+@Database(entities = [Budget::class], version = 2, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class BudgetDatabase : RoomDatabase() {
     abstract fun budgetDao(): BudgetDao
@@ -22,7 +23,10 @@ abstract class BudgetDatabase : RoomDatabase() {
                     context.applicationContext,
                     BudgetDatabase::class.java,
                     "budget_database"
-                ).build().also { INSTANCE = it }
+                )
+                    .fallbackToDestructiveMigration(true) //Dropper table når vi skifter version i stedet for at migrate
+                    .build()
+                    .also { INSTANCE = it }
             }
         }
     }

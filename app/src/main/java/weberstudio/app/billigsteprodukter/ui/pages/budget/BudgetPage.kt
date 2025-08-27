@@ -9,6 +9,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -34,6 +35,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -58,7 +60,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import weberstudio.app.billigsteprodukter.data.Budget
+import weberstudio.app.billigsteprodukter.data.Product
+import weberstudio.app.billigsteprodukter.data.Receipt
 import weberstudio.app.billigsteprodukter.data.ReceiptWithProducts
+import weberstudio.app.billigsteprodukter.logic.Store
 import java.text.DecimalFormat
 import java.text.NumberFormat
 import java.time.LocalDate
@@ -499,14 +504,6 @@ fun BudgetPageUI(
 
 @Composable
 private fun BudgetHeader(selectedMonth: String, onMonthClick: () -> Unit, onAddClick: () -> Unit) {
-    Text(
-        text = "Budget",
-        fontSize = 24.sp,
-        fontWeight = FontWeight.Bold,
-        color = Color.Black, // TODO: Change to your app's primary text color
-        modifier = Modifier.padding(bottom = 16.dp)
-    )
-
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -831,11 +828,17 @@ private fun ViewReceiptsDialog(onDismiss: () -> Unit, receipts: List<ReceiptWith
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // TODO: Customize this dialog content yourself
-                Text(
-                    text = "Crazy? I was crazy once. They locked me in a room. A rubber room. A rubber room with rats. And rats make me crazy. Crazy? I was crazy once. They locked me in a room. A rubber room. A rubber room with rats. And rats make me crazy",
-                    color = Color.Gray
-                )
+
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(vertical = 16.dp)
+                ) {
+                    items(receipts) { receipt ->
+                        ReceiptCard(receipt = receipt)
+                    }
+                }
 
                 Spacer(modifier = Modifier.weight(1f))
 
@@ -851,6 +854,105 @@ private fun ViewReceiptsDialog(onDismiss: () -> Unit, receipts: List<ReceiptWith
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun ReceiptCard(modifier: Modifier = Modifier, receipt: ReceiptWithProducts) {
+    var openReceipt by remember { mutableStateOf(false) }
+
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = { openReceipt = true })
+            .padding(horizontal = 8.dp),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Box(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(
+                text = "${receipt.receipt.date}: ${receipt.receipt.total}kr",
+                style = MaterialTheme.typography.bodyLarge
+            )
+        }
+    }
+
+    if (openReceipt) {
+        ReceiptDialog(
+            onDismiss = { openReceipt = false },
+            receipt = receipt
+        )
+    }
+}
+
+@Composable
+private fun ReceiptDialog(onDismiss: () -> Unit, receipt: ReceiptWithProducts) {
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(0.8f)
+                .padding(16.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color.White // TODO: Change to your app's dialog background
+            )
+        ) {
+            Column(
+                modifier = Modifier.padding(20.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "${receipt.receipt.date}:",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black // TODO: Change to your app's primary text color
+                    )
+                    Text(
+                        text = "${receipt.receipt.total}kr",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black // TODO: Change to your app's primary text color
+                    )
+                }
+
+                LazyColumn() {
+                    items(receipt.products) { product ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(text = product.name)
+                            Text(text = product.price.toString())
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text(
+                            text = "Luk",
+                            color = Color.Gray // TODO: Change to your app's secondary text color
+                        )
+                    }
+                }
+            }
+
         }
     }
 }

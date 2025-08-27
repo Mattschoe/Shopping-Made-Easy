@@ -5,11 +5,11 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import androidx.room.migration.Migration
 import weberstudio.app.billigsteprodukter.data.Budget
 import weberstudio.app.billigsteprodukter.data.Converters
+import weberstudio.app.billigsteprodukter.data.ExtraExpense
 
-@Database(entities = [Budget::class], version = 2, exportSchema = false)
+@Database(entities = [Budget::class, ExtraExpense::class], version = 3, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class BudgetDatabase : RoomDatabase() {
     abstract fun budgetDao(): BudgetDao

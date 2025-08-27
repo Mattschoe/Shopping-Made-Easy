@@ -8,10 +8,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import weberstudio.app.billigsteprodukter.ReceiptApp
 import weberstudio.app.billigsteprodukter.data.Budget
+import weberstudio.app.billigsteprodukter.data.ExtraExpense
 import weberstudio.app.billigsteprodukter.data.ReceiptWithProducts
 import weberstudio.app.billigsteprodukter.data.budget.BudgetRepository
 import weberstudio.app.billigsteprodukter.data.receipt.ReceiptRepository
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.Month
 import java.time.Year
 
@@ -21,17 +23,19 @@ class BudgetViewModel(application: Application): AndroidViewModel(application) {
 
     private val _currentBudget = MutableStateFlow<Budget?>(null)
     private val _currentReceipts = MutableStateFlow<List<ReceiptWithProducts>>(emptyList())
+    private val _currentExtraExpenses = MutableStateFlow<List<ExtraExpense>>(emptyList())
 
     val currentBudget = _currentBudget.asStateFlow()
     val currentReceipts = _currentReceipts.asStateFlow()
+    val currentExtraExpenses = _currentExtraExpenses
 
     init {
-        val now = LocalDate.now()
+        val now = LocalDateTime.now()
         loadBudget(Month.from(now), Year.from(now))
     }
 
     /**
-     * Loads the budget and receipts given from the month and year
+     * Loads the budget and expenses given from the month and year
      */
     fun loadBudget(month: Month, year: Year) {
         //Collects budget
@@ -47,6 +51,13 @@ class BudgetViewModel(application: Application): AndroidViewModel(application) {
                 _currentReceipts.value = receipts
             }
         }
+
+        //Collects extra expenses
+        viewModelScope.launch {
+            budgetRepo.getExpenses(month, year).collect { expenses ->
+                _currentExtraExpenses.value = expenses
+            }
+        }
     }
 
     /**
@@ -59,6 +70,14 @@ class BudgetViewModel(application: Application): AndroidViewModel(application) {
     }
 
     fun addExtraSpendingToCurrentBudget(expenseName: String, price: Float) {
-
+        viewModelScope.launch {
+            budgetRepo.insertExtraExpense(ExtraExpense(
+                name = expenseName,
+                price = price,
+                date = LocalDate.now(),
+                month = Month.from(LocalDateTime.now()),
+                year =  Year.from(LocalDateTime.now())
+            ))
+        }
     }
 }

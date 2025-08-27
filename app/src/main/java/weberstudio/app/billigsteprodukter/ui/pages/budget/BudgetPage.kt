@@ -60,6 +60,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import weberstudio.app.billigsteprodukter.data.Budget
+import weberstudio.app.billigsteprodukter.data.ExtraExpense
 import weberstudio.app.billigsteprodukter.data.Product
 import weberstudio.app.billigsteprodukter.data.Receipt
 import weberstudio.app.billigsteprodukter.data.ReceiptWithProducts
@@ -77,6 +78,7 @@ import java.util.Locale
 fun BudgetPage(modifier: Modifier = Modifier, viewModel: BudgetViewModel) {
     val currentBudget by viewModel.currentBudget.collectAsState()
     val currentReceipts by viewModel.currentReceipts.collectAsState()
+    val currentExpenses by viewModel.currentExtraExpenses.collectAsState()
 
     //Hvis useren ikke har givet budgetInput for de intro pagen
     if (currentBudget == null) {
@@ -92,8 +94,9 @@ fun BudgetPage(modifier: Modifier = Modifier, viewModel: BudgetViewModel) {
         BudgetPageUI(
             modifier = modifier,
             currentBudget =  currentBudget.budget,
-            totalSpent = currentReceipts.sumOf { it.receipt.total.toDouble() }.toFloat(),
+            totalSpent = (currentReceipts.sumOf { it.receipt.total.toDouble() } + currentExpenses.sumOf { it.price.toDouble() }).toFloat() ,
             receipts = currentReceipts,
+            expenses = currentExpenses,
             selectedMonth = currentBudget.month,
             selectedYear = currentBudget.year,
             onAddExpense = { name, price -> viewModel.addExtraSpendingToCurrentBudget(name, price) },
@@ -415,6 +418,7 @@ fun BudgetPageUI(
     currentBudget: Float,
     totalSpent: Float,
     receipts: List<ReceiptWithProducts>,
+    expenses: List<ExtraExpense>,
     selectedMonth: Month = Month.from(LocalDate.now()),
     selectedYear: Year = Year.from(LocalDate.now()),
     onAddExpense: (String, Float) -> Unit,
@@ -442,7 +446,7 @@ fun BudgetPageUI(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Budget circle with animation
+        //Budget circle with animation
         BudgetCircle(
             currentBudget = currentBudget,
             totalSpent = totalSpent,
@@ -452,14 +456,14 @@ fun BudgetPageUI(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // View receipts button
+        //View receipts button
         ViewReceiptsButton(
             onClick = { showViewReceiptsDialog = true }
         )
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Tips section
+        //Tips section
         BudgetTipsSection(
             tips = getCurrentTips(spentPercentage)
         )
@@ -495,6 +499,7 @@ fun BudgetPageUI(
         ViewReceiptsDialog(
             onDismiss = { showViewReceiptsDialog = false },
             receipts = receipts,
+            expenses = expenses,
             selectedMonth = selectedMonth.toDanishString()
         )
     }
@@ -804,7 +809,7 @@ private fun DatePickerDialog(currentMonth: Month, currentYear: Year, onDismiss: 
 }
 
 @Composable
-private fun ViewReceiptsDialog(onDismiss: () -> Unit, receipts: List<ReceiptWithProducts>, selectedMonth: String) {
+private fun ViewReceiptsDialog(onDismiss: () -> Unit, receipts: List<ReceiptWithProducts>, expenses: List<ExtraExpense>, selectedMonth: String) {
     Dialog(onDismissRequest = onDismiss) {
         Card(
             modifier = Modifier
@@ -837,6 +842,9 @@ private fun ViewReceiptsDialog(onDismiss: () -> Unit, receipts: List<ReceiptWith
                 ) {
                     items(receipts) { receipt ->
                         ReceiptCard(receipt = receipt)
+                    }
+                    items(expenses) { expense ->
+                        ExpenseCard(expense = expense)
                     }
                 }
 
@@ -885,6 +893,26 @@ private fun ReceiptCard(modifier: Modifier = Modifier, receipt: ReceiptWithProdu
             onDismiss = { openReceipt = false },
             receipt = receipt
         )
+    }
+}
+
+@Composable
+private fun ExpenseCard(modifier: Modifier = Modifier, expense: ExtraExpense) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Box(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(
+                text = "${expense.name}: ${expense.price}kr ${expense.date}",
+                style = MaterialTheme.typography.bodyLarge
+            )
+        }
     }
 }
 

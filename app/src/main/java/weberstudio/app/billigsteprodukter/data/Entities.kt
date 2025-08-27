@@ -7,7 +7,6 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Relation
-import androidx.room.TypeConverter
 import kotlinx.parcelize.Parcelize
 import weberstudio.app.billigsteprodukter.logic.Store
 import java.time.LocalDate
@@ -74,12 +73,24 @@ data class ReceiptWithProducts(
     val products: List<Product>
 )
 
-@Entity(tableName = "budgets")
+@Entity(
+    tableName = "budgets",
+    primaryKeys = ["month", "year"]
+)
 data class Budget(
-    @PrimaryKey(autoGenerate = true)
-    val databaseID: Long = 0,
     val month: Month,
     val year: Year,
     val budget: Float,
+)
+
+@Entity(tableName = "extra_expenses")
+data class ExtraExpense(
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0,
+    val name: String,
+    val price: Float,
+    val date: LocalDate, // Full date for display
+    val month: Month,
+    val year: Year
 )
 

@@ -3,17 +3,11 @@ package weberstudio.app.billigsteprodukter.ui.pages.budget
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flatten
-import kotlinx.coroutines.flow.flattenConcat
 import kotlinx.coroutines.launch
 import weberstudio.app.billigsteprodukter.ReceiptApp
 import weberstudio.app.billigsteprodukter.data.Budget
-import weberstudio.app.billigsteprodukter.data.Receipt
 import weberstudio.app.billigsteprodukter.data.ReceiptWithProducts
 import weberstudio.app.billigsteprodukter.data.budget.BudgetRepository
 import weberstudio.app.billigsteprodukter.data.receipt.ReceiptRepository
@@ -53,5 +47,18 @@ class BudgetViewModel(application: Application): AndroidViewModel(application) {
                 _currentReceipts.value = receipts
             }
         }
+    }
+
+    /**
+     * Adds a new budget to the database
+     */
+    fun addBudget(budget: Budget) {
+        viewModelScope.launch {
+            budgetRepo.insertBudget(budget)
+        }
+    }
+
+    fun addExtraSpendingToCurrentBudget(expenseName: String, price: Float) {
+
     }
 }

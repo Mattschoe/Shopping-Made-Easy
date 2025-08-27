@@ -10,4 +10,9 @@ interface BudgetRepository {
      * Returns the [Budget] given the month and year.
      */
     suspend fun getBudget(month: Month, year: Year): Flow<Budget?>
+
+    /**
+     * Inserts a new budget into database
+     */
+    suspend fun insertBudget(budget: Budget)
 }

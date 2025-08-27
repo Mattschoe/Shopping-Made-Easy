@@ -9,4 +9,8 @@ class OfflineBudgetRepository(private val dao: BudgetDao) : BudgetRepository {
     override suspend fun getBudget(month: Month, year: Year): Flow<Budget?> {
         return dao.getBudgetByDate(month, year)
     }
+
+    override suspend fun insertBudget(budget: Budget) {
+        dao.insertBudget(budget)
+    }
 }

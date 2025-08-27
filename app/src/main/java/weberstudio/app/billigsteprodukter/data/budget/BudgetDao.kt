@@ -22,7 +22,7 @@ interface BudgetDao {
 
     //region QUERIES
     @Query("SELECT * FROM budgets WHERE month = :month AND year = :year")
-    suspend fun getBudgetByDate(month: Month, year: Year): Flow<Budget?>
+    fun getBudgetByDate(month: Month, year: Year): Flow<Budget?>
 
 
     //endregion

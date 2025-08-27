@@ -1,5 +1,6 @@
 package weberstudio.app.billigsteprodukter.ui.pages.budget
 
+import android.util.Log
 import androidx.compose.animation.core.EaseOutCubic
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -18,61 +19,400 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import weberstudio.app.billigsteprodukter.data.Receipt
-import java.text.SimpleDateFormat
-import java.util.Date
+import weberstudio.app.billigsteprodukter.data.Budget
+import weberstudio.app.billigsteprodukter.data.ReceiptWithProducts
+import java.text.DecimalFormat
+import java.text.NumberFormat
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.Month
+import java.time.Year
 import java.util.Locale
+
 
 @Composable
 fun BudgetPage(modifier: Modifier = Modifier, viewModel: BudgetViewModel) {
-    /*BudgetUI(
-        modifier = modifier,
-        currentBudget =  viewModel.currentBudget,
-        totalSpent = viewModel.totalSpent,
-        receipts = ,
-        onAddExpense = { arg1, arg2 ->  },
-        onMonthSelected = { month -> viewModel.changeMonth(month)}
-    ) */
+    val currentBudget by viewModel.currentBudget.collectAsState()
+    val currentReceipts by viewModel.currentReceipts.collectAsState()
+
+    //Hvis useren ikke har givet budgetInput for de intro pagen
+    if (currentBudget == null) {
+        PreBudgetPageUI(
+            modifier = modifier
+        ) { newBudget ->
+                viewModel.addBudget(newBudget)
+        }
+    }
+
+    //Hvis useren har givet et budget så viser vi dem statistik pagen
+    currentBudget?.let { currentBudget ->
+        BudgetPageUI(
+            modifier = modifier,
+            currentBudget =  currentBudget.budget,
+            totalSpent = currentReceipts.sumOf { it.receipt.total.toDouble() }.toFloat(),
+            receipts = currentReceipts,
+            selectedMonth = currentBudget.month,
+            selectedYear = currentBudget.year,
+            onAddExpense = { name, price -> viewModel.addExtraSpendingToCurrentBudget(name, price) },
+            onMonthSelected = { month, year -> viewModel.loadBudget(month, year) }
+        )
+    }
 }
 
 //region UI
+//region PreBudgetPageUI
+val BudgetGreen = Color(0xFF4CAF50)
+/**
+ * The UI for the user to input a monthly budget so we can navigate them to [BudgetPageUI]
+ */
 @Composable
-fun BudgetUI(
+fun PreBudgetPageUI(modifier: Modifier = Modifier, newBudget: (Budget) -> Unit) {
+    newBudget(Budget(
+        month = Month.from(LocalDateTime.now()),
+        year = Year.from(LocalDateTime.now()),
+        budget = 2500f
+    ))
+    /* var showDialog by remember { mutableStateOf(false) }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(300.dp),
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color(0xFFF5F5F5)
+            )
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "Budget",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black
+                )
+
+                Text(
+                    text = "Hvad er budgettet på\nmad for denne måned?",
+                    fontSize = 16.sp,
+                    textAlign = TextAlign.Center,
+                    color = Color.Black,
+                    lineHeight = 22.sp
+                )
+
+                Button(
+                    onClick = { showDialog = true },
+                    modifier = Modifier
+                        .fillMaxWidth(0.6f)
+                        .height(48.dp),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = BudgetGreen // TODO: Change color here
+                    )
+                ) {
+                    Text(
+                        text = "Opret budget",
+                        fontSize = 16.sp,
+                        color = Color.White
+                    )
+                }
+            }
+        }
+    }
+
+    if (showDialog) {
+        BudgetDialog(
+            onDismiss = { showDialog = false }
+        )
+    }
+
+     */
+}
+
+@Composable
+fun BudgetDialog(onDismiss: () -> Unit) {
+    var totalBudget by remember { mutableStateOf("") }
+    var categories by remember { mutableStateOf(
+        mutableListOf(
+            BudgetCategory("gal", "Gal"),
+            BudgetCategory("kod", "Kød"),
+            BudgetCategory("frys", "Frys"),
+            BudgetCategory("tor", "Tör")
+        )
+    ) }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(500.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color.White
+            )
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
+            ) {
+                // Header
+                Text(
+                    text = "Budget for Januar 2025",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                // Total budget field
+                BudgetInputField(
+                    label = "Ialt",
+                    value = totalBudget,
+                    onValueChange = { totalBudget = formatCurrency(it) },
+                    totalBudget = parseAmount(totalBudget),
+                    currentAmount = parseAmount(totalBudget),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+
+                // Category fields
+                LazyColumn(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(bottom = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(categories) { category ->
+                        BudgetInputField(
+                            label = category.name,
+                            value = category.amount,
+                            onValueChange = { newValue ->
+                                val index = categories.indexOfFirst { it.id == category.id }
+                                if (index != -1) {
+                                    categories[index] = category.copy(amount = formatCurrency(newValue))
+                                }
+                            },
+                            totalBudget = parseAmount(totalBudget),
+                            currentAmount = parseAmount(category.amount),
+                            showDelete = category.isDeletable,
+                            onDelete = {
+                                categories.removeAll { it.id == category.id }
+                            }
+                        )
+                    }
+
+                    // Add new category button
+                    item {
+                        OutlinedButton(
+                            onClick = {
+                                val newId = "custom_${System.currentTimeMillis()}"
+                                categories.add(
+                                    BudgetCategory(
+                                        id = newId,
+                                        name = "Ny kategori",
+                                        isDeletable = true
+                                    )
+                                )
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp),
+                            shape = RoundedCornerShape(28.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                containerColor = Color.Transparent
+                            ),
+                            border = ButtonDefaults.outlinedButtonBorder().copy(
+                                width = 1.dp
+                            )
+                        ) {
+                            Icon(
+                                Icons.Default.Add,
+                                contentDescription = "Tilføj kategori",
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Tilføj kategori")
+                        }
+                    }
+                }
+
+                // Done button
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    IconButton(
+                        onClick = onDismiss,
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(RoundedCornerShape(24.dp))
+                            .background(BudgetGreen) // TODO: Change color here
+                    ) {
+                        Icon(
+                            Icons.Default.Check,
+                            contentDescription = "Færdig",
+                            tint = Color.White,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun BudgetInputField(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    totalBudget: Double,
+    currentAmount: Double,
+    showDelete: Boolean = false,
+    onDelete: () -> Unit = {},
+    modifier: Modifier = Modifier
+) {
+    val percentage = if (totalBudget > 0) (currentAmount / totalBudget * 100) else 0.0
+
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            label = { Text(label) },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            modifier = Modifier.weight(1f),
+            shape = RoundedCornerShape(28.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = BudgetGreen, // TODO: Change color here
+                focusedLabelColor = BudgetGreen,  // TODO: Change color here
+                unfocusedBorderColor = BudgetGreen.copy(alpha = 0.5f) // TODO: Change color here
+            ),
+            singleLine = true,
+            suffix = {
+                if (currentAmount > 0) {
+                    Text(
+                        text = "${DecimalFormat("#.#").format(percentage)}%",
+                        fontSize = 12.sp,
+                        color = Color.Gray
+                    )
+                }
+            }
+        )
+
+        if (showDelete) {
+            IconButton(
+                onClick = onDelete,
+                modifier = Modifier.padding(start = 8.dp)
+            ) {
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = "Slet kategori",
+                    tint = Color.Gray
+                )
+            }
+        }
+    }
+}
+
+data class BudgetCategory(
+    val id: String,
+    val name: String,
+    var amount: String = "",
+    val isDeletable: Boolean = false
+)
+
+//region HELPER FUNCTIONS
+fun formatCurrency(input: String): String {
+    // Remove all non-digits
+    val digitsOnly = input.filter { it.isDigit() }
+
+    if (digitsOnly.isEmpty()) return ""
+
+    // Convert to double and format
+    val amount = digitsOnly.toDoubleOrNull() ?: 0.0
+    val formatted = NumberFormat.getNumberInstance(Locale.forLanguageTag("da-DK")).format(amount)
+
+    return formatted
+}
+fun parseAmount(formattedAmount: String): Double {
+    if (formattedAmount.isEmpty()) return 0.0
+
+    // Remove currency symbols and parse
+    val cleaned = formattedAmount
+        .replace("[^0-9,.]".toRegex(), "")
+        .replace(",", ".")
+
+    return cleaned.toDoubleOrNull() ?: 0.0
+}
+//endregion
+//endregion
+
+//region BUDGETPAGE UI
+/**
+ * The UI for the full budget page with graph
+ */
+@Composable
+fun BudgetPageUI(
     modifier: Modifier = Modifier,
     currentBudget: Float,
     totalSpent: Float,
-    receipts: List<Receipt>,
-    selectedMonth: String = getCurrentMonth(),
+    receipts: List<ReceiptWithProducts>,
+    selectedMonth: Month = Month.from(LocalDate.now()),
+    selectedYear: Year = Year.from(LocalDate.now()),
     onAddExpense: (String, Float) -> Unit,
-    onMonthSelected: (String) -> Unit
+    onMonthSelected: (Month, Year) -> Unit
 ) {
     var showAddExpenseDialog by remember { mutableStateOf(false) }
     var showMonthPicker by remember { mutableStateOf(false) }
@@ -89,7 +429,7 @@ fun BudgetUI(
     ) {
         // Header with dropdown and add button
         BudgetHeader(
-            selectedMonth = selectedMonth,
+            selectedMonth = "${selectedMonth.toDanishString()} ${selectedYear.value}",
             onMonthClick = { showMonthPicker = true },
             onAddClick = { showAddExpenseDialog = true }
         )
@@ -133,11 +473,12 @@ fun BudgetUI(
 
     //Month picker dialog
     if (showMonthPicker) {
-        MonthPickerDialog(
+        DatePickerDialog(
             currentMonth = selectedMonth,
+            currentYear = selectedYear,
             onDismiss = { showMonthPicker = false },
-            onMonthSelected = { month ->
-                onMonthSelected(month)
+            onMonthSelected = { month, year ->
+                onMonthSelected(month, year)
                 showMonthPicker = false
             }
         )
@@ -148,7 +489,7 @@ fun BudgetUI(
         ViewReceiptsDialog(
             onDismiss = { showViewReceiptsDialog = false },
             receipts = receipts,
-            selectedMonth = selectedMonth
+            selectedMonth = selectedMonth.toDanishString()
         )
     }
     //endregion
@@ -402,12 +743,13 @@ private fun AddExpenseDialog(onDismiss: () -> Unit, onConfirm: (String, Float) -
 }
 
 @Composable
-private fun MonthPickerDialog(currentMonth: String, onDismiss: () -> Unit, onMonthSelected: (String) -> Unit) {
-    val months = listOf(
-        "Januar 2025", "Februar 2025", "Marts 2025", "April 2025",
-        "Maj 2025", "Juni 2025", "Juli 2025", "August 2025",
-        "September 2025", "Oktober 2025", "November 2025", "December 2025"
-    )
+private fun DatePickerDialog(currentMonth: Month, currentYear: Year, onDismiss: () -> Unit, onMonthSelected: (Month, Year) -> Unit) {
+    val years = listOf(Year.of(2025))
+    val year2Month = years.flatMap { year ->
+        Month.entries.map { month ->
+            month to year
+        }
+    }
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -431,15 +773,17 @@ private fun MonthPickerDialog(currentMonth: String, onDismiss: () -> Unit, onMon
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                months.forEach { month ->
+                year2Month.forEach { (month, year) ->
+                    val isSelected = month == currentMonth && year == currentYear
+
                     Text(
-                        text = month,
+                        text = "${month.toDanishString()} ${year.value}",
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { onMonthSelected(month) }
+                            .clickable { onMonthSelected(month, year) }
                             .padding(vertical = 12.dp),
-                        color = if (month == currentMonth) Color(0xFF4CAF50) else Color.Black, // TODO: Change colors
-                        fontWeight = if (month == currentMonth) FontWeight.Bold else FontWeight.Normal
+                        color = if (isSelected) Color(0xFF4CAF50) else Color.Black, // TODO: Change colors
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                     )
                 }
 
@@ -462,7 +806,7 @@ private fun MonthPickerDialog(currentMonth: String, onDismiss: () -> Unit, onMon
 }
 
 @Composable
-private fun ViewReceiptsDialog(onDismiss: () -> Unit, receipts: List<Receipt>, selectedMonth: String) {
+private fun ViewReceiptsDialog(onDismiss: () -> Unit, receipts: List<ReceiptWithProducts>, selectedMonth: String) {
     Dialog(onDismissRequest = onDismiss) {
         Card(
             modifier = Modifier
@@ -533,16 +877,29 @@ private fun ViewReceiptsButton(onClick: () -> Unit) {
 //endregion
 
 //region HELPER FUNCTION
-private fun getCurrentMonth(): String {
-    val sdf = SimpleDateFormat("MMMM yyyy", Locale("da", "DK"))
-    return sdf.format(Date()).replaceFirstChar { it.uppercase() }
-}
-
 private fun getCurrentTips(spentPercentage: Float): List<String> {
     return when {
         spentPercentage > 1.0f -> BudgetTips.OVERSPENDING.tips
         spentPercentage < 0.7f -> BudgetTips.UNDER_BUDGET.tips
         else -> BudgetTips.GENERAL.tips
     }
+}
+
+/**
+ * Extension function for translating Month objects
+ */
+fun Month.toDanishString(): String = when(this) {
+    Month.JANUARY -> "Januar"
+    Month.FEBRUARY -> "Februar"
+    Month.MARCH -> "Marts"
+    Month.APRIL -> "April"
+    Month.MAY -> "Maj"
+    Month.JUNE -> "Juni"
+    Month.JULY -> "Juli"
+    Month.AUGUST -> "August"
+    Month.SEPTEMBER -> "September"
+    Month.OCTOBER -> "Oktober"
+    Month.NOVEMBER -> "November"
+    Month.DECEMBER -> "December"
 }
 //endregion

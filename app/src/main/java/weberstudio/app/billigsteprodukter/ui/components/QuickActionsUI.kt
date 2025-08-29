@@ -23,7 +23,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import weberstudio.app.billigsteprodukter.R
-import weberstudio.app.billigsteprodukter.ui.theme.ThemeLightGreen
 
 /**
  * The layout UI for the quick actions buttons
@@ -57,7 +56,7 @@ fun QuickActionsButton(text: String, @DrawableRes iconRes: Int, onClick: () -> U
             .height(72.dp)
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(12.dp),
-        color = ThemeLightGreen
+        color = MaterialTheme.colorScheme.secondaryContainer
     ) {
         Row(
             modifier = Modifier

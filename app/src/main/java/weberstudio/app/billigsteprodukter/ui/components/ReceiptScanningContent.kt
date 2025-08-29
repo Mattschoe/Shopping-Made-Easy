@@ -1,9 +1,6 @@
 package weberstudio.app.billigsteprodukter.ui.components
 
-import androidx.compose.foundation.border
-import androidx.compose.material3.AlertDialog
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -16,46 +13,25 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import weberstudio.app.billigsteprodukter.R
-import weberstudio.app.billigsteprodukter.logic.Store
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
-import weberstudio.app.billigsteprodukter.ui.theme.ThemeBlack
-import weberstudio.app.billigsteprodukter.ui.theme.ThemeLightGreen
-import weberstudio.app.billigsteprodukter.ui.theme.ThemeLightGrey
-import weberstudio.app.billigsteprodukter.ui.theme.ThemeTEMP
+
 
 /**
  * @param productName the name of the product (Title)
@@ -82,14 +58,14 @@ fun ProductRow(productName: String, productPrice: String, onThreeDotMenuClick: (
                 Text(
                    text = productName,
                     style = MaterialTheme.typography.bodyLarge, //TODO: Change later to app font
-                    color = ThemeLightGreen
+                    color = Color.Black
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 //Price
                 Text(
                     text = productPrice,
                     style = MaterialTheme.typography.bodyMedium, //TODO: Change later to app font
-                    color = ThemeLightGrey
+                    color = Color.Black
                 )
             }
             //TODO: Det her dukker bare slet ikke op? Tror heller ikke der er funktionalitet for at ændre noget endnu
@@ -102,7 +78,7 @@ fun ProductRow(productName: String, productPrice: String, onThreeDotMenuClick: (
                     modifier = Modifier
                         .rotate(90f),
                     contentDescription = "Indstillinger for $productName",
-                    tint = ThemeTEMP
+                    tint = Color.Black
                 )
             }
         }
@@ -152,7 +128,7 @@ fun DefaultProductCard(modifier: Modifier = Modifier, content: @Composable (Colu
         modifier = modifier
             .padding(horizontal = 16.dp, vertical = 6.dp),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = ThemeTEMP),
+        colors = CardDefaults.cardColors(containerColor = Color.Black),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         content = content
     )

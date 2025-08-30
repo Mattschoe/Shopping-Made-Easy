@@ -53,10 +53,13 @@ fun ApplicationNavigationHost(navController: NavHostController = rememberNavCont
             val cameraViewModel: CameraViewModel = viewModel(backStackEntry) {
                 CameraViewModel(context.applicationContext as Application)
             }
+            val budgetViewModel: BudgetViewModel = viewModel(backStackEntry) {
+                BudgetViewModel(context.applicationContext as Application)
+            }
             PageShell(
                 navController,
                 title = "Forside",
-                pageContent =  { padding -> MainPageContent(Modifier.padding(padding), navController, cameraViewModel) }
+                pageContent =  { padding -> MainPageContent(Modifier.padding(padding), navController, cameraViewModel, budgetViewModel) }
             )
         }
 
@@ -152,10 +155,13 @@ fun ApplicationNavigationHost(navController: NavHostController = rememberNavCont
                 val cameraViewModel: CameraViewModel = viewModel(parentBackStackEntry) {
                     CameraViewModel(context.applicationContext as Application)
                 }
+                val budgetViewModel: BudgetViewModel = viewModel(backStackEntry) {
+                    BudgetViewModel(context.applicationContext as Application)
+                }
                 PageShell(
                     navController,
                     title = "Forside",
-                    pageContent = { padding -> MainPageContent(Modifier.padding(padding), navController, cameraViewModel) }
+                    pageContent = { padding -> MainPageContent(Modifier.padding(padding), navController, cameraViewModel, budgetViewModel) }
                 )
             }
 

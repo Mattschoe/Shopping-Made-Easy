@@ -448,7 +448,6 @@ fun BudgetPageUI(
 
         //Budget circle with animation
         BudgetCircle(
-            currentBudget = currentBudget,
             totalSpent = totalSpent,
             remaining = remaining,
             spentPercentage = spentPercentage
@@ -561,7 +560,7 @@ private fun BudgetHeader(selectedMonth: String, onMonthClick: () -> Unit, onAddC
 }
 
 @Composable
-private fun BudgetCircle(currentBudget: Float, totalSpent: Float, remaining: Float, spentPercentage: Float) {
+fun BudgetCircle(modifier: Modifier = Modifier, totalSpent: Float, remaining: Float, spentPercentage: Float) {
     // Animation for the progress ring
     val animatedProgress by animateFloatAsState(
         targetValue = spentPercentage,

@@ -119,7 +119,7 @@ fun ApplicationNavigationHost(navController: NavHostController = rememberNavCont
             val databaseViewModel: DataBaseViewModel = viewModel(backStackEntry)
             PageShell(
                 navController,
-                title = "Oversigt over priser",
+                title = "Oversigt",
                 pageContent =  { padding -> DatabaseContent(Modifier.padding(padding), databaseViewModel) }
             )
         }

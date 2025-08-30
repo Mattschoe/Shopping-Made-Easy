@@ -73,10 +73,11 @@ fun BilligsteProdukterTheme(
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+        // TODO("SKAL SLÅES FRA SENERE. ER UDELUKKENDE FOR AT SØRGE FOR DET ORIGINALE COLORSCHEME SER GODT UD")
+        /*dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
+        } */
 
         darkTheme -> DarkColorScheme
         else -> LightColorScheme

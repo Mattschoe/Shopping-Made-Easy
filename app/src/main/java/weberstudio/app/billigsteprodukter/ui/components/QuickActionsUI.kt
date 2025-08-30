@@ -23,26 +23,34 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import weberstudio.app.billigsteprodukter.R
+import weberstudio.app.billigsteprodukter.ui.navigation.PageNavigation
 
 /**
  * The layout UI for the quick actions buttons
  */
 @Composable
-fun QuickActionsUI(modifier: Modifier) {
+fun QuickActionsUI(modifier: Modifier, onClick: (PageNavigation) -> Unit) {
     Row(
         modifier = modifier
             .fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        CreateShoppingListUI(
+        //Shopping List
+        QuickActionsButton(
+            text = "Opret indkøbsliste",
+            iconRes = R.drawable.list,
+            onClick = { onClick(PageNavigation.ShoppingList) },
             modifier = Modifier
                 .weight(1f, fill = false)
         )
 
-        TempUI(
-            modifier = modifier
-                .weight(1f,  fill = false)
-        )
+        //Budget
+        QuickActionsButton(
+            text = "Opret Budget",
+            iconRes = R.drawable.list,
+            onClick = { onClick(PageNavigation.Budget) },
+            modifier = Modifier
+                .weight(1f, fill = false))
     }
 }
 
@@ -53,10 +61,10 @@ fun QuickActionsUI(modifier: Modifier) {
 fun QuickActionsButton(text: String, @DrawableRes iconRes: Int, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Surface(
         modifier = modifier
-            .height(72.dp)
+            .height(100.dp)
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(12.dp),
-        color = MaterialTheme.colorScheme.secondaryContainer
+        shape = RoundedCornerShape(24.dp),
+        color = MaterialTheme.colorScheme.secondary
     ) {
         Row(
             modifier = Modifier
@@ -74,25 +82,10 @@ fun QuickActionsButton(text: String, @DrawableRes iconRes: Int, onClick: () -> U
             Text(
                 text = text,
                 style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSecondary,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
         }
     }
-}
-
-/**
- * Moves user to shopping list page so they can create their shopping list
- */
-@Composable
-fun CreateShoppingListUI(modifier: Modifier) {
-    QuickActionsButton("Opret indkøbsliste", R.drawable.list, { println("Jeg vil gerne oprette min indkøbsliste!") }, modifier)
-}
-
-/**
- * Temporary name until i find a use for this
- */
-@Composable
-fun TempUI(modifier: Modifier) {
-    QuickActionsButton("Temp UI", R.drawable.list, { println("Jeg vil gerne lave noget temp her!") }, modifier)
 }

@@ -3,6 +3,7 @@ package weberstudio.app.billigsteprodukter.data
 import androidx.room.TypeConverter
 import weberstudio.app.billigsteprodukter.logic.Store
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.Month
 import java.time.Year
 
@@ -45,5 +46,15 @@ class Converters {
     @TypeConverter
     fun toLocalDate(epochDay: Long?): LocalDate? {
         return epochDay?.let { LocalDate.ofEpochDay(it) }
+    }
+
+    @TypeConverter
+    fun fromLocalDateTime(dateTime: LocalDateTime?): String? {
+        return dateTime?.toString()
+    }
+
+    @TypeConverter
+    fun toLocalDateTime(dateTimeString: String?): LocalDateTime? {
+        return dateTimeString?.let { LocalDateTime.parse(it) }
     }
 }

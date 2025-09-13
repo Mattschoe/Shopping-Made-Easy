@@ -49,7 +49,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import weberstudio.app.billigsteprodukter.logic.Store
-import weberstudio.app.billigsteprodukter.ui.pages.shoppingList.ShoppingList
+import weberstudio.app.billigsteprodukter.ui.navigation.PageNavigation.ShoppingList
 
 private data class DialogUI(
     val shape: RoundedCornerShape = RoundedCornerShape(24.dp),
@@ -394,7 +394,7 @@ fun DeleteConfirmationDialog(shoppingList: ShoppingList, onDismiss: () -> Unit, 
                 )
 
                 Text(
-                    text = "Er du sikker på, at du vil slette \"${shoppingList.name}\"? Denne handling kan ikke fortrydes.",
+                    text = "JEG ER ØDELAGT FIX MIG",
                     fontSize = 16.sp,
                     color = Color.Gray // TODO: Replace with theme color
                 )

@@ -1,5 +1,6 @@
 package weberstudio.app.billigsteprodukter.ui.pages.home
 
+import android.app.Activity
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -200,4 +201,10 @@ fun BudgetCard(modifier: Modifier = Modifier, onClick: () -> Unit, currentBudget
             spentPercentage = spentPercentage
         )
     }
+}
+
+
+@Composable
+fun LatestActivityCard(activity: Activity, onClick: () -> Unit) {
+
 }

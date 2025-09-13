@@ -1,8 +1,8 @@
 package weberstudio.app.billigsteprodukter.data.shoppingList
 
 import weberstudio.app.billigsteprodukter.data.Product
+import weberstudio.app.billigsteprodukter.data.ShoppingList
 import weberstudio.app.billigsteprodukter.logic.Store
-import weberstudio.app.billigsteprodukter.ui.pages.shoppingList.ShoppingList
 
 object ShoppingListRepository {
 

@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import weberstudio.app.billigsteprodukter.data.shoppingList.ShoppingListRepository
 import weberstudio.app.billigsteprodukter.data.Product
+import weberstudio.app.billigsteprodukter.data.ShoppingList
 import weberstudio.app.billigsteprodukter.logic.Store
 import java.time.LocalDateTime
 
@@ -35,7 +36,6 @@ class ShoppingListsViewModel: ViewModel() {
         val shoppingList = ShoppingList(
             ID = ID,
             name = defaultName,
-            store2Products = emptyMap(),
             createdDate = LocalDateTime.now()
         )
 
@@ -79,7 +79,7 @@ class ShoppingListUndermenuViewModel: ViewModel() {
         val shoppingList = repo.getShoppingListByID(listID)
         if (shoppingList != null) {
             //Loads shopping list, resets states aswell
-            _store2ProductsAdded2Store.value = shoppingList.store2Products
+            //_store2ProductsAdded2Store.value = shoppingList.store2Products TODO: JEG ER ØDELAGT FIX MIG
             _selectedProducts.value = emptySet()
             _isStoreExpanded.value = emptyMap()
         } else {
@@ -163,9 +163,3 @@ class ShoppingListUndermenuViewModel: ViewModel() {
     }
 }
 
-data class ShoppingList(
-    val ID: String,
-    val name: String,
-    val store2Products: Map<Store, List<Product>>,
-    val createdDate: LocalDateTime
-)

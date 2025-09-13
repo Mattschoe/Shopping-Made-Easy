@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import weberstudio.app.billigsteprodukter.R
 import weberstudio.app.billigsteprodukter.data.Product
+import weberstudio.app.billigsteprodukter.data.ShoppingList
 import weberstudio.app.billigsteprodukter.logic.Store
 import weberstudio.app.billigsteprodukter.ui.components.AddListDialog
 import weberstudio.app.billigsteprodukter.ui.components.DefaultProductCard
@@ -121,6 +122,8 @@ fun ShoppingListsPage(modifier: Modifier = Modifier, navController: NavControlle
         )
     }
 
+    /*
+    TODO: FIX
     //Delete Confirmation Dialog
     showDeleteDialog?.let { listToDelete ->
         DeleteConfirmationDialog(
@@ -132,6 +135,8 @@ fun ShoppingListsPage(modifier: Modifier = Modifier, navController: NavControlle
             }
         )
     }
+
+     */
 }
 
 @Composable
@@ -165,7 +170,7 @@ fun ShoppingListItem(shoppingList: ShoppingList, onClick: () -> Unit, onDeleteCl
                     color = Color.Black // TODO: Replace with theme color
                 )
                 Text(
-                    text = "${shoppingList.store2Products.values.sumOf { it.size }} produkter",
+                    text = "JEG ER ØDELAGT, FIX MIG :(",
                     fontSize = 14.sp,
                     color = Color.Gray // TODO: Replace with theme color
                 )

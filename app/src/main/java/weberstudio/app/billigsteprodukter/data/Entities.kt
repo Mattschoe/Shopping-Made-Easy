@@ -5,11 +5,14 @@ import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
+import androidx.room.Junction
 import androidx.room.PrimaryKey
 import androidx.room.Relation
 import kotlinx.parcelize.Parcelize
 import weberstudio.app.billigsteprodukter.logic.Store
+import weberstudio.app.billigsteprodukter.ui.pages.shoppingList.ShoppingListsPage
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.Month
 import java.time.Year
 
@@ -93,4 +96,102 @@ data class ExtraExpense(
     val month: Month,
     val year: Year
 )
+
+@Entity(tableName = "shopping_list")
+data class ShoppingList(
+    @PrimaryKey
+    val ID: String,
+    val name: String,
+    val createdDate: LocalDateTime
+)
+
+@Entity(tableName = "recent_activities",
+    foreignKeys = [
+        ForeignKey(
+            entity = Receipt::class,
+            parentColumns = ["receiptID"],
+            childColumns = ["receiptID"],
+            onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = Budget::class,
+            parentColumns = ["month", "year"],
+            childColumns = ["budgetMonth", "budgetYear"],
+            onDelete = ForeignKey.CASCADE,
+        ),
+        ForeignKey(
+            entity = ShoppingList::class,
+            parentColumns = ["ID"],
+            childColumns = ["shoppingListID"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ],
+    indices = [
+        Index(value = ["receiptID"]),
+        Index(value = ["budgetMonth", "budgetYear"]),
+        Index(value = ["shoppingListID"])
+    ]
+)
+data class RecentActivity(
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0,
+    val activityType: ActivityType,
+    val displayInfo: String, //Precomputed for better performance
+    val timestamp: Long = System.currentTimeMillis(),
+
+    //Foreign keys (Used for navigation only)
+    val receiptID: Long? = null,
+    val budgetMonth: Month? = null,
+    val budgetYear: Year? = null,
+    val shoppingListID: String? = null
+)
+
+/**
+ * Junction table since ShoppingList -> Product is a many-to-many relationship
+ */
+@Entity(
+    tableName = "shopping_list_products",
+    primaryKeys = ["shoppingListID", "productID"],
+    foreignKeys = [
+        ForeignKey(
+            entity = ShoppingList::class,
+            parentColumns = ["ID"],
+            childColumns = ["shoppingListID"]
+        ),
+        ForeignKey(
+            entity = Product::class,
+            parentColumns = ["databaseID"],
+            childColumns = ["productID"]
+        )
+    ],
+    indices = [
+        Index(value = ["productID"]),
+        Index(value = ["shoppingListID"])
+    ]
+)
+data class ShoppingListCrossRef(
+    val shoppingListID: String,
+    val productID: Long
+)
+
+/**
+ * Query helper
+ */
+data class ShoppingListWithProducts(
+    @Embedded val shoppingList: ShoppingList,
+    @Relation(
+        parentColumn = "id",
+        entityColumn = "databaseID",
+        associateBy = Junction(ShoppingListCrossRef::class)
+    )
+    val products: List<Product>
+)
+
+enum class ActivityType {
+    RECEIPT_SCANNED,
+    BUDGET_CREATED,
+    SHOPPING_LIST_CREATED
+}
+
+
 

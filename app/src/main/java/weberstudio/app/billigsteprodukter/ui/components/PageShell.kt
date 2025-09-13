@@ -1,6 +1,5 @@
 package weberstudio.app.billigsteprodukter.ui.components
 
-import android.graphics.Camera
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons

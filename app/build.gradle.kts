@@ -62,9 +62,9 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
-    implementation("org.opencv:opencv:4.12.0")
-
+    implementation(libs.opencv)
 
     implementation(libs.androidx.room.runtime)
-    ksp("androidx.room:room-compiler:2.5.0")
+    ksp(libs.androidx.room.compiler)
+    implementation(libs.kotlinx.serialization.json)
 }

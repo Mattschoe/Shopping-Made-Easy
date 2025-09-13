@@ -97,13 +97,7 @@ data class ExtraExpense(
     val year: Year
 )
 
-@Entity(tableName = "shopping_list")
-data class ShoppingList(
-    @PrimaryKey
-    val ID: String,
-    val name: String,
-    val createdDate: LocalDateTime
-)
+
 
 @Entity(tableName = "recent_activities",
     foreignKeys = [
@@ -146,6 +140,14 @@ data class RecentActivity(
     val shoppingListID: String? = null
 )
 
+@Entity(tableName = "shopping_list")
+data class ShoppingList(
+    @PrimaryKey
+    val ID: String,
+    val name: String,
+    val createdDate: LocalDateTime
+)
+
 /**
  * Junction table since ShoppingList -> Product is a many-to-many relationship
  */
@@ -180,9 +182,13 @@ data class ShoppingListCrossRef(
 data class ShoppingListWithProducts(
     @Embedded val shoppingList: ShoppingList,
     @Relation(
-        parentColumn = "id",
+        parentColumn = "ID",
         entityColumn = "databaseID",
-        associateBy = Junction(ShoppingListCrossRef::class)
+        associateBy = Junction(
+            ShoppingListCrossRef::class,
+            parentColumn = "shoppingListID",
+            entityColumn = "productID"
+        )
     )
     val products: List<Product>
 )

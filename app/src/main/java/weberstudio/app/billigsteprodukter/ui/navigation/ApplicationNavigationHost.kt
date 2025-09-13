@@ -65,7 +65,10 @@ fun ApplicationNavigationHost(navController: NavHostController = rememberNavCont
 
         //Shopping List Main menu
         composable(PageNavigation.ShoppingList.route) { backStackEntry ->
-            val viewModel: ShoppingListsViewModel = viewModel()
+            val context = LocalContext.current
+            val viewModel: ShoppingListsViewModel = viewModel(backStackEntry) {
+                ShoppingListsViewModel(context.applicationContext as Application)
+            }
             PageShell(
                 navController,
                 title = "Indkøbslister",
@@ -84,7 +87,10 @@ fun ApplicationNavigationHost(navController: NavHostController = rememberNavCont
             PageNavigation.ShoppingListUndermenu.route,
             arguments = listOf(navArgument("listID") { type = NavType.StringType})
         ) { backStackEntry ->
-            val viewModel: ShoppingListUndermenuViewModel = viewModel()
+            val context = LocalContext.current
+            val viewModel: ShoppingListUndermenuViewModel = viewModel(backStackEntry) {
+                ShoppingListUndermenuViewModel(context.applicationContext as Application)
+            }
             val listID = backStackEntry.arguments?.getString("listID")
             val shoppingListName = if (listID != null) viewModel.getShoppingListName(listID) else "Indkøbsliste"
             var showAddDialog by rememberSaveable { mutableStateOf(false) }

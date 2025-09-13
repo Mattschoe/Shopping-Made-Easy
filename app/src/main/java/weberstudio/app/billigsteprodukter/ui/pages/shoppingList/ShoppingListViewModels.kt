@@ -1,18 +1,20 @@
 package weberstudio.app.billigsteprodukter.ui.pages.shoppingList
 
+import android.app.Application
 import android.util.Log
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import weberstudio.app.billigsteprodukter.ReceiptApp
 import weberstudio.app.billigsteprodukter.data.shoppingList.ShoppingListRepository
 import weberstudio.app.billigsteprodukter.data.Product
 import weberstudio.app.billigsteprodukter.data.ShoppingList
 import weberstudio.app.billigsteprodukter.logic.Store
 import java.time.LocalDateTime
 
-class ShoppingListsViewModel: ViewModel() {
-    private val repo = ShoppingListRepository
+class ShoppingListsViewModel(application: Application): AndroidViewModel(application) {
+    private val repo: ShoppingListRepository = (application as ReceiptApp).shoppingListRepository
     private val _shoppingLists = MutableStateFlow<List<ShoppingList>>(emptyList())
 
     val shoppingLists = _shoppingLists.asStateFlow()
@@ -58,8 +60,8 @@ class ShoppingListsViewModel: ViewModel() {
     }
 }
 
-class ShoppingListUndermenuViewModel: ViewModel() {
-    private val repo = ShoppingListRepository
+class ShoppingListUndermenuViewModel(application: Application): AndroidViewModel(application) {
+    private val repo: ShoppingListRepository = (application as ReceiptApp).shoppingListRepository
     private var currentShoppingListID: String? = null
 
     private val _store2ProductsAdded2Store = MutableStateFlow<Map<Store, List<Product>>>(emptyMap())

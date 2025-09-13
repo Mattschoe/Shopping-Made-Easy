@@ -8,6 +8,7 @@ import androidx.room.TypeConverters
 import weberstudio.app.billigsteprodukter.data.budget.BudgetDao
 import weberstudio.app.billigsteprodukter.data.receipt.ReceiptDao
 import weberstudio.app.billigsteprodukter.data.recentactivity.RecentActivityDao
+import weberstudio.app.billigsteprodukter.data.shoppingList.ShoppingListDao
 
 @Database(
     entities = [Receipt::class, Product::class, RecentActivity::class, Budget::class, ExtraExpense::class, ShoppingList::class, ShoppingListCrossRef::class],
@@ -18,6 +19,7 @@ import weberstudio.app.billigsteprodukter.data.recentactivity.RecentActivityDao
 abstract class AppDatabase : RoomDatabase() {
     abstract fun receiptDao(): ReceiptDao
     abstract fun budgetDao(): BudgetDao
+    abstract fun ShoppingListDao(): ShoppingListDao
     abstract fun recentActivityDao(): RecentActivityDao
 
     companion object {

@@ -6,6 +6,7 @@ import weberstudio.app.billigsteprodukter.data.budget.OfflineBudgetRepository
 import weberstudio.app.billigsteprodukter.data.receipt.OfflineReceiptRepository
 import weberstudio.app.billigsteprodukter.data.recentactivity.OfflineActivityRepository
 import weberstudio.app.billigsteprodukter.data.shoppingList.OfflineShoppingListRepository
+import weberstudio.app.billigsteprodukter.logic.ActivityLogger
 
 /**
  * A application that runs beside the program to access repo's/databases
@@ -17,4 +18,5 @@ class ReceiptApp : Application() {
     val receiptRepository by lazy { OfflineReceiptRepository(database.receiptDao()) }
     val budgetRepository by lazy { OfflineBudgetRepository(database.budgetDao()) }
     val shoppingListRepository by lazy { OfflineShoppingListRepository(database.ShoppingListDao()) }
+    val activityLogger by lazy { ActivityLogger(OfflineActivityRepository(database.recentActivityDao())) }
 }

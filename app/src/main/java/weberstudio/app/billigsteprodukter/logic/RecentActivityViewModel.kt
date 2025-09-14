@@ -18,32 +18,4 @@ class RecentActivityViewModel(application: Application): AndroidViewModel(applic
 
     private val _recentActivities = MutableStateFlow(activityRepo.getRecentActivities())
     val recentActivities = _recentActivities.asStateFlow()
-    
-    suspend fun logReceiptScan(receipt: Receipt) {
-        val activity = RecentActivity(
-            activityType = ActivityType.RECEIPT_SCANNED,
-            displayInfo = "Scannede ${receipt.store.name} kvittering fra d. ${receipt.date}",
-            receiptID = receipt.receiptID
-        )
-        activityRepo.insertActivity(activity)
-    }
-
-    suspend fun logBudgetCreated(budget: Budget) {
-        val activity = RecentActivity(
-            activityType = ActivityType.BUDGET_CREATED,
-            displayInfo = "Lavede budget på: ${budget.budget} for ${budget.month} måned",
-            budgetMonth = budget.month,
-            budgetYear = budget.year
-        )
-        activityRepo.insertActivity(activity)
-    }
-
-    suspend fun logShoppingListCreated(shoppingList: ShoppingList) {
-        val activity = RecentActivity(
-            activityType = ActivityType.SHOPPING_LIST_CREATED,
-            displayInfo = "",
-            shoppingListID = shoppingList.ID
-        )
-        activityRepo.insertActivity(activity)
-    }
 }

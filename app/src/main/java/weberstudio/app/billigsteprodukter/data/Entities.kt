@@ -9,6 +9,7 @@ import androidx.room.Junction
 import androidx.room.PrimaryKey
 import androidx.room.Relation
 import kotlinx.parcelize.Parcelize
+import weberstudio.app.billigsteprodukter.R
 import weberstudio.app.billigsteprodukter.logic.Store
 import weberstudio.app.billigsteprodukter.ui.pages.shoppingList.ShoppingListsPage
 import java.time.LocalDate
@@ -197,6 +198,14 @@ enum class ActivityType {
     RECEIPT_SCANNED,
     BUDGET_CREATED,
     SHOPPING_LIST_CREATED
+}
+
+fun RecentActivity.getIcon(): Int {
+    return when (activityType) {
+        ActivityType.RECEIPT_SCANNED -> R.drawable.camera_icon
+        ActivityType.BUDGET_CREATED -> R.drawable.piggybank_icon
+        ActivityType.SHOPPING_LIST_CREATED -> R.drawable.list
+    }
 }
 
 

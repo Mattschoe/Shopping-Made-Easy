@@ -19,6 +19,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
+import weberstudio.app.billigsteprodukter.logic.ActivityViewModel
 import weberstudio.app.billigsteprodukter.logic.CameraViewModel
 import weberstudio.app.billigsteprodukter.ui.components.AddFAB
 import weberstudio.app.billigsteprodukter.ui.components.AddProductToListDialog
@@ -56,10 +57,13 @@ fun ApplicationNavigationHost(navController: NavHostController = rememberNavCont
             val budgetViewModel: BudgetViewModel = viewModel(backStackEntry) {
                 BudgetViewModel(context.applicationContext as Application)
             }
+            val activityViewModel: ActivityViewModel = viewModel(backStackEntry) {
+                ActivityViewModel(context.applicationContext as Application)
+            }
             PageShell(
                 navController,
                 title = "Forside",
-                pageContent =  { padding -> MainPageContent(Modifier.padding(padding), navController, cameraViewModel, budgetViewModel) }
+                pageContent =  { padding -> MainPageContent(Modifier.padding(padding), navController, cameraViewModel, budgetViewModel, activityViewModel) }
             )
         }
 
@@ -164,10 +168,13 @@ fun ApplicationNavigationHost(navController: NavHostController = rememberNavCont
                 val budgetViewModel: BudgetViewModel = viewModel(backStackEntry) {
                     BudgetViewModel(context.applicationContext as Application)
                 }
+                val activityViewModel: ActivityViewModel = viewModel(backStackEntry) {
+                    ActivityViewModel(context.applicationContext as Application)
+                }
                 PageShell(
                     navController,
                     title = "Forside",
-                    pageContent = { padding -> MainPageContent(Modifier.padding(padding), navController, cameraViewModel, budgetViewModel) }
+                    pageContent = { padding -> MainPageContent(Modifier.padding(padding), navController, cameraViewModel, budgetViewModel, activityViewModel) }
                 )
             }
 

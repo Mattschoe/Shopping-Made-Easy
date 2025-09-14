@@ -1,6 +1,5 @@
 package weberstudio.app.billigsteprodukter.ui.pages.home
 
-import android.app.Activity
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -14,8 +13,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -28,40 +27,38 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
-import kotlinx.coroutines.launch
-import weberstudio.app.billigsteprodukter.logic.CameraViewModel
-import weberstudio.app.billigsteprodukter.ui.components.LatestActivityButton
-import weberstudio.app.billigsteprodukter.ui.components.SaveImage
-import weberstudio.app.billigsteprodukter.ui.components.SaveImageButton
-import weberstudio.app.billigsteprodukter.ui.navigation.PageNavigation
-import weberstudio.app.billigsteprodukter.ui.pages.budget.BudgetViewModel
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import weberstudio.app.billigsteprodukter.data.Budget
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import weberstudio.app.billigsteprodukter.data.ExtraExpense
 import weberstudio.app.billigsteprodukter.data.ReceiptWithProducts
+import weberstudio.app.billigsteprodukter.data.RecentActivity
+import weberstudio.app.billigsteprodukter.data.getIcon
+import weberstudio.app.billigsteprodukter.logic.CameraViewModel
+import weberstudio.app.billigsteprodukter.logic.ActivityViewModel
+import weberstudio.app.billigsteprodukter.ui.navigation.PageNavigation
 import weberstudio.app.billigsteprodukter.ui.pages.budget.BudgetCircle
-import weberstudio.app.billigsteprodukter.ui.theme.Typography
+import weberstudio.app.billigsteprodukter.ui.pages.budget.BudgetViewModel
 
 /**
  * The UI content of the *Main* Page
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun MainPageContent(modifier: Modifier = Modifier, navController: NavController, cameraViewModel: CameraViewModel, budgetViewModel: BudgetViewModel) {
-    val budgetViewModel: BudgetViewModel = viewModel()
+fun MainPageContent(modifier: Modifier = Modifier, navController: NavController, cameraViewModel: CameraViewModel, budgetViewModel: BudgetViewModel, activityViewModel: ActivityViewModel) {
     val currentBudget by budgetViewModel.currentBudget.collectAsState()
     val currentReceipts by budgetViewModel.currentReceipts.collectAsState()
     val currentExpenses by budgetViewModel.currentExtraExpenses.collectAsState()
+
+    val recentActivities by activityViewModel.recentActivities.collectAsState(initial = emptyList())
+
 
     //Main page
     Column(
@@ -124,8 +121,8 @@ fun MainPageContent(modifier: Modifier = Modifier, navController: NavController,
             LazyColumn(
                 modifier = Modifier
             ) {
-                items(10) { _ ->
-                    LatestActivityButton("Hejsa")
+                items(recentActivities) { activity ->
+                    LatestActivityCard(Modifier, activity, {})
                 }
             }
         }
@@ -203,8 +200,87 @@ fun BudgetCard(modifier: Modifier = Modifier, onClick: () -> Unit, currentBudget
     }
 }
 
-
 @Composable
-fun LatestActivityCard(activity: Activity, onClick: () -> Unit) {
+fun LatestActivityCard(modifier: Modifier = Modifier, activity: RecentActivity, onClick: () -> Unit) {
+    Card(
+        onClick = onClick,
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 2.dp,
+            pressedElevation = 4.dp
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Icon(
+                painter = painterResource(activity.getIcon()),
+                contentDescription = activity.toString()
+            )
 
+            //Content
+            Column(
+                modifier = Modifier
+                    .weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = activity.displayInfo,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Text(
+                    text = formatTimestamp(activity.timestamp),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
 }
+
+private fun formatTimestamp(timestamp: Long): String {
+    val now = System.currentTimeMillis()
+    val difference = now - timestamp
+    val dayInMillis = 24 * 60 * 60 * 1000
+
+    return when {
+        difference < dayInMillis -> {
+            val hours = difference / (60 * 60 * 1000)
+            if (hours < 1) {
+                val minutes = difference / (60 * 1000)
+                if (minutes < 1) "Nu" else "${minutes}m siden"
+            } else {
+                val dateFormat = java.text.SimpleDateFormat("HH:mm", java.util.Locale("da", "DK"))
+                "I dag, ${dateFormat.format(java.util.Date(timestamp))}"
+            }
+        }
+        difference < 2 * dayInMillis -> {
+            val dateFormat = java.text.SimpleDateFormat("HH:mm", java.util.Locale("da", "DK"))
+            "I går, ${dateFormat.format(java.util.Date(timestamp))}"
+        }
+        difference < 7 * dayInMillis -> {
+            val days = (difference / dayInMillis).toInt()
+            "${days} dage siden"
+        }
+        else -> {
+            val dateFormat = java.text.SimpleDateFormat("dd/MM", java.util.Locale("da", "DK"))
+            dateFormat.format(java.util.Date(timestamp))
+        }
+    }
+}
+

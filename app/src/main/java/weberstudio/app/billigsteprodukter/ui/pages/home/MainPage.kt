@@ -225,6 +225,8 @@ fun LatestActivityCard(modifier: Modifier = Modifier, activity: RecentActivity, 
         ) {
             Icon(
                 painter = painterResource(activity.getIcon()),
+                modifier = Modifier
+                    .size(36.dp),
                 contentDescription = activity.toString()
             )
 
@@ -239,7 +241,7 @@ fun LatestActivityCard(modifier: Modifier = Modifier, activity: RecentActivity, 
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
 

@@ -16,18 +16,12 @@ class OfflineReceiptRepository(private val dao: ReceiptDao) : ReceiptRepository 
     private val _lastReceipt = MutableStateFlow<List<Product>>(emptyList())
     override val lastReceipt: StateFlow<List<Product>> = _lastReceipt
 
-    override suspend fun addReceiptProducts(store: Store, products: Set<Product>, receiptTotal: Float) {
-        //Creates receipt
-        val receipt = Receipt(
-            store = store,
-            date = LocalDate.now(),
-            total = receiptTotal
-        )
-
+    override suspend fun addReceiptProducts(receipt: Receipt, products: Set<Product>): Long {
         val productsList = products.toList()
 
-        dao.insertReceiptWithProducts(receipt, productsList)
+        val receiptID = dao.insertReceiptWithProducts(receipt, productsList)
         updateStreams(productsList)
+        return receiptID
     }
 
     override suspend fun getReceiptWithProducts(receiptID: Long): ReceiptWithProducts? {

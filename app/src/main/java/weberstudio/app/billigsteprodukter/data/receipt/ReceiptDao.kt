@@ -22,10 +22,11 @@ interface ReceiptDao {
     suspend fun insertProducts(products: List<Product>)
 
     @Transaction
-    suspend fun insertReceiptWithProducts(receipt: Receipt, products: List<Product>) {
+    suspend fun insertReceiptWithProducts(receipt: Receipt, products: List<Product>): Long {
         val receiptID = insertReceipt(receipt)
         val productsWithReceiptID = products.map { it.copy(receiptID = receiptID) }
         insertProducts(productsWithReceiptID)
+        return receiptID
     }
     //endregion
 

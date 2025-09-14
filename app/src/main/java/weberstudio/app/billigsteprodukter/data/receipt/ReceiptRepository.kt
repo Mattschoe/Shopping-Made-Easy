@@ -2,6 +2,7 @@ package weberstudio.app.billigsteprodukter.data.receipt
 
 import kotlinx.coroutines.flow.Flow
 import weberstudio.app.billigsteprodukter.data.Product
+import weberstudio.app.billigsteprodukter.data.Receipt
 import weberstudio.app.billigsteprodukter.data.ReceiptWithProducts
 import weberstudio.app.billigsteprodukter.logic.Store
 import java.time.Month
@@ -20,7 +21,7 @@ interface ReceiptRepository {
      * Adds the products from a parsed receipt into the database. Creates a new receipt and associates all products with it.
      * @param receiptTotal the total price read from the receipt
      */
-    suspend fun addReceiptProducts(store: Store, products: Set<Product>, receiptTotal: Float)
+    suspend fun addReceiptProducts(receipt: Receipt, products: Set<Product>): Long
 
     /**
      * Get receipts within a date range for budget tracking.

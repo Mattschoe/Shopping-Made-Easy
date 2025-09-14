@@ -16,14 +16,17 @@ import kotlinx.coroutines.tasks.await
 import weberstudio.app.billigsteprodukter.ReceiptApp
 import weberstudio.app.billigsteprodukter.data.receipt.OfflineReceiptRepository
 import weberstudio.app.billigsteprodukter.data.Product
+import weberstudio.app.billigsteprodukter.data.Receipt
 import weberstudio.app.billigsteprodukter.logic.exceptions.ParsingException
 import weberstudio.app.billigsteprodukter.logic.parsers.ParserFactory
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser
 import weberstudio.app.billigsteprodukter.ui.ParsingState
+import java.time.LocalDate
 
 
 class CameraViewModel(application: Application): AndroidViewModel(application) {
-    private val receiptRepo: OfflineReceiptRepository = (application as ReceiptApp).receiptRepository
+    val app = application as ReceiptApp
+    private val receiptRepo: OfflineReceiptRepository = app.receiptRepository
     private val parsingState = mutableStateOf<ParsingState>(ParsingState.NotActivated)
 
     /**
@@ -74,7 +77,19 @@ class CameraViewModel(application: Application): AndroidViewModel(application) {
                 if (store == null) throw ParsingException("Couldn't find store from ${parser.toString()}!")
                 try {
                     val parsedText = parser.parse(imageText)
-                    viewModelScope.launch { receiptRepo.addReceiptProducts(parsedText.store, parsedText.products, parsedText.total) } //Saves to repository
+
+                    //Creates receipt
+                    val receipt = Receipt(
+                        store = store,
+                        date = LocalDate.now(),
+                        total = parsedText.total
+                    )
+
+                    //Saves to repository
+                    viewModelScope.launch {
+                        val receiptID = receiptRepo.addReceiptProducts(receipt, parsedText.products)
+                        app.activityLogger.logReceiptScan(receipt.copy(receiptID = receiptID))
+                    }
                     parsingState.value = ParsingState.Success(store)
                 } catch (e: ParsingException) {
                     parsingState.value = ParsingState.Error("Fejl med at scanne kvittering, $e")  //TODO: Denne her Error dukker ikke op på UI

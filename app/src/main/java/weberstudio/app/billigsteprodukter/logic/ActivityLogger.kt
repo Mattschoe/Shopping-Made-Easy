@@ -20,10 +20,11 @@ class ActivityLogger(private val activityRepo: ActivityRepository) {
     suspend fun logBudgetCreated(budget: Budget) {
         val activity = RecentActivity(
             activityType = ActivityType.BUDGET_CREATED,
-            displayInfo = "Lavede budget på: ${budget.budget} for ${budget.month} måned",
+            displayInfo = "Lavede budget på: ${budget.budget}kr for ${budget.month} måned",
             budgetMonth = budget.month,
             budgetYear = budget.year
         )
+
         activityRepo.insertActivity(activity)
     }
 

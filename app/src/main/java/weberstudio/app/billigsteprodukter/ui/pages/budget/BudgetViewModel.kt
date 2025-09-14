@@ -18,8 +18,9 @@ import java.time.Month
 import java.time.Year
 
 class BudgetViewModel(application: Application): AndroidViewModel(application) {
-    private val receiptRepo: ReceiptRepository = (application as ReceiptApp).receiptRepository
-    private val budgetRepo: BudgetRepository = (application as ReceiptApp).budgetRepository
+    val app = application as ReceiptApp
+    private val receiptRepo: ReceiptRepository = app.receiptRepository
+    private val budgetRepo: BudgetRepository = app.budgetRepository
 
     private val _currentBudget = MutableStateFlow<Budget?>(null)
     private val _currentReceipts = MutableStateFlow<List<ReceiptWithProducts>>(emptyList())
@@ -66,6 +67,7 @@ class BudgetViewModel(application: Application): AndroidViewModel(application) {
     fun addBudget(budget: Budget) {
         viewModelScope.launch {
             budgetRepo.insertBudget(budget)
+            app.activityLogger.logBudgetCreated(budget)
         }
     }
 

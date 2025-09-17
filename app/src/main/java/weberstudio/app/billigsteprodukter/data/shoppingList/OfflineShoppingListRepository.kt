@@ -1,35 +1,41 @@
 package weberstudio.app.billigsteprodukter.data.shoppingList
 
-import weberstudio.app.billigsteprodukter.data.Product
+import kotlinx.coroutines.flow.Flow
 import weberstudio.app.billigsteprodukter.data.ShoppingList
-import weberstudio.app.billigsteprodukter.logic.Store
+import weberstudio.app.billigsteprodukter.data.ShoppingListCrossRef
+import weberstudio.app.billigsteprodukter.data.ShoppingListWithProducts
 
 class OfflineShoppingListRepository(private val dao: ShoppingListDao) : ShoppingListRepository {
-    override fun saveShoppingList(shoppingList: ShoppingList) {
-        TODO("Not yet implemented")
+    override suspend fun insert(shoppingList: ShoppingList) {
+        dao.insertShoppingList(shoppingList)
     }
 
-    override fun deleteShoppingList(ID: String) {
-        TODO("Not yet implemented")
+    override suspend fun updateShoppingList(shoppingList: ShoppingList) {
+        dao.updateShoppingList(shoppingList)
     }
 
-    override fun getShoppingListByID(ID: String): ShoppingList? {
-        TODO("Not yet implemented")
+    override suspend fun deleteShoppingList(shoppingList: ShoppingList) {
+        dao.deleteShoppingList(shoppingList)
     }
 
-    override fun getAllShoppingLists(): List<ShoppingList> {
-        TODO("Not yet implemented")
+    override suspend fun getAllShoppingLists(): Flow<List<ShoppingList>> {
+        return dao.getAllShoppingLists()
     }
 
-    override fun updateShoppingList(
-        ID: String,
-        store2Product: Map<Store, List<Product>>
-    ) {
-        TODO("Not yet implemented")
+    override suspend fun insertShoppingListProductCrossRef(crossRef: ShoppingListCrossRef) {
+        dao.insertShoppingListProductCrossRef(crossRef)
     }
 
-    override suspend fun getProductsGroupedByStore(listId: String): Map<Store, List<Product>> {
-        val products = dao.getProductsGroupedByStore(listId)
-        return products.groupBy { it.store }
+    override suspend fun getShoppingListWithProducts(ID: String): Flow<ShoppingListWithProducts?> {
+        return dao.getShoppingListWithProducts(ID)
     }
+
+    override suspend fun removeProductFromShoppingList(shoppingListID: String, productID: Long) {
+        dao.removeProductFromShoppingList(shoppingListID, productID)
+    }
+
+    override suspend fun getProductCountInShoppingList(shoppingListID: String): Flow<Int> {
+        return dao.getProductCountInShoppingList(shoppingListID)
+    }
+
 }

@@ -1,23 +1,27 @@
 package weberstudio.app.billigsteprodukter.data.shoppingList
 
-import weberstudio.app.billigsteprodukter.data.Product
+import kotlinx.coroutines.flow.Flow
 import weberstudio.app.billigsteprodukter.data.ShoppingList
-import weberstudio.app.billigsteprodukter.logic.Store
+import weberstudio.app.billigsteprodukter.data.ShoppingListCrossRef
+import weberstudio.app.billigsteprodukter.data.ShoppingListWithProducts
 
 interface ShoppingListRepository {
     /**
      * Saves the shopping list to the repository
      */
-    fun saveShoppingList(shoppingList: ShoppingList)
+    suspend fun insert(shoppingList: ShoppingList)
 
-    fun deleteShoppingList(ID: String)
+    suspend fun updateShoppingList(shoppingList: ShoppingList)
 
-    fun getShoppingListByID(ID: String): ShoppingList?
+    suspend fun deleteShoppingList(shoppingList: ShoppingList)
 
-    fun getAllShoppingLists(): List<ShoppingList>
+    suspend fun getAllShoppingLists(): Flow<List<ShoppingList>>
 
-    fun updateShoppingList(ID: String, store2Product: Map<Store, List<Product>>)
+    suspend fun insertShoppingListProductCrossRef(crossRef: ShoppingListCrossRef)
 
-    suspend fun getProductsGroupedByStore(listId: String): Map<Store, List<Product>>
+    suspend fun getShoppingListWithProducts(ID: String): Flow<ShoppingListWithProducts?>
 
+    suspend fun removeProductFromShoppingList(shoppingListID: String, productID: Long)
+
+    suspend fun getProductCountInShoppingList(shoppingListID: String): Flow<Int>
 }

@@ -18,7 +18,7 @@ import java.time.Month
 import java.time.Year
 
 class BudgetViewModel(application: Application): AndroidViewModel(application) {
-    val app = application as ReceiptApp
+    private val app = application as ReceiptApp
     private val receiptRepo: ReceiptRepository = app.receiptRepository
     private val budgetRepo: BudgetRepository = app.budgetRepository
 

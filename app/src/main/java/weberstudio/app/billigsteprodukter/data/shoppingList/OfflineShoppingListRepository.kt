@@ -18,7 +18,7 @@ class OfflineShoppingListRepository(private val dao: ShoppingListDao) : Shopping
         dao.deleteShoppingList(shoppingList)
     }
 
-    override suspend fun getAllShoppingLists(): Flow<List<ShoppingList>> {
+    override fun getAllShoppingLists(): Flow<List<ShoppingList>> {
         return dao.getAllShoppingLists()
     }
 
@@ -26,7 +26,7 @@ class OfflineShoppingListRepository(private val dao: ShoppingListDao) : Shopping
         dao.insertShoppingListProductCrossRef(crossRef)
     }
 
-    override suspend fun getShoppingListWithProducts(ID: String): Flow<ShoppingListWithProducts?> {
+    override fun getShoppingListWithProducts(ID: String): Flow<ShoppingListWithProducts?> {
         return dao.getShoppingListWithProducts(ID)
     }
 
@@ -34,7 +34,7 @@ class OfflineShoppingListRepository(private val dao: ShoppingListDao) : Shopping
         dao.removeProductFromShoppingList(shoppingListID, productID)
     }
 
-    override suspend fun getProductCountInShoppingList(shoppingListID: String): Flow<Int> {
+    override fun getProductCountInShoppingList(shoppingListID: String): Flow<Int> {
         return dao.getProductCountInShoppingList(shoppingListID)
     }
 

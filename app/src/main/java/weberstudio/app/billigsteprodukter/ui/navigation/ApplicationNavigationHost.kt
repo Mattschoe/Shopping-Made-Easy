@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -23,6 +24,7 @@ import weberstudio.app.billigsteprodukter.logic.ActivityViewModel
 import weberstudio.app.billigsteprodukter.logic.CameraViewModel
 import weberstudio.app.billigsteprodukter.ui.components.AddFAB
 import weberstudio.app.billigsteprodukter.ui.components.AddProductToListDialog
+import weberstudio.app.billigsteprodukter.ui.components.AddShoppingListDialog
 import weberstudio.app.billigsteprodukter.ui.components.PageShell
 import weberstudio.app.billigsteprodukter.ui.pages.database.DataBaseViewModel
 import weberstudio.app.billigsteprodukter.ui.pages.database.DatabaseContent
@@ -73,6 +75,7 @@ fun ApplicationNavigationHost(navController: NavHostController = rememberNavCont
             val viewModel: ShoppingListsViewModel = viewModel(backStackEntry) {
                 ShoppingListsViewModel(context.applicationContext as Application)
             }
+            var showAddShoppingList by remember { mutableStateOf(false) }
             PageShell(
                 navController,
                 title = "Indkøbslister",
@@ -82,6 +85,16 @@ fun ApplicationNavigationHost(navController: NavHostController = rememberNavCont
                         navController = navController,
                         viewModel = viewModel
                     )
+                },
+                floatingActionButton = { AddFAB(onClick = { showAddShoppingList = true }) }
+            )
+
+            AddShoppingListDialog(
+                showDialog = showAddShoppingList,
+                onDismiss =  { showAddShoppingList = false },
+                onConfirm =  { name ->
+                    viewModel.addShoppingList(name)
+                    showAddShoppingList = false
                 }
             )
         }
@@ -96,7 +109,10 @@ fun ApplicationNavigationHost(navController: NavHostController = rememberNavCont
                 ShoppingListUndermenuViewModel(context.applicationContext as Application)
             }
             val listID = backStackEntry.arguments?.getString("listID")
-            val shoppingListName = if (listID != null) viewModel.getShoppingListName(listID) else "Indkøbsliste"
+            val shoppingListName = if (listID != null) {
+                viewModel.selectShoppingList(listID)
+                viewModel.selectedShoppingList.collectAsState().value!!.shoppingList.name
+            } else "Indkøbsliste"
             var showAddDialog by rememberSaveable { mutableStateOf(false) }
 
 

@@ -33,5 +33,5 @@ interface ShoppingListDao {
     suspend fun removeProductFromShoppingList(shoppingListID: String, productId: Long)
 
     @Query("SELECT COUNT(*) FROM shopping_list_products WHERE shoppingListID = :shoppingListID")
-    suspend fun getProductCountInShoppingList(shoppingListID: String): Flow<Int>
+    fun getProductCountInShoppingList(shoppingListID: String): Flow<Int>
 }

@@ -184,6 +184,72 @@ fun AddProductToListDialog(showDialog: Boolean, onDismiss: () -> Unit, onConfirm
     }
 }
 
+@Composable
+fun AddShoppingListDialog(showDialog: Boolean, onDismiss: () -> Unit, onConfirm: (name: String) -> Unit) {
+    if (!showDialog) return
+
+    //Local UI state
+    var shoppingListName by rememberSaveable { mutableStateOf("") }
+    var dialogUI = remember { DialogUI() }
+
+    // Build the TextFieldColors from DialogUI inside a @Composable scope
+    val textFieldColors = TextFieldDefaults.colors(
+        focusedContainerColor = dialogUI.focusedContainerColor,
+        unfocusedContainerColor = dialogUI.unfocusedContainerColor,
+    )
+
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = dialogUI.shape,
+            shadowElevation = 6.dp,
+            modifier = Modifier
+                .padding(16.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(12.dp)
+                    .widthIn(min = 280.dp, max = 380.dp)
+            ) {
+                Text(
+                    text = "Giv din indkøbsliste et navn!",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Medium)
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+
+                //Navn på produkt
+                TextField(
+                    value = shoppingListName,
+                    onValueChange = { shoppingListName = it },
+                    placeholder = { Text("Navn...") },
+                    singleLine = true,
+                    shape = dialogUI.shape,
+                    colors = textFieldColors,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 44.dp)
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+
+                //Action row for confirm/dismiss
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TextButton(onClick = onDismiss) { Text("Annuller") }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    // Confirm is enabled only when both fields are provided
+                    Button(onClick = { onConfirm(shoppingListName) }) {
+                        Text("Tilføj")
+                    }
+                }
+            }
+        }
+    }
+
+}
+
+
 /**
  * Prompts the user for product info which can be used to create a product
  * @param onConfirm the name and price given by user if they accept.

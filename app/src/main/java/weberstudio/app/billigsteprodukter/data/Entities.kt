@@ -146,7 +146,7 @@ data class ShoppingList(
     @PrimaryKey
     val ID: String,
     val name: String,
-    val createdDate: LocalDateTime
+    val createdDate: LocalDate
 )
 
 /**

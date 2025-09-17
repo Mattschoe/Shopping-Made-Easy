@@ -74,7 +74,7 @@ fun ShoppingListsPage(modifier: Modifier = Modifier, navController: NavControlle
     ) {
         //Shopping Lists
         LazyColumn(
-            modifier = Modifier
+            modifier = modifier
                 .fillMaxWidth()
                 .weight(1f)
                 .padding(horizontal = 16.dp),
@@ -116,7 +116,7 @@ fun ShoppingListsPage(modifier: Modifier = Modifier, navController: NavControlle
         AddListDialog(
             onDismiss = { showAddDialog = false },
             onConfirm = { listName ->
-                viewModel.createShoppingList(listName)
+                viewModel.addShoppingList(listName)
                 showAddDialog = false
             }
         )
@@ -170,7 +170,7 @@ fun ShoppingListItem(shoppingList: ShoppingList, onClick: () -> Unit, onDeleteCl
                     color = Color.Black // TODO: Replace with theme color
                 )
                 Text(
-                    text = "JEG ER ØDELAGT, FIX MIG :(",
+                    text = "Oprettet den: ${shoppingList.createdDate}",
                     fontSize = 14.sp,
                     color = Color.Gray // TODO: Replace with theme color
                 )
@@ -193,10 +193,11 @@ fun ShoppingListItem(shoppingList: ShoppingList, onClick: () -> Unit, onDeleteCl
 
 @Composable
 fun ShoppingListUndermenuContent(modifier: Modifier, listID: String?, navController: NavController, viewModel: ShoppingListUndermenuViewModel) {
+    /*
     //Loads the shopping list from ID given as param
     LaunchedEffect(listID) { //LaunchedEffect gør så koden bliver runned når listID ændrer sig
         if (listID != null) {
-            viewModel.loadShoppingList(listID)
+            viewModel.selectShoppingList(listID)
         }
     }
 
@@ -301,6 +302,7 @@ fun ShoppingListUndermenuContent(modifier: Modifier, listID: String?, navControl
         }
         //endregion
     }
+    */
 }
 
 @Composable

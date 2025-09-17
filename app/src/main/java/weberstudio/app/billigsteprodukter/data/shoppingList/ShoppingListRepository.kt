@@ -15,13 +15,13 @@ interface ShoppingListRepository {
 
     suspend fun deleteShoppingList(shoppingList: ShoppingList)
 
-    suspend fun getAllShoppingLists(): Flow<List<ShoppingList>>
+    fun getAllShoppingLists(): Flow<List<ShoppingList>>
 
     suspend fun insertShoppingListProductCrossRef(crossRef: ShoppingListCrossRef)
 
-    suspend fun getShoppingListWithProducts(ID: String): Flow<ShoppingListWithProducts?>
+    fun getShoppingListWithProducts(ID: String): Flow<ShoppingListWithProducts?>
 
     suspend fun removeProductFromShoppingList(shoppingListID: String, productID: Long)
 
-    suspend fun getProductCountInShoppingList(shoppingListID: String): Flow<Int>
+    fun getProductCountInShoppingList(shoppingListID: String): Flow<Int>
 }

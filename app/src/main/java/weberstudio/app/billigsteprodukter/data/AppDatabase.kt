@@ -1,10 +1,12 @@
 package weberstudio.app.billigsteprodukter.data
 
 import android.content.Context
+import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import androidx.room.migration.Migration
 import weberstudio.app.billigsteprodukter.data.budget.BudgetDao
 import weberstudio.app.billigsteprodukter.data.receipt.ReceiptDao
 import weberstudio.app.billigsteprodukter.data.recentactivity.RecentActivityDao
@@ -12,8 +14,8 @@ import weberstudio.app.billigsteprodukter.data.shoppingList.ShoppingListDao
 
 @Database(
     entities = [Receipt::class, Product::class, RecentActivity::class, Budget::class, ExtraExpense::class, ShoppingList::class, ShoppingListCrossRef::class],
-    version = 4,
-    exportSchema =  false
+    version = 5,
+    exportSchema = false,
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {

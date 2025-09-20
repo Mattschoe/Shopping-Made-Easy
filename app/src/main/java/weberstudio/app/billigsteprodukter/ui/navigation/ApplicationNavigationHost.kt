@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -109,16 +110,13 @@ fun ApplicationNavigationHost(navController: NavHostController = rememberNavCont
                 ShoppingListUndermenuViewModel(context.applicationContext as Application)
             }
             val listID = backStackEntry.arguments?.getString("listID")
-            val shoppingListName = if (listID != null) {
-                viewModel.selectShoppingList(listID)
-                viewModel.selectedShoppingList.collectAsState().value!!.shoppingList.name
-            } else "Indkøbsliste"
+            viewModel.selectShoppingList(listID!!) //If no listID found we want it to break here TODO(Add error handling here)
             var showAddDialog by rememberSaveable { mutableStateOf(false) }
 
 
             PageShell(
                 navController,
-                title = "$shoppingListName",
+                title = "Indkøbsliste",
                 pageContent = { padding ->
                     ShoppingListUndermenuContent(
                         listID = listID,

@@ -193,7 +193,6 @@ fun ShoppingListItem(shoppingList: ShoppingList, onClick: () -> Unit, onDeleteCl
 
 @Composable
 fun ShoppingListUndermenuContent(modifier: Modifier, listID: String?, navController: NavController, viewModel: ShoppingListUndermenuViewModel) {
-    /*
     //Loads the shopping list from ID given as param
     LaunchedEffect(listID) { //LaunchedEffect gør så koden bliver runned når listID ændrer sig
         if (listID != null) {
@@ -302,7 +301,6 @@ fun ShoppingListUndermenuContent(modifier: Modifier, listID: String?, navControl
         }
         //endregion
     }
-    */
 }
 
 @Composable

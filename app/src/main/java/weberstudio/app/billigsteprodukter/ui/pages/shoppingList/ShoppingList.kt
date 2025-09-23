@@ -2,9 +2,14 @@ package weberstudio.app.billigsteprodukter.ui.pages.shoppingList
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,17 +28,22 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalUseFallbackRippleImplementation
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,9 +52,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -54,7 +66,6 @@ import weberstudio.app.billigsteprodukter.data.ShoppingList
 import weberstudio.app.billigsteprodukter.logic.Store
 import weberstudio.app.billigsteprodukter.ui.components.AddListDialog
 import weberstudio.app.billigsteprodukter.ui.components.DefaultProductCard
-import weberstudio.app.billigsteprodukter.ui.components.DeleteConfirmationDialog
 import weberstudio.app.billigsteprodukter.ui.components.ReceiptTotalCard
 import weberstudio.app.billigsteprodukter.ui.components.SearchBar
 import weberstudio.app.billigsteprodukter.ui.navigation.PageNavigation
@@ -192,28 +203,23 @@ fun ShoppingListItem(shoppingList: ShoppingList, onClick: () -> Unit, onDeleteCl
 }
 
 @Composable
-fun ShoppingListUndermenuContent(modifier: Modifier, listID: String?, navController: NavController, viewModel: ShoppingListUndermenuViewModel) {
-    //Loads the shopping list from ID given as param
-    LaunchedEffect(listID) { //LaunchedEffect gør så koden bliver runned når listID ændrer sig
-        if (listID != null) {
-            viewModel.selectShoppingList(listID)
-        }
-    }
-
+fun ShoppingListUndermenuContent(modifier: Modifier, navController: NavController, viewModel: ShoppingListUndermenuViewModel) {
     val visibleStores by viewModel.store2ProductsAdded2Store.collectAsState()
     val isStoreExpanded by viewModel.isStoreExpanded.collectAsState()
-    val selectedProducts by viewModel.selectedProducts.collectAsState()
+    val storeTotals by viewModel.storeTotals.collectAsState()
+
+    val shoppingList by viewModel.selectedShoppingList.collectAsState()
+    val listName = shoppingList?.shoppingList?.name
 
 
     Column(
         modifier = modifier
-            .border(2.dp, Color.Magenta)
+            .padding(12.dp)
     ) {
         //region TITLE
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .border(2.dp, Color.Black)
         ) {
             //Text
             Column(
@@ -223,7 +229,7 @@ fun ShoppingListUndermenuContent(modifier: Modifier, listID: String?, navControl
                 //Indkøbsliste navn
                 Row {
                     Text(
-                        text = "Mit Indkøb",
+                        text = listName ?: "Min Indkøbsliste",
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Medium
                     )
@@ -246,7 +252,7 @@ fun ShoppingListUndermenuContent(modifier: Modifier, listID: String?, navControl
             //Sort by icon
             IconButton(
                 modifier = Modifier
-                    .size(72.dp),
+                    .size(60.dp),
                 onClick = { } //Sort order
             ) {
                 Icon(imageVector = ImageVector.vectorResource(R.drawable.sortascending_icon), "Sorter efter")
@@ -258,43 +264,96 @@ fun ShoppingListUndermenuContent(modifier: Modifier, listID: String?, navControl
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .border(2.dp, Color.Red)
+                .padding(vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            SearchBar(Modifier.weight(1f), searchQuery =  "TEMP", onQueryChange =  {})
-            ReceiptTotalCard(totalPrice = "193,95")
+            SearchBar(
+                Modifier.weight(0.65f),
+                searchQuery =  viewModel.searchQuery.collectAsState().value,
+                onQueryChange =  viewModel::setSearchQuery
+            )
+            ReceiptTotalCard(
+                modifier = Modifier.weight(0.35f), //So we have space for max 9999,99kr
+                totalPrice = "9999,99"
+            )
         }
         //endregion
 
         //region SHOPPING LIST
         LazyColumn(
             modifier = Modifier
-                .fillMaxSize()
-                .border(2.dp, Color.Green)
+                .fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            visibleStores.forEach { store2ProductList ->
-                val store = store2ProductList.key
+            visibleStores.forEach { (store, productsWithStatus) ->
                 val expanded = isStoreExpanded[store.ID] == true
-                val (total, checkedOff) = viewModel.getTotalAndCheckedOff(store)
-                item(key = store.ID) {
-                    StoreDropDown(
-                        store = store,
-                        isExpanded = isStoreExpanded[store.ID] == true,
-                        onToggle = { viewModel.toggleStore(store, expanded) },
-                        total = total,
-                        checkedOff = checkedOff
-                    )
-                }
+                val (total, checkedOff) = storeTotals[store] ?: Pair(0, 0)
 
-                if (expanded) {
-                    items(
-                        items = store2ProductList.value,
-                        key = { product -> product.businessID }
-                    ) { product ->
-                        ShoppingListProductCardU(
-                            product = product,
-                            selected = selectedProducts.contains(product),
-                            onToggle = { viewModel.toggleProduct(product) },
-                        )
+                item(key = store.ID) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant
+                        ),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        //region Store Header
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { viewModel.toggleStore(store) }
+                                .animateContentSize(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant
+                            ),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                            shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = store.name,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.weight(1f)
+                                )
+
+                                Icon(
+                                    imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                                    contentDescription = if (expanded) "Collapse" else "Expand",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(20.dp)
+                                )
+
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Text(
+                                    text = "$checkedOff/$total",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                        //endregion
+
+                        //Products
+                        if (expanded) {
+                            productsWithStatus.forEach { (product, isChecked) ->
+                                ShoppingListProductCardUI(
+                                    product = product,
+                                    selected = isChecked,
+                                    onToggle = { viewModel.toggleProduct(product) },
+                                )
+                                Spacer(Modifier.height(4.dp))
+                            }
+                        }
                     }
                 }
             }
@@ -303,60 +362,70 @@ fun ShoppingListUndermenuContent(modifier: Modifier, listID: String?, navControl
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun StoreDropDown(modifier: Modifier = Modifier, store: Store, isExpanded: Boolean, onToggle: () -> Unit, total: Int, checkedOff: Int) {
+fun ShoppingListProductCardUI(modifier: Modifier = Modifier, product: Product, selected: Boolean = false, onToggle: () -> Unit) {
+    val backgroundColor by animateColorAsState(
+        targetValue = if (selected) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.surface,
+        animationSpec = tween(300)
+    )
+
+    val textColor by animateColorAsState(
+        targetValue = if (selected) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurface,
+        animationSpec = tween(300)
+    )
+
+    val interactionSource = remember { MutableInteractionSource() }
+
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp)
-            .clickable { onToggle() }
-            .animateContentSize(), // smooth size change when toggling
-    ) {
-        Row(modifier = Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(text = store.name, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-            Text(text = if (isExpanded) "▲" else "▼")
-            Text(text = "$checkedOff/$total", style = MaterialTheme.typography.titleMedium)
-        }
-    }
-}
-
-@Composable
-fun ShoppingListProductCardU(modifier: Modifier = Modifier, product: Product, selected: Boolean = false, onToggle: () -> Unit) {
-    val backgroundColor by animateColorAsState(
-        targetValue = if (selected) Color.Green else Color.LightGray
-    )
-
-    DefaultProductCard(
-        modifier = modifier
-            .fillMaxSize()
-            .background(backgroundColor)
-            .clickable { onToggle() } //Gør hele produkt row klikbart
+            .padding(horizontal = 8.dp)
+            .clickable(interactionSource = interactionSource, indication = null, onClick = onToggle), //Gør hele produkt row klikbart
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = backgroundColor
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
         Row(
             modifier = Modifier
-                .padding(horizontal = 12.dp, vertical = 12.dp),
+                .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Checkbox(
+           Checkbox(
                 checked = selected,
-                onCheckedChange = { onToggle() }
+                onCheckedChange = { onToggle() },
+                colors = CheckboxDefaults.colors(
+                    checkedColor = MaterialTheme.colorScheme.primary,
+                    uncheckedColor = MaterialTheme.colorScheme.outline,
+                    checkmarkColor = MaterialTheme.colorScheme.onPrimary,
+                ),
             )
 
             Spacer(modifier = Modifier.width(width = 12.dp))
 
+
             Column(modifier = Modifier.weight(1f)) {
+
                 //Produktnavn
                 Text(
                     text = product.name,
-                    style = MaterialTheme.typography.bodyLarge
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = textColor,
+                    textDecoration = if (selected) TextDecoration.LineThrough else TextDecoration.None
                 )
+
                 Spacer(modifier = Modifier.height(4.dp))
 
                 //Produktdetaljer
                 Text(
                     text = "${product.price} | 1kg", //TODO: Her skal prober enhed tilføjes når den funktionalitet er implementeret
-                    style = MaterialTheme.typography.bodySmall
+                    style = MaterialTheme.typography.bodySmall,
+                    color = textColor.copy(alpha = 0.8f),
+                    textDecoration = if (selected) TextDecoration.LineThrough else TextDecoration.None
                 )
+
             }
         }
     }

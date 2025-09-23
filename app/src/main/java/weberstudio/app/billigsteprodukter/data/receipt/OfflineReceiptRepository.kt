@@ -47,6 +47,10 @@ class OfflineReceiptRepository(private val dao: ReceiptDao) : ReceiptRepository 
         return true
     }
 
+    override suspend fun addProduct(product: Product): Long {
+        return dao.insertProduct(product)
+    }
+
     override suspend fun removeProduct(product: Product) {
         dao.deleteProduct(product)
 

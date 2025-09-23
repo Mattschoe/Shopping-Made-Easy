@@ -21,8 +21,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
+import weberstudio.app.billigsteprodukter.data.Product
 import weberstudio.app.billigsteprodukter.logic.ActivityViewModel
 import weberstudio.app.billigsteprodukter.logic.CameraViewModel
+import weberstudio.app.billigsteprodukter.logic.Store
 import weberstudio.app.billigsteprodukter.ui.components.AddFAB
 import weberstudio.app.billigsteprodukter.ui.components.AddProductToListDialog
 import weberstudio.app.billigsteprodukter.ui.components.AddShoppingListDialog
@@ -119,7 +121,6 @@ fun ApplicationNavigationHost(navController: NavHostController = rememberNavCont
                 title = "Indkøbsliste",
                 pageContent = { padding ->
                     ShoppingListUndermenuContent(
-                        listID = listID,
                         modifier = Modifier.padding(padding),
                         navController = navController,
                         viewModel = viewModel
@@ -132,7 +133,7 @@ fun ApplicationNavigationHost(navController: NavHostController = rememberNavCont
                 showDialog = showAddDialog,
                 onDismiss =  { showAddDialog = false },
                 onConfirm =  { name, store ->
-                    viewModel.addProduct(name, store)
+                    viewModel.addProduct(Product(name = "Test", price = 15.95f, store = Store.Netto))
                     showAddDialog = false
                 }
             )
@@ -187,7 +188,7 @@ fun ApplicationNavigationHost(navController: NavHostController = rememberNavCont
                 }
                 PageShell(
                     navController,
-                    title = "Forside",
+                    title = "Hjem",
                     pageContent = { padding -> MainPageContent(Modifier.padding(padding), navController, cameraViewModel, budgetViewModel, activityViewModel) }
                 )
             }

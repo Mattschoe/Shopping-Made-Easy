@@ -80,7 +80,7 @@ fun MainPageContent(modifier: Modifier = Modifier, navController: NavController,
             Column(
                 modifier = Modifier
                     .weight(1.5f)
-                    .border(2.dp, Color.Magenta)
+                    //.border(2.dp, Color.Magenta)
             ) {
                 NoBudgetCard(
                     onClick = { navController.navigate(PageNavigation.Budget.route) }

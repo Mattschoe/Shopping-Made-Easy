@@ -47,6 +47,11 @@ interface ReceiptRepository {
     suspend fun addProductToCurrentReceipt(product: Product): Boolean
 
     /**
+     * Adds a product to the database
+     */
+    suspend fun addProduct(product: Product): Long
+
+    /**
      * Remove one product from the database.
      */
     suspend fun removeProduct(product: Product)

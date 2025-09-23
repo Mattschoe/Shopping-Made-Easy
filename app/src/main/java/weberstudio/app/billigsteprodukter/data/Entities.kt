@@ -176,6 +176,7 @@ data class ShoppingListCrossRef(
     val isChecked: Boolean = false
 )
 
+//region HELPER
 /**
  * Query helper
  */
@@ -193,6 +194,11 @@ data class ShoppingListWithProducts(
     val products: List<Product>
 )
 
+data class ProductWithCheckedStatus(
+    @Embedded val product: Product,
+    val isChecked: Boolean
+)
+
 enum class ActivityType {
     RECEIPT_SCANNED,
     BUDGET_CREATED,
@@ -206,6 +212,7 @@ fun RecentActivity.getIcon(): Int {
         ActivityType.SHOPPING_LIST_CREATED -> R.drawable.list
     }
 }
+//endregion
 
 
 

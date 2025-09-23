@@ -1,11 +1,14 @@
 package weberstudio.app.billigsteprodukter.ui.components
 
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
@@ -30,6 +33,8 @@ fun SearchBar(modifier: Modifier = Modifier, searchQuery: String, onQueryChange:
         leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) }, //TODO: Fjern Placeholder for eget ikon
         shape = RoundedCornerShape(24.dp),
         colors = OutlinedTextFieldDefaults.colors(
+            focusedContainerColor = MaterialTheme.colorScheme.surface,
+            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
             focusedBorderColor = Color.Black,
             unfocusedBorderColor = Color.Black
         ),

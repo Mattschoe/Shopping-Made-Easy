@@ -34,4 +34,16 @@ interface ShoppingListDao {
 
     @Query("SELECT COUNT(*) FROM shopping_list_products WHERE shoppingListID = :shoppingListID")
     fun getProductCountInShoppingList(shoppingListID: String): Flow<Int>
+
+    @Query("UPDATE shopping_list_products SET isChecked = NOT isChecked WHERE shoppingListID = :shoppingListID AND productID = :productID")
+    suspend fun toggleProductChecked(shoppingListID: String, productID: Long)
+
+    @Query("""
+    SELECT p.*, slp.isChecked 
+    FROM shopping_list_products slp 
+    INNER JOIN products p ON slp.productID = p.databaseID 
+    WHERE slp.shoppingListID = :shoppingListID
+    ORDER BY p.store, p.name
+""")
+    fun getShoppingListProductsWithCheckedStatus(shoppingListID: String): Flow<List<ProductWithCheckedStatus>>
 }

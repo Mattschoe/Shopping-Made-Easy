@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -43,6 +44,7 @@ fun ProductRow(productName: String, productPrice: String, onThreeDotMenuClick: (
     DefaultProductCard(
         modifier = Modifier
             .fillMaxSize()
+            .padding(horizontal = 16.dp, vertical = 6.dp),
     ) {
         Row(
             modifier = Modifier
@@ -96,11 +98,11 @@ fun ReceiptTotalCard(modifier: Modifier = Modifier, totalPrice: String) {
     ) {
         Row(
             modifier = Modifier
-                .padding(horizontal = 12.dp, vertical = 10.dp),
+                .padding(horizontal = 12.dp, vertical = 14.dp),
         ) {
             Text(
                 text = "Total:",
-                style = MaterialTheme.typography.bodyMedium, //TODO: Change later to app font
+                style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black,
                 maxLines = 1,
@@ -109,7 +111,7 @@ fun ReceiptTotalCard(modifier: Modifier = Modifier, totalPrice: String) {
             Spacer(modifier = Modifier.width(4.dp))
             Text(
                 text = "${totalPrice}kr",
-                style = MaterialTheme.typography.bodyMedium, //TODO: Change later to app font
+                style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Normal,
                 color = Color.Red,
                 maxLines = 1,
@@ -125,10 +127,9 @@ fun ReceiptTotalCard(modifier: Modifier = Modifier, totalPrice: String) {
 @Composable
 fun DefaultProductCard(modifier: Modifier = Modifier, content: @Composable (ColumnScope.() -> Unit)) {
     Card(
-        modifier = modifier
-            .padding(horizontal = 16.dp, vertical = 6.dp),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.Black),
+        modifier = modifier,
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         content = content
     )

@@ -21,6 +21,9 @@ interface ReceiptDao {
     @Insert
     suspend fun insertProducts(products: List<Product>)
 
+    @Insert
+    suspend fun insertProduct(product: Product): Long
+
     @Transaction
     suspend fun insertReceiptWithProducts(receipt: Receipt, products: List<Product>): Long {
         val receiptID = insertReceipt(receipt)

@@ -11,9 +11,7 @@ import androidx.room.Relation
 import kotlinx.parcelize.Parcelize
 import weberstudio.app.billigsteprodukter.R
 import weberstudio.app.billigsteprodukter.logic.Store
-import weberstudio.app.billigsteprodukter.ui.pages.shoppingList.ShoppingListsPage
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.Month
 import java.time.Year
 
@@ -174,7 +172,8 @@ data class ShoppingList(
 )
 data class ShoppingListCrossRef(
     val shoppingListID: String,
-    val productID: Long
+    val productID: Long,
+    val isChecked: Boolean = false
 )
 
 /**

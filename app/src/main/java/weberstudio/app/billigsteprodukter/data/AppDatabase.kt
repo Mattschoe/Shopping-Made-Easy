@@ -14,7 +14,7 @@ import weberstudio.app.billigsteprodukter.data.shoppingList.ShoppingListDao
 
 @Database(
     entities = [Receipt::class, Product::class, RecentActivity::class, Budget::class, ExtraExpense::class, ShoppingList::class, ShoppingListCrossRef::class],
-    version = 5,
+    version = 6,
     exportSchema = false,
 )
 @TypeConverters(Converters::class)

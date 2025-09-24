@@ -10,6 +10,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
@@ -27,6 +28,8 @@ import weberstudio.app.billigsteprodukter.data.ShoppingListCrossRef
 import weberstudio.app.billigsteprodukter.data.ShoppingListWithProducts
 import weberstudio.app.billigsteprodukter.data.receipt.ReceiptRepository
 import weberstudio.app.billigsteprodukter.logic.Store
+import java.math.BigDecimal
+import java.math.RoundingMode
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -94,6 +97,14 @@ class ShoppingListUndermenuViewModel(application: Application): AndroidViewModel
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = emptyMap()
+    )
+
+    val priceTotal: StateFlow<Double> = selectedShoppingList.map { shoppingListWithProduct ->
+        shoppingListWithProduct?.products?.sumOf { it.price.toDouble() } ?: 0.0
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = 0.0
     )
 
     /**

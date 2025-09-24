@@ -69,6 +69,8 @@ import weberstudio.app.billigsteprodukter.ui.components.DefaultProductCard
 import weberstudio.app.billigsteprodukter.ui.components.ReceiptTotalCard
 import weberstudio.app.billigsteprodukter.ui.components.SearchBar
 import weberstudio.app.billigsteprodukter.ui.navigation.PageNavigation
+import java.math.BigDecimal
+import java.math.RoundingMode
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -210,6 +212,7 @@ fun ShoppingListUndermenuContent(modifier: Modifier, navController: NavControlle
 
     val shoppingList by viewModel.selectedShoppingList.collectAsState()
     val listName = shoppingList?.shoppingList?.name
+    val totalPrice by viewModel.priceTotal.collectAsState()
 
 
     Column(
@@ -275,7 +278,7 @@ fun ShoppingListUndermenuContent(modifier: Modifier, navController: NavControlle
             )
             ReceiptTotalCard(
                 modifier = Modifier.weight(0.35f), //So we have space for max 9999,99kr
-                totalPrice = "9999,99"
+                totalPrice = BigDecimal(totalPrice).setScale(2, RoundingMode.HALF_EVEN).toString()
             )
         }
         //endregion

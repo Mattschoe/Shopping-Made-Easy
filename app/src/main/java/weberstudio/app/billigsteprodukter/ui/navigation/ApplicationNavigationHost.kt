@@ -133,7 +133,7 @@ fun ApplicationNavigationHost(navController: NavHostController = rememberNavCont
                 showDialog = showAddDialog,
                 onDismiss =  { showAddDialog = false },
                 onConfirm =  { name, store ->
-                    viewModel.addProduct(Product(name = "Test", price = 15.95f, store = Store.Netto))
+                    viewModel.addProduct(Product(name = name, price = 15.95f, store = store))
                     showAddDialog = false
                 }
             )

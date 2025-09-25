@@ -61,7 +61,6 @@ import weberstudio.app.billigsteprodukter.ui.components.AddListDialog
 import weberstudio.app.billigsteprodukter.ui.components.ReceiptTotalCard
 import weberstudio.app.billigsteprodukter.ui.components.SearchBar
 import weberstudio.app.billigsteprodukter.ui.navigation.PageNavigation
-import weberstudio.app.billigsteprodukter.ui.pages.budget.formatCurrencyToString
 import java.math.BigDecimal
 import java.math.RoundingMode
 
@@ -199,7 +198,7 @@ fun ShoppingListItem(shoppingList: ShoppingList, onClick: () -> Unit, onDeleteCl
 
 @Composable
 fun ShoppingListUndermenuContent(modifier: Modifier, navController: NavController, viewModel: ShoppingListUndermenuViewModel) {
-    val visibleStores by viewModel.store2ProductsAdded2Store.collectAsState()
+    val filteredList = viewModel.filteredStore2ProductsAdded2Store.collectAsState().value
     val isStoreExpanded by viewModel.isStoreExpanded.collectAsState()
     val storeTotals by viewModel.storeTotals.collectAsState()
 
@@ -267,8 +266,8 @@ fun ShoppingListUndermenuContent(modifier: Modifier, navController: NavControlle
         ) {
             SearchBar(
                 Modifier.weight(0.65f).fillMaxHeight(),
-                searchQuery =  viewModel.searchQuery.collectAsState().value,
-                onQueryChange =  viewModel::setSearchQuery
+                searchQuery =  viewModel.listSearchQuery.collectAsState().value,
+                onQueryChange =  viewModel::setListSearchQuery
             )
             ReceiptTotalCard(
                 modifier = Modifier.weight(0.35f).fillMaxHeight(), //So we have space for max 9999,99kr
@@ -283,7 +282,7 @@ fun ShoppingListUndermenuContent(modifier: Modifier, navController: NavControlle
                 .fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            visibleStores.forEach { (store, productsWithStatus) ->
+            filteredList.forEach { (store, productsWithStatus) ->
                 val expanded = isStoreExpanded[store.ID] == true
                 val (total, checkedOff) = storeTotals[store] ?: Pair(0, 0)
 

@@ -4,11 +4,17 @@ import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -21,6 +27,7 @@ import weberstudio.app.billigsteprodukter.data.Product
 import weberstudio.app.billigsteprodukter.data.ShoppingList
 import weberstudio.app.billigsteprodukter.data.ShoppingListCrossRef
 import weberstudio.app.billigsteprodukter.data.receipt.ReceiptRepository
+import weberstudio.app.billigsteprodukter.logic.MatchScoreCalculator
 import weberstudio.app.billigsteprodukter.logic.Store
 import java.time.LocalDate
 
@@ -56,11 +63,13 @@ class ShoppingListUndermenuViewModel(application: Application): AndroidViewModel
     private val productRepo: ReceiptRepository = app.receiptRepository
 
     private val _selectedShoppingListID = MutableStateFlow<String?>(null)
-    private val _searchQuery = MutableStateFlow("")
+    private val _databaseSearchQuery = MutableStateFlow("")
+    private val _listSearchQuery = MutableStateFlow("")
     private val _searchResults = MutableStateFlow<List<Product>>(emptyList())
     private val _isStoreExpanded = MutableStateFlow<Map<Int, Boolean>>(emptyMap())
 
-    val searchQuery = _searchQuery.asStateFlow()
+    val databaseSearchQuery = _databaseSearchQuery.asStateFlow()
+    val listSearchQuery = _listSearchQuery.asStateFlow()
     val searchResults = _searchResults.asStateFlow()
     val isStoreExpanded = _isStoreExpanded.asStateFlow()
 
@@ -100,6 +109,46 @@ class ShoppingListUndermenuViewModel(application: Application): AndroidViewModel
         initialValue = 0.0
     )
 
+    @OptIn(FlowPreview::class)
+    val filteredStore2ProductsAdded2Store = run {
+        //region SETTINGS
+        val minimumQueryLength = 3 //How long the query has to be before search kicks in
+        val inputCooldown: Long = 300 //How long in MS from the user stops inputting 'till query starts
+        val itemLimit = 30 //How many items to retrieve per store
+        //endregion
+
+        store2ProductsAdded2Store.combine(
+            listSearchQuery
+                .debounce(inputCooldown)
+                .distinctUntilChanged()
+        ) { store2Products, rawQuery ->
+            val query = rawQuery.trim().lowercase()
+            when {
+                query.isBlank() || query.length < minimumQueryLength -> {
+                    store2Products
+                }
+                else -> {
+                    store2Products.mapValues { (store, productPair) ->
+                        productPair.map { productPair ->
+                            val score = MatchScoreCalculator.calculate(productPair.first.name, query)
+                            Triple(productPair.first, productPair.second, score)
+                        }
+                        .filter { it.third > 0 } // Only keep products with match score > 0
+                        .sortedByDescending { it.third } // Sort by match score
+                        .map { Pair(it.first, it.second) } // Convert back to Pair<Product, Boolean>
+                        .take(itemLimit)
+                    }
+                }
+            }.filterValues { products ->
+                products.isNotEmpty()
+            }
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = emptyMap()
+        )
+    }
+
     /**
      * Toggles the product to/from selected
      */
@@ -120,7 +169,8 @@ class ShoppingListUndermenuViewModel(application: Application): AndroidViewModel
         }
     }
 
-    fun setSearchQuery(query: String) { _searchQuery.value = query }
+    fun setDatabaseSearchQuery(query: String) { _databaseSearchQuery.value = query }
+    fun setListSearchQuery(query: String) { _listSearchQuery.value = query }
 
     fun selectShoppingList(shoppingListID: String) {
         _selectedShoppingListID.value = shoppingListID
@@ -143,6 +193,7 @@ class ShoppingListUndermenuViewModel(application: Application): AndroidViewModel
         }
     }
 
+    private var nextNegativeID = -1L
     /**
      * Adds a product only scoped to this list and will not be saved beyond this shoppingList
      */
@@ -173,7 +224,7 @@ class ShoppingListUndermenuViewModel(application: Application): AndroidViewModel
      * Searches for products in the product database
      */
     fun searchProductsInDatabase(query: String) {
-        _searchQuery.value = query
+        _databaseSearchQuery.value = query
         if (query.length >= 3) {
             viewModelScope.launch {
                 productRepo.searchProductsContaining(query).collect { products ->
@@ -183,14 +234,6 @@ class ShoppingListUndermenuViewModel(application: Application): AndroidViewModel
         } else {
             _searchResults.value = emptyList()
         }
-    }
-
-    private var nextNegativeID = -1L
-
-
-
-    fun searchProductsInList() {
-
     }
 }
 

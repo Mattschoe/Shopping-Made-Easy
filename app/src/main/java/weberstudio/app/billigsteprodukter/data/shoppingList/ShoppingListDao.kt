@@ -46,4 +46,7 @@ interface ShoppingListDao {
     ORDER BY p.store, p.name
 """)
     fun getShoppingListProductsWithCheckedStatus(shoppingListID: String): Flow<List<ProductWithCheckedStatus>>
+
+    @Query("SELECT EXISTS(SELECT 1 FROM shopping_list_products WHERE shoppingListID = :shoppingListID AND productID = :productID)")
+    suspend fun isProductInShoppingList(shoppingListID: String, productID: Long): Boolean
 }

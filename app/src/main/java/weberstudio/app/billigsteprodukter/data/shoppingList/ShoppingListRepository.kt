@@ -32,4 +32,6 @@ interface ShoppingListRepository {
     fun getShoppingListProductsGroupedByStore(shoppingListID: String): Flow<Map<Store, List<Pair<Product, Boolean>>>>
 
     fun getStoreTotals(shoppingListID: String): Flow<Map<Store, Pair<Int, Int>>>
+
+    suspend fun isProductInShoppingList(listID: String, productID: Long): Boolean
 }

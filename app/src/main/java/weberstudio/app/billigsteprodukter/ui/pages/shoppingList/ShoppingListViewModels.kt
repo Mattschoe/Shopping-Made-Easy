@@ -2,19 +2,14 @@ package weberstudio.app.billigsteprodukter.ui.pages.shoppingList
 
 import android.app.Application
 import android.util.Log
-import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -25,13 +20,9 @@ import weberstudio.app.billigsteprodukter.data.shoppingList.ShoppingListReposito
 import weberstudio.app.billigsteprodukter.data.Product
 import weberstudio.app.billigsteprodukter.data.ShoppingList
 import weberstudio.app.billigsteprodukter.data.ShoppingListCrossRef
-import weberstudio.app.billigsteprodukter.data.ShoppingListWithProducts
 import weberstudio.app.billigsteprodukter.data.receipt.ReceiptRepository
 import weberstudio.app.billigsteprodukter.logic.Store
-import java.math.BigDecimal
-import java.math.RoundingMode
 import java.time.LocalDate
-import java.time.LocalDateTime
 
 class ShoppingListsViewModel(application: Application): AndroidViewModel(application) {
     private val app = application as ReceiptApp
@@ -66,9 +57,11 @@ class ShoppingListUndermenuViewModel(application: Application): AndroidViewModel
 
     private val _selectedShoppingListID = MutableStateFlow<String?>(null)
     private val _searchQuery = MutableStateFlow("")
+    private val _searchResults = MutableStateFlow<List<Product>>(emptyList())
     private val _isStoreExpanded = MutableStateFlow<Map<Int, Boolean>>(emptyMap())
 
     val searchQuery = _searchQuery.asStateFlow()
+    val searchResults = _searchResults.asStateFlow()
     val isStoreExpanded = _isStoreExpanded.asStateFlow()
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -133,10 +126,38 @@ class ShoppingListUndermenuViewModel(application: Application): AndroidViewModel
         _selectedShoppingListID.value = shoppingListID
     }
 
-    fun addProduct(product: Product) {
+    fun addExistingProductToList(product: Product) {
         viewModelScope.launch {
             _selectedShoppingListID.value?.let { listID ->
-                val productID = productRepo.addProduct(product)
+
+                if (!shoppingListRepo.isProductInShoppingList(listID, product.databaseID)) {
+                    val crossRef = ShoppingListCrossRef(
+                        shoppingListID = listID,
+                        productID = product.databaseID,
+                        isChecked = false
+                    )
+                    shoppingListRepo.insertShoppingListProductCrossRef(crossRef)
+
+                }
+            }
+        }
+    }
+
+    /**
+     * Adds a product only scoped to this list and will not be saved beyond this shoppingList
+     */
+    fun addCustomProductToList(name: String, store: Store) {
+        viewModelScope.launch {
+            _selectedShoppingListID.value?.let { listID ->
+                val customProduct = Product(
+                    databaseID = nextNegativeID--,
+                    name = name,
+                    price = 0f,
+                    store = store
+                )
+
+                val productID = productRepo.addProduct(customProduct)
+                Log.d("ShoppingList", "ProductID: $productID")
 
                 val crossRef = ShoppingListCrossRef(
                     shoppingListID = listID,
@@ -146,6 +167,30 @@ class ShoppingListUndermenuViewModel(application: Application): AndroidViewModel
                 shoppingListRepo.insertShoppingListProductCrossRef(crossRef)
             }
         }
+    }
+
+    /**
+     * Searches for products in the product database
+     */
+    fun searchProductsInDatabase(query: String) {
+        _searchQuery.value = query
+        if (query.length >= 3) {
+            viewModelScope.launch {
+                productRepo.searchProductsContaining(query).collect { products ->
+                    _searchResults.value = products
+                }
+            }
+        } else {
+            _searchResults.value = emptyList()
+        }
+    }
+
+    private var nextNegativeID = -1L
+
+
+
+    fun searchProductsInList() {
+
     }
 }
 

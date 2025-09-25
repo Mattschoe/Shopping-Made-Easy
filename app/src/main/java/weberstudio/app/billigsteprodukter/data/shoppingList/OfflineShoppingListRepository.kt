@@ -68,5 +68,9 @@ class OfflineShoppingListRepository(private val dao: ShoppingListDao) : Shopping
             }
     }
 
+    override suspend fun isProductInShoppingList(listID: String, productID: Long): Boolean {
+        return dao.isProductInShoppingList(listID, productID)
+    }
+
 
 }

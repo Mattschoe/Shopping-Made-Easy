@@ -4,7 +4,6 @@ import android.app.Application
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -21,10 +20,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
-import weberstudio.app.billigsteprodukter.data.Product
 import weberstudio.app.billigsteprodukter.logic.ActivityViewModel
 import weberstudio.app.billigsteprodukter.logic.CameraViewModel
-import weberstudio.app.billigsteprodukter.logic.Store
 import weberstudio.app.billigsteprodukter.ui.components.AddFAB
 import weberstudio.app.billigsteprodukter.ui.components.AddProductToListDialog
 import weberstudio.app.billigsteprodukter.ui.components.AddShoppingListDialog
@@ -129,12 +126,19 @@ fun ApplicationNavigationHost(navController: NavHostController = rememberNavCont
                 floatingActionButton = { AddFAB(onClick = { showAddDialog = true}) }
             )
 
+            val searchResults by viewModel.searchResults.collectAsState()
             AddProductToListDialog(
                 showDialog = showAddDialog,
                 onDismiss =  { showAddDialog = false },
                 onConfirm =  { name, store ->
-                    viewModel.addProduct(Product(name = name, price = 15.95f, store = store))
+                    viewModel.addCustomProductToList(name, store)
                     showAddDialog = false
+                },
+                searchResults = searchResults,
+                onSearchQueryChange = viewModel::searchProductsInDatabase,
+                onSelectExistingProduct = { product ->
+                    viewModel.addExistingProductToList(product)
+                    showAddDialog
                 }
             )
         }

@@ -1,5 +1,7 @@
 package weberstudio.app.billigsteprodukter.ui.components
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,6 +14,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -23,6 +26,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.Icon
@@ -48,6 +52,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import weberstudio.app.billigsteprodukter.data.Product
 import weberstudio.app.billigsteprodukter.logic.Store
 import weberstudio.app.billigsteprodukter.ui.navigation.PageNavigation.ShoppingList
 
@@ -59,13 +64,21 @@ private data class DialogUI(
 
 
 @Composable
-fun AddProductToListDialog(showDialog: Boolean, onDismiss: () -> Unit, onConfirm: (name: String, store: Store) -> Unit) {
+fun AddProductToListDialog(
+    showDialog: Boolean,
+    onDismiss: () -> Unit,
+    onConfirm: (name: String, store: Store) -> Unit,
+    searchResults: List<Product>,
+    onSearchQueryChange: (String) -> Unit,
+    onSelectExistingProduct: (Product) -> Unit
+) {
     if (!showDialog) return
 
     //Local UI state
     var productName by rememberSaveable { mutableStateOf("") }
     var selectedStore by rememberSaveable { mutableStateOf<Store?>(null) }
     var expanded by remember { mutableStateOf(false) } //Is DropDown expanded
+    var showSearchResults by remember { mutableStateOf(false) }
     var dialogUI = remember { DialogUI() }
     val isValid = productName.trim().isNotEmpty() && selectedStore != null //Form validity
 
@@ -94,25 +107,74 @@ fun AddProductToListDialog(showDialog: Boolean, onDismiss: () -> Unit, onConfirm
                 Spacer(modifier = Modifier.height(12.dp))
 
                 //Navn på produkt
-                TextField(
+                OutlinedTextField(
                     value = productName,
-                    onValueChange = { productName = it },
+                    onValueChange = { query ->
+                        productName = query
+                        onSearchQueryChange(query)
+                        showSearchResults = query.length >= 3 && searchResults.isNotEmpty()
+                    },
                     placeholder = { Text("Navn...") },
                     singleLine = true,
                     shape = dialogUI.shape,
-                    colors = textFieldColors,
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(min = 44.dp)
                 )
                 Spacer(modifier = Modifier.height(12.dp))
 
+                //Search result
+                if (showSearchResults) {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 200.dp) //Limit height so it doesn't take whole dialog
+                            .background(
+                                color = MaterialTheme.colorScheme.surface,
+                                shape = RoundedCornerShape(8.dp)
+                            )
+                            .border(
+                                width = 1.dp,
+                                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                                shape = RoundedCornerShape(8.dp)
+                            )
+                    ) {
+                        items(searchResults) { product ->
+                            Surface(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        onSelectExistingProduct(product)
+                                        showSearchResults = false
+                                        onDismiss()
+                                    }
+                                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                            ) {
+                                Column {
+                                    Text(
+                                        text = product.name,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                    Text(
+                                        text = "${product.store.name} • ${product.price}kr",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+
                 //Store DropDown
                 Box(
                     modifier = Modifier
                         .clickable { expanded = true }
                 ) {
-                    TextField(
+                    OutlinedTextField(
                         value = selectedStore?.name ?: "Vælg butik..",
                         onValueChange = {},
                         enabled = false,
@@ -158,7 +220,7 @@ fun AddProductToListDialog(showDialog: Boolean, onDismiss: () -> Unit, onConfirm
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Simple action row for confirm/dismiss (optional)
+                //Action row for confirm/dismiss
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End,

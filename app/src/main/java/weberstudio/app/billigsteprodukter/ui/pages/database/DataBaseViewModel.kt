@@ -20,6 +20,7 @@ import org.apache.commons.text.similarity.LevenshteinDistance
 import weberstudio.app.billigsteprodukter.ReceiptApp
 import weberstudio.app.billigsteprodukter.data.Product
 import weberstudio.app.billigsteprodukter.data.receipt.ReceiptRepository
+import weberstudio.app.billigsteprodukter.logic.MatchScoreCalculator
 import weberstudio.app.billigsteprodukter.logic.Store
 
 /**
@@ -31,8 +32,7 @@ class DataBaseViewModel(application: Application): AndroidViewModel(application)
     private val _searchAllStores = MutableStateFlow(false)
 
     private val receiptRepo: ReceiptRepository = (application as ReceiptApp).receiptRepository
-    private val fuzzyMatcherLeven = LevenshteinDistance()
-    private val fuzzyMatcherJaro = JaroWinklerSimilarity()
+
 
     val searchQuery = _searchQuery.asStateFlow()
     val searchAllStores = _searchAllStores.asStateFlow()
@@ -103,7 +103,7 @@ class DataBaseViewModel(application: Application): AndroidViewModel(application)
 
                 // Otherwise, rank and filter by search relevance
                 products
-                    .map { it to calculateMatchScore(it.name, query) }
+                    .map { it to MatchScoreCalculator.calculate(it.name, query) }
                     .filter { it.second > 0 }
                     .sortedByDescending { it.second }
                     .map { it.first }
@@ -126,30 +126,9 @@ class DataBaseViewModel(application: Application): AndroidViewModel(application)
         }
     }
 
-    private fun calculateMatchScore(productName: String, query: String): Int {
-        //TODO: Det her skal normalizes helt (se hvordan i parser), og ikke bar trimmes og lowercases
-        val productName = productName.lowercase().trim()
-        val query = query.lowercase().trim()
 
-        return when {
-            productName == query -> 100
-            productName.startsWith(query) -> 75
-            productName.contains(query) -> 50
-            fuzzyMatch(productName, query) -> 25
-            else -> 0
-        }
-    }
 
-    /**
-     * Fuzzy matches the productName and query
-     */
-    private fun fuzzyMatch(productName: String, query: String): Boolean {
-        val jaroSimilarity = fuzzyMatcherJaro.apply(productName, query)
-        if (jaroSimilarity >= 0.85) return true
 
-        val levenSimilarity = fuzzyMatcherLeven.apply(productName, query)
-        return levenSimilarity != -1 && levenSimilarity <= 2
-    }
 
 
     /**

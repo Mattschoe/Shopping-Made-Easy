@@ -20,7 +20,7 @@ import org.apache.commons.text.similarity.LevenshteinDistance
 import weberstudio.app.billigsteprodukter.ReceiptApp
 import weberstudio.app.billigsteprodukter.data.Product
 import weberstudio.app.billigsteprodukter.data.receipt.ReceiptRepository
-import weberstudio.app.billigsteprodukter.logic.MatchScoreCalculator
+import weberstudio.app.billigsteprodukter.logic.components.MatchScoreCalculator
 import weberstudio.app.billigsteprodukter.logic.Store
 
 /**

@@ -27,7 +27,7 @@ import weberstudio.app.billigsteprodukter.data.Product
 import weberstudio.app.billigsteprodukter.data.ShoppingList
 import weberstudio.app.billigsteprodukter.data.ShoppingListCrossRef
 import weberstudio.app.billigsteprodukter.data.receipt.ReceiptRepository
-import weberstudio.app.billigsteprodukter.logic.MatchScoreCalculator
+import weberstudio.app.billigsteprodukter.logic.components.MatchScoreCalculator
 import weberstudio.app.billigsteprodukter.logic.Store
 import java.time.LocalDate
 
@@ -68,7 +68,6 @@ class ShoppingListUndermenuViewModel(application: Application): AndroidViewModel
     private val _searchResults = MutableStateFlow<List<Product>>(emptyList())
     private val _isStoreExpanded = MutableStateFlow<Map<Int, Boolean>>(emptyMap())
 
-    val databaseSearchQuery = _databaseSearchQuery.asStateFlow()
     val listSearchQuery = _listSearchQuery.asStateFlow()
     val searchResults = _searchResults.asStateFlow()
     val isStoreExpanded = _isStoreExpanded.asStateFlow()

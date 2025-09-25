@@ -143,7 +143,7 @@ fun NavigationBar(navController: NavController) {
                     modifier = Modifier.size(36.dp),
                 )
             },
-            selected = currentRoute == PageNavigation.ShoppingList.route,
+            selected = currentRoute == PageNavigation.ShoppingList.route || currentRoute == PageNavigation.ShoppingListUndermenu.route,
             onClick = {
                 navController.navigate(PageNavigation.ShoppingList.route) {
                     popUpTo(navController.graph.startDestinationId) { saveState = true }

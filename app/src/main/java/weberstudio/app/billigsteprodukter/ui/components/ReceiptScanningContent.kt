@@ -98,7 +98,7 @@ fun ReceiptTotalCard(modifier: Modifier = Modifier, totalPrice: String) {
     ) {
         Row(
             modifier = Modifier
-                .padding(horizontal = 12.dp, vertical = 14.dp),
+                .padding(horizontal = 12.dp, vertical = 16.dp),
         ) {
             Text(
                 text = "Total:",

@@ -1,6 +1,7 @@
 package weberstudio.app.billigsteprodukter.ui.components
 
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -39,6 +40,5 @@ fun SearchBar(modifier: Modifier = Modifier, searchQuery: String, onQueryChange:
             unfocusedBorderColor = Color.Black
         ),
         modifier = modifier
-            .height(48.dp)
     )
 }

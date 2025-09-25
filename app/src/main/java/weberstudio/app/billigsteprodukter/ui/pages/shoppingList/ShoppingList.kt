@@ -4,6 +4,7 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -69,48 +70,29 @@ import java.math.RoundingMode
 @Composable
 fun ShoppingListsPage(modifier: Modifier = Modifier, navController: NavController, onSortMenuClick: () -> Unit = {}, viewModel: ShoppingListsViewModel) {
     val shoppingLists by viewModel.shoppingLists.collectAsState()
+
+
     var showAddDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf<ShoppingList?>(null) }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White) // TODO: Replace with theme color
+        modifier = modifier
     ) {
         //Shopping Lists
         LazyColumn(
-            modifier = modifier
+            modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
-            contentPadding = PaddingValues(vertical = 16.dp)
+            contentPadding = PaddingValues(vertical = 16.dp),
+            reverseLayout = true
         ) {
             items(shoppingLists) { shoppingList ->
                 ShoppingListItem(
                     shoppingList = shoppingList,
                     onClick = { navController.navigate(PageNavigation.createShoppingListDetailRoute(shoppingList.ID)) },
                     onDeleteClick = { showDeleteDialog = shoppingList }
-                )
-            }
-        }
-
-        //Add Button
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            FloatingActionButton(
-                onClick = { showAddDialog = true },
-                containerColor = Color(0xFF4CAF50), // TODO: Replace with theme color
-                contentColor = Color.White,
-                modifier = Modifier.size(56.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Tilføj indkøbsliste"
                 )
             }
         }

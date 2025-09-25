@@ -6,6 +6,7 @@ import weberstudio.app.billigsteprodukter.data.Receipt
 import weberstudio.app.billigsteprodukter.data.RecentActivity
 import weberstudio.app.billigsteprodukter.data.ShoppingList
 import weberstudio.app.billigsteprodukter.data.recentactivity.ActivityRepository
+import java.time.format.DateTimeFormatter
 
 class ActivityLogger(private val activityRepo: ActivityRepository) {
     suspend fun logReceiptScan(receipt: Receipt) {
@@ -29,9 +30,10 @@ class ActivityLogger(private val activityRepo: ActivityRepository) {
     }
 
     suspend fun logShoppingListCreated(shoppingList: ShoppingList) {
+        val formatter = DateTimeFormatter.ofPattern("dd/MM")
         val activity = RecentActivity(
             activityType = ActivityType.SHOPPING_LIST_CREATED,
-            displayInfo = "",
+            displayInfo = "Oprettede indkøbsliste: '${shoppingList.name}' d. ${formatter.format(shoppingList.createdDate)}",
             shoppingListID = shoppingList.ID
         )
         activityRepo.insertActivity(activity)

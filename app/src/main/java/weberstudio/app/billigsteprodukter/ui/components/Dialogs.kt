@@ -279,7 +279,7 @@ fun AddShoppingListDialog(showDialog: Boolean, onDismiss: () -> Unit, onConfirm:
                 Spacer(modifier = Modifier.height(12.dp))
 
                 //Navn på produkt
-                TextField(
+                OutlinedTextField(
                     value = shoppingListName,
                     onValueChange = { shoppingListName = it },
                     placeholder = { Text("Navn...") },

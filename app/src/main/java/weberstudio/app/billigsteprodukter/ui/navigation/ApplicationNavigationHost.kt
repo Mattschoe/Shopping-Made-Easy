@@ -20,6 +20,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
+import weberstudio.app.billigsteprodukter.logic.ActivityLogger
 import weberstudio.app.billigsteprodukter.logic.ActivityViewModel
 import weberstudio.app.billigsteprodukter.logic.CameraViewModel
 import weberstudio.app.billigsteprodukter.ui.components.AddFAB

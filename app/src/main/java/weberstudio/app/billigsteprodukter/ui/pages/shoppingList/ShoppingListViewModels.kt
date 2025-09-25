@@ -53,6 +53,7 @@ class ShoppingListsViewModel(application: Application): AndroidViewModel(applica
 
         viewModelScope.launch {
             shoppingListRepo.insert(shoppingList)
+            app.activityLogger.logShoppingListCreated(shoppingList)
         }
     }
 }

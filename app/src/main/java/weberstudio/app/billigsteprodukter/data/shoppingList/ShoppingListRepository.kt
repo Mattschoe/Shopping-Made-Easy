@@ -34,4 +34,9 @@ interface ShoppingListRepository {
     fun getStoreTotals(shoppingListID: String): Flow<Map<Store, Pair<Int, Int>>>
 
     suspend fun isProductInShoppingList(listID: String, productID: Long): Boolean
+
+    /**
+     * Returns the last (min) ID that was added in the products database.
+     */
+    suspend fun getLastNegativeID(): Long
 }

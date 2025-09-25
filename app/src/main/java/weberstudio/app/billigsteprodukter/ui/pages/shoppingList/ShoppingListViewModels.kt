@@ -30,6 +30,7 @@ import weberstudio.app.billigsteprodukter.data.receipt.ReceiptRepository
 import weberstudio.app.billigsteprodukter.logic.components.MatchScoreCalculator
 import weberstudio.app.billigsteprodukter.logic.Store
 import java.time.LocalDate
+import kotlin.math.cos
 
 class ShoppingListsViewModel(application: Application): AndroidViewModel(application) {
     private val app = application as ReceiptApp
@@ -200,15 +201,14 @@ class ShoppingListUndermenuViewModel(application: Application): AndroidViewModel
     fun addCustomProductToList(name: String, store: Store) {
         viewModelScope.launch {
             _selectedShoppingListID.value?.let { listID ->
+                var productID = shoppingListRepo.getLastNegativeID() - 1
                 val customProduct = Product(
-                    databaseID = nextNegativeID--,
+                    databaseID = productID,
                     name = name,
                     price = 0f,
                     store = store
                 )
-
-                val productID = productRepo.addProduct(customProduct)
-                Log.d("ShoppingList", "ProductID: $productID")
+                productID = productRepo.addProduct(customProduct)
 
                 val crossRef = ShoppingListCrossRef(
                     shoppingListID = listID,

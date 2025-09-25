@@ -68,25 +68,25 @@ interface ReceiptDao {
     //endregion
 
     //region PRODUCT QUERIES
-    @Query("SELECT * FROM products")
+    @Query("SELECT * FROM products WHERE databaseID >= 0")
     fun getAllProducts(): Flow<List<Product>>
 
-    @Query("SELECT * FROM products WHERE store = :store")
+    @Query("SELECT * FROM products WHERE store = :store AND databaseID >= 0")
     fun getProductsByStore(store: Store): Flow<List<Product>>
 
-    @Query("SELECT * FROM products WHERE receiptID = :receiptID")
+    @Query("SELECT * FROM products WHERE receiptID = :receiptID AND databaseID >= 0")
     fun getProductsForReceipt(receiptID: Long): Flow<List<Product>>
 
-    @Query("SELECT * FROM products WHERE isFavorite = 1")
+    @Query("SELECT * FROM products WHERE isFavorite = 1 AND databaseID >= 0")
     fun getFavoriteProducts(): Flow<List<Product>>
 
-    @Query("SELECT * FROM products where store = :store AND name = :name LIMIT 1")
+    @Query("SELECT * FROM products where store = :store AND name = :name AND databaseID >= 0 LIMIT 1 ")
     suspend fun getProductByBusinessID(store: Store, name: String): Product?
 
-    @Query("SELECT * FROM products WHERE LOWER(name) LIKE '%' || LOWER(:query) || '%' LIMIT 200")
+    @Query("SELECT * FROM products WHERE LOWER(name) LIKE '%' || LOWER(:query) || '%' AND databaseID >= 0 LIMIT 100")
     fun searchProductsContaining(query: String): Flow<List<Product>>
 
-    @Query("SELECT * FROM products WHERE store = :store AND LOWER(name) LIKE '%' || LOWER(:query) || '%' LIMIT 200")
+    @Query("SELECT * FROM products WHERE store = :store AND LOWER(name) LIKE '%' || LOWER(:query) || '%' AND databaseID >= 0 LIMIT 200")
     fun searchProductsByStoreContaining(store: Store, query: String): Flow<List<Product>>
     //endregion
 

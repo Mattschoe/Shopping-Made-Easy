@@ -72,5 +72,9 @@ class OfflineShoppingListRepository(private val dao: ShoppingListDao) : Shopping
         return dao.isProductInShoppingList(listID, productID)
     }
 
+    override suspend fun getLastNegativeID(): Long {
+        return dao.getLastNegativeID()
+    }
+
 
 }

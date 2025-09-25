@@ -49,4 +49,7 @@ interface ShoppingListDao {
 
     @Query("SELECT EXISTS(SELECT 1 FROM shopping_list_products WHERE shoppingListID = :shoppingListID AND productID = :productID)")
     suspend fun isProductInShoppingList(shoppingListID: String, productID: Long): Boolean
+
+    @Query("SELECT databaseID FROM products WHERE databaseID = (SELECT MIN(databaseID) FROM products)")
+    suspend fun getLastNegativeID(): Long
 }

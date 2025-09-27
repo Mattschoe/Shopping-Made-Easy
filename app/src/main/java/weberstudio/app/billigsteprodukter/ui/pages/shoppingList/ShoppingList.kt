@@ -228,15 +228,6 @@ fun ShoppingListUndermenuContent(modifier: Modifier, navController: NavControlle
                     color = Color.Gray,
                 )
             }
-
-            //Sort by icon
-            IconButton(
-                modifier = Modifier
-                    .size(60.dp),
-                onClick = { } //Sort order
-            ) {
-                Icon(imageVector = ImageVector.vectorResource(R.drawable.sortascending_icon), "Sorter efter")
-            }
         }
         //endregion
 

@@ -17,8 +17,8 @@ class OfflineShoppingListRepository(private val dao: ShoppingListDao) : Shopping
         dao.updateShoppingList(shoppingList)
     }
 
-    override suspend fun deleteShoppingList(shoppingList: ShoppingList) {
-        dao.deleteShoppingList(shoppingList)
+    override suspend fun deleteShoppingList(listID: String) {
+        dao.deleteList(listID)
     }
 
     override fun getAllShoppingLists(): Flow<List<ShoppingList>> {

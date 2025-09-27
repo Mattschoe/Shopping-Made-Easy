@@ -59,6 +59,7 @@ import weberstudio.app.billigsteprodukter.R
 import weberstudio.app.billigsteprodukter.data.Product
 import weberstudio.app.billigsteprodukter.data.ShoppingList
 import weberstudio.app.billigsteprodukter.ui.components.AddListDialog
+import weberstudio.app.billigsteprodukter.ui.components.DeleteConfirmationDialog
 import weberstudio.app.billigsteprodukter.ui.components.ReceiptTotalCard
 import weberstudio.app.billigsteprodukter.ui.components.SearchBar
 import weberstudio.app.billigsteprodukter.ui.navigation.PageNavigation
@@ -73,7 +74,8 @@ fun ShoppingListsPage(modifier: Modifier = Modifier, navController: NavControlle
 
 
     var showAddDialog by remember { mutableStateOf(false) }
-    var showDeleteDialog by remember { mutableStateOf<ShoppingList?>(null) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var shoppingListToDelete by remember { mutableStateOf<ShoppingList?>(null)}
 
     Column(
         modifier = modifier
@@ -92,7 +94,10 @@ fun ShoppingListsPage(modifier: Modifier = Modifier, navController: NavControlle
                 ShoppingListItem(
                     shoppingList = shoppingList,
                     onClick = { navController.navigate(PageNavigation.createShoppingListDetailRoute(shoppingList.ID)) },
-                    onDeleteClick = { showDeleteDialog = shoppingList }
+                    onDeleteClick = {
+                        shoppingListToDelete = shoppingList
+                        showDeleteDialog = true
+                    }
                 )
             }
         }
@@ -109,21 +114,19 @@ fun ShoppingListsPage(modifier: Modifier = Modifier, navController: NavControlle
         )
     }
 
-    /*
-    TODO: FIX
     //Delete Confirmation Dialog
-    showDeleteDialog?.let { listToDelete ->
-        DeleteConfirmationDialog(
-            shoppingList = listToDelete,
-            onDismiss = { showDeleteDialog = null },
-            onConfirm = {
-                viewModel.deleteShoppingList(listToDelete.ID)
-                showDeleteDialog = null
-            }
-        )
+    if (showDeleteDialog) {
+        shoppingListToDelete?.let { list ->
+            DeleteConfirmationDialog(
+                shoppingList = list,
+                onDismiss = { showDeleteDialog = false },
+                onConfirm = {
+                    viewModel.deleteShoppingList(list)
+                    showDeleteDialog = false
+                }
+            )
+        }
     }
-
-     */
 }
 
 @Composable

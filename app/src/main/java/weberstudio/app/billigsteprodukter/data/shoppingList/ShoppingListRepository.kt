@@ -15,7 +15,10 @@ interface ShoppingListRepository {
 
     suspend fun updateShoppingList(shoppingList: ShoppingList)
 
-    suspend fun deleteShoppingList(shoppingList: ShoppingList)
+    /**
+     * Also deletes the custom products that are associated with this list
+     */
+    suspend fun deleteShoppingList(listID: String)
 
     fun getAllShoppingLists(): Flow<List<ShoppingList>>
 

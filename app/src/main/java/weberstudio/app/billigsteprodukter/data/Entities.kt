@@ -157,12 +157,14 @@ data class ShoppingList(
         ForeignKey(
             entity = ShoppingList::class,
             parentColumns = ["ID"],
-            childColumns = ["shoppingListID"]
+            childColumns = ["shoppingListID"],
+            onDelete = ForeignKey.CASCADE
         ),
         ForeignKey(
             entity = Product::class,
             parentColumns = ["databaseID"],
-            childColumns = ["productID"]
+            childColumns = ["productID"],
+            onDelete = ForeignKey.CASCADE
         )
     ],
     indices = [

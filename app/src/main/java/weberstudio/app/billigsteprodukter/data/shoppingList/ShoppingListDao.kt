@@ -15,8 +15,32 @@ interface ShoppingListDao {
     @Query("SELECT * FROM shopping_list ORDER BY createdDate DESC")
     fun getAllShoppingLists(): Flow<List<ShoppingList>>
 
-    @Delete
-    suspend fun deleteShoppingList(shoppingList: ShoppingList)
+
+    /**
+     * SHOULD NOT BE USED, USE [deleteList] INSTEAD!
+     */
+    @Query("""
+        DELETE FROM products WHERE databaseID < 0 AND databaseID IN (
+        SELECT productID 
+        FROM shopping_list_products 
+        WHERE shoppingListID = :shoppingListId)
+    """)
+    suspend fun deleteCustomProducts(shoppingListId: String)
+
+    /**
+     * SHOULD NOT BE USED, USE [deleteList] INSTEAD!
+     */
+    @Query("DELETE FROM shopping_list WHERE ID = :shoppingListID")
+    suspend fun deleteShoppingList(shoppingListID: String)
+
+    /**
+     * Also deletes the custom products that are associated with this list
+     */
+    @Transaction
+    suspend fun deleteList(shoppingListID: String) {
+        deleteCustomProducts(shoppingListID)
+        deleteShoppingList(shoppingListID)
+    }
 
     @Transaction
     @Query("SELECT * FROM shopping_list ORDER BY createdDate DESC")

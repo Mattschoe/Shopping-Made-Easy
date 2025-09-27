@@ -43,7 +43,6 @@ class ShoppingListsViewModel(application: Application): AndroidViewModel(applica
     )
 
 
-
     fun addShoppingList(name: String) {
         val nextNumber = shoppingLists.value.size + 1
         val shoppingList = ShoppingList(
@@ -55,6 +54,12 @@ class ShoppingListsViewModel(application: Application): AndroidViewModel(applica
         viewModelScope.launch {
             shoppingListRepo.insert(shoppingList)
             app.activityLogger.logShoppingListCreated(shoppingList)
+        }
+    }
+
+    fun deleteShoppingList(list: ShoppingList) {
+        viewModelScope.launch {
+            shoppingListRepo.deleteShoppingList(list.ID)
         }
     }
 }

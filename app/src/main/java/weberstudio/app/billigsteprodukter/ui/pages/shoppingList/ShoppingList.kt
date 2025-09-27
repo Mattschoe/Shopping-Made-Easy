@@ -3,7 +3,6 @@ package weberstudio.app.billigsteprodukter.ui.pages.shoppingList
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -24,8 +23,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -33,13 +34,15 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -47,14 +50,21 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import kotlinx.coroutines.delay
 import weberstudio.app.billigsteprodukter.R
 import weberstudio.app.billigsteprodukter.data.Product
 import weberstudio.app.billigsteprodukter.data.ShoppingList
@@ -65,6 +75,7 @@ import weberstudio.app.billigsteprodukter.ui.components.SearchBar
 import weberstudio.app.billigsteprodukter.ui.navigation.PageNavigation
 import java.math.BigDecimal
 import java.math.RoundingMode
+import java.time.format.DateTimeFormatter
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -187,10 +198,29 @@ fun ShoppingListUndermenuContent(modifier: Modifier, navController: NavControlle
     val isStoreExpanded by viewModel.isStoreExpanded.collectAsState()
     val storeTotals by viewModel.storeTotals.collectAsState()
 
-    val shoppingList by viewModel.selectedShoppingList.collectAsState()
-    val listName = shoppingList?.shoppingList?.name
-    val totalPrice by viewModel.priceTotal.collectAsState()
+    val shoppingListState by viewModel.selectedShoppingList.collectAsState()
+    val shoppingList = shoppingListState
+    if (shoppingList == null) {
+        Box(
+            modifier = modifier
+                .fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+        return
+    }
 
+    val totalPrice by viewModel.priceTotal.collectAsState()
+    val createdAtDate = remember { DateTimeFormatter.ofPattern("dd/MM").format(shoppingList.shoppingList.createdDate) }
+
+    val listName = shoppingList.shoppingList.name
+    var isEditingListName by remember { mutableStateOf(false) }
+    var tempListName by remember(listName) { mutableStateOf(listName) }
+
+    var hasInitialFocus by remember { mutableStateOf(false) }
+    val focusRequester = remember { FocusRequester() }
+    val focusManager = LocalFocusManager.current
 
     Column(
         modifier = modifier
@@ -207,22 +237,83 @@ fun ShoppingListUndermenuContent(modifier: Modifier, navController: NavControlle
                     .weight(1f)
             ) {
                 //Indkøbsliste navn
-                Row {
-                    Text(
-                        text = listName ?: "Min Indkøbsliste",
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Medium
-                    )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (isEditingListName) {
+                        OutlinedTextField(
+                            value = tempListName,
+                            onValueChange = { tempListName = it },
+                            textStyle = TextStyle(
+                                fontSize = 24.sp,
+                                fontWeight = FontWeight.Medium
+                            ),
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                            keyboardActions = KeyboardActions(
+                                onDone = {
+                                    isEditingListName = false
+                                    hasInitialFocus = false
+                                    viewModel.updateShoppingListName(tempListName)
+                                    focusManager.clearFocus()
+                                }
+                            ),
+                            modifier = Modifier
+                                .focusRequester(focusRequester)
+                                .onFocusChanged { focusState ->
+                                    if (focusState.isFocused) {
+                                        hasInitialFocus = true
+                                    } else if (hasInitialFocus) {
+                                        isEditingListName = false
+                                        hasInitialFocus = false
+                                        viewModel.updateShoppingListName(tempListName)
+                                    }
+                                }
+                        )
+                        LaunchedEffect(Unit) {
+                            delay(50)
+                            focusRequester.requestFocus()
+                        }
+                    } else {
+                        Text(
+                            text = listName,
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier
+                                .weight(1f)
+                                .clickable {
+                                    isEditingListName = true
+                                    hasInitialFocus = false
+                                }
+                        )
+                    }
                     IconButton(
                         modifier = Modifier
-                            .size(24.dp),
-                        onClick = {  } //Skift titlen på "Mit Indkøb"
+                            .weight(0.3f),
+                        onClick = {
+                            if (isEditingListName) {
+                                isEditingListName = false
+                                hasInitialFocus = false
+                                viewModel.updateShoppingListName(tempListName)
+                                focusManager.clearFocus()
+                            } else {
+                                isEditingListName = true
+                                hasInitialFocus = false
+                            }
+                        }
                     ) {
-                        Icon(imageVector = ImageVector.vectorResource(R.drawable.edit_icon), "Ændrer overskrift")
+                        Icon(
+                            imageVector =
+                                if (isEditingListName) Icons.Default.Check
+                                else ImageVector.vectorResource( R.drawable.edit_icon),
+                            contentDescription = if (isEditingListName) "Gem ændringer" else "Ændrer indkøbslistenavn",
+                        )
                     }
                 }
                 Text(
-                    text = "Oprettet den 7/8",
+                    text = "Oprettet den $createdAtDate",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = Color.Gray,

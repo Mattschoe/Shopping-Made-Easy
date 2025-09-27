@@ -240,5 +240,18 @@ class ShoppingListUndermenuViewModel(application: Application): AndroidViewModel
             _searchResults.value = emptyList()
         }
     }
+
+    fun updateShoppingListName(name: String) {
+        viewModelScope.launch {
+            _selectedShoppingListID.value?.let { listID ->
+                val currentShoppingList = selectedShoppingList.value
+                currentShoppingList?.let { list ->
+                    val updatedList = list.shoppingList.copy(name = name)
+                    shoppingListRepo.updateShoppingList(updatedList)
+
+                }
+            }
+        }
+    }
 }
 

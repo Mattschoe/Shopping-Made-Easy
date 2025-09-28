@@ -211,7 +211,7 @@ fun RecentActivity.getIcon(): Int {
     return when (activityType) {
         ActivityType.RECEIPT_SCANNED -> R.drawable.camera_icon
         ActivityType.BUDGET_CREATED -> R.drawable.piggybank_icon
-        ActivityType.SHOPPING_LIST_CREATED -> R.drawable.list
+        ActivityType.SHOPPING_LIST_CREATED -> R.drawable.list_icon
     }
 }
 //endregion

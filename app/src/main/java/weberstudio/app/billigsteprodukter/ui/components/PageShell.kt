@@ -138,7 +138,7 @@ fun NavigationBar(navController: NavController) {
         NavigationBarItem(
             icon = {
                 Icon(
-                    painterResource(id = R.drawable.list),
+                    painterResource(id = R.drawable.list_icon),
                     contentDescription = "Shopping lister",
                     modifier = Modifier.size(36.dp),
                 )
@@ -157,7 +157,7 @@ fun NavigationBar(navController: NavController) {
         NavigationBarItem(
             icon = {
                 Icon(
-                    painterResource(id = R.drawable.pricetag_icon),
+                    painterResource(id = R.drawable.pricetag_icom),
                     contentDescription = "Database",
                     modifier = Modifier.size(36.dp),
                 )

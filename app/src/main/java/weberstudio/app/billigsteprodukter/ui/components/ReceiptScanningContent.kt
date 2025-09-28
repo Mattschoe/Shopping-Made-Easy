@@ -59,17 +59,18 @@ fun ProductRow(productName: String, productPrice: String, onThreeDotMenuClick: (
                 //Name
                 Text(
                    text = productName,
-                    style = MaterialTheme.typography.bodyLarge, //TODO: Change later to app font
+                    style = MaterialTheme.typography.bodyLarge,
                     color = Color.Black
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 //Price
                 Text(
                     text = productPrice,
-                    style = MaterialTheme.typography.bodyMedium, //TODO: Change later to app font
+                    style = MaterialTheme.typography.bodyMedium,
                     color = Color.Black
                 )
             }
+            /*
             //TODO: Det her dukker bare slet ikke op? Tror heller ikke der er funktionalitet for at ændre noget endnu
             IconButton(
                 onClick = onThreeDotMenuClick,
@@ -83,6 +84,8 @@ fun ProductRow(productName: String, productPrice: String, onThreeDotMenuClick: (
                     tint = Color.Black
                 )
             }
+
+             */
         }
     }
 }

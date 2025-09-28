@@ -1,5 +1,6 @@
 package weberstudio.app.billigsteprodukter.ui.components
 
+import android.R.attr.scaleY
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -12,6 +13,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
@@ -39,8 +41,10 @@ fun TotalAndFilterRow(modifier: Modifier = Modifier, totalPrice: String, filterM
                 .size(56.dp)
         ) {
             Icon(
-                imageVector = ImageVector.vectorResource(R.drawable.filtermenu_icon),
+                imageVector = ImageVector.vectorResource(R.drawable.sort_icon),
                 contentDescription = "Filter",
+                modifier = Modifier
+                    .scale(scaleX = -1f, scaleY = 1f) //Mirrors icon
             )
         }
     }

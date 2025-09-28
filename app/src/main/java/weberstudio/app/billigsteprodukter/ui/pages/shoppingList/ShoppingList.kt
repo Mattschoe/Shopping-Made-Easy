@@ -81,8 +81,6 @@ import java.time.format.DateTimeFormatter
 fun ShoppingListsPage(modifier: Modifier = Modifier, navController: NavController, viewModel: ShoppingListsViewModel) {
     val shoppingLists by viewModel.shoppingLists.collectAsState()
 
-
-    var showAddDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var shoppingListToDelete by remember { mutableStateOf<ShoppingList?>(null)}
 

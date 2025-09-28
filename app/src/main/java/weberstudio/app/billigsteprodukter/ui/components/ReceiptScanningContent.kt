@@ -1,6 +1,7 @@
 package weberstudio.app.billigsteprodukter.ui.components
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -97,8 +98,9 @@ fun ReceiptTotalCard(modifier: Modifier = Modifier, totalPrice: String) {
         modifier = modifier
     ) {
         Row(
-            modifier = Modifier
-                .padding(horizontal = 12.dp, vertical = 16.dp),
+            modifier = Modifier.fillMaxSize(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
         ) {
             Text(
                 text = "Total:",

@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -26,16 +27,17 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -53,16 +55,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import weberstudio.app.billigsteprodukter.data.Product
-import weberstudio.app.billigsteprodukter.data.ShoppingList
 import weberstudio.app.billigsteprodukter.logic.Store
 
-private data class DialogUI(
-    val shape: RoundedCornerShape = RoundedCornerShape(24.dp),
-    val focusedContainerColor: Color = Color(0xFFDFFFD6),
-    val unfocusedContainerColor: Color = Color(0xFFDFFFD6)
-)
 
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddProductToListDialog(
     showDialog: Boolean,
@@ -79,18 +75,11 @@ fun AddProductToListDialog(
     var selectedStore by rememberSaveable { mutableStateOf<Store?>(null) }
     var expanded by remember { mutableStateOf(false) } //Is DropDown expanded
     var showSearchResults by remember { mutableStateOf(false) }
-    var dialogUI = remember { DialogUI() }
     val isValid = productName.trim().isNotEmpty() && selectedStore != null //Form validity
-
-    // Build the TextFieldColors from DialogUI inside a @Composable scope
-    val textFieldColors = TextFieldDefaults.colors(
-        focusedContainerColor = dialogUI.focusedContainerColor,
-        unfocusedContainerColor = dialogUI.unfocusedContainerColor,
-    )
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
-            shape = dialogUI.shape,
+            shape = RoundedCornerShape(24.dp),
             shadowElevation = 6.dp,
             modifier = Modifier
                 .padding(16.dp)
@@ -116,10 +105,17 @@ fun AddProductToListDialog(
                     },
                     placeholder = { Text("Navn...") },
                     singleLine = true,
-                    shape = dialogUI.shape,
+                    shape = RoundedCornerShape(24.dp),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(min = 44.dp)
+                        .heightIn(min = 44.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+
+                        focusedTextColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
                 )
                 Spacer(modifier = Modifier.height(12.dp))
 
@@ -168,40 +164,50 @@ fun AddProductToListDialog(
                     }
                 }
 
-
-                //Store DropDown
-                Box(
+                ExposedDropdownMenuBox(
+                    expanded = expanded,
+                    onExpandedChange = { expanded = it },
                     modifier = Modifier
-                        .clickable { expanded = true }
+                        .fillMaxWidth()
                 ) {
+                    //Store DropDown
                     OutlinedTextField(
                         value = selectedStore?.name ?: "Vælg butik..",
-                        onValueChange = {},
-                        enabled = false,
+                        onValueChange = { /* READ ONLY */ },
                         readOnly = true,
                         trailingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.ArrowDropDown,
-                                contentDescription = "Vælg butik",
-                            )
+                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
                         },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedContainerColor =
+                                if (selectedStore != null) MaterialTheme.colorScheme.secondaryContainer
+                                else MaterialTheme.colorScheme.surface,
+
+                            unfocusedContainerColor =
+                                if (selectedStore != null) MaterialTheme.colorScheme.secondaryContainer
+                                else MaterialTheme.colorScheme.surface,
+
+                            focusedTextColor =
+                                if (selectedStore != null) MaterialTheme.colorScheme.onSecondaryContainer
+
+                                else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            unfocusedTextColor =
+                                if (selectedStore != null) MaterialTheme.colorScheme.onSecondaryContainer
+                                else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                        ),
                         singleLine = true,
-                        shape = dialogUI.shape,
-                        colors = textFieldColors,
+                        shape = RoundedCornerShape(24.dp),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { expanded = true }
                             .heightIn(min = 36.dp)
+                            .menuAnchor()
                     )
-
-                    //Store DropDown
-                    DropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false },
-                        modifier = Modifier.fillMaxWidth()
+                    ExposedDropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false },
                     ) {
                         Store.entries.forEach { store ->
-                            DropdownMenuItem(
+                            DropdownMenuItem (
                                 text = {
                                     Text(
                                         text = store.name,
@@ -217,6 +223,7 @@ fun AddProductToListDialog(
                         }
                     }
                 }
+
 
                 Spacer(modifier = Modifier.height(12.dp))
 
@@ -252,17 +259,10 @@ fun AddShoppingListDialog(showDialog: Boolean, onDismiss: () -> Unit, onConfirm:
 
     //Local UI state
     var shoppingListName by rememberSaveable { mutableStateOf("") }
-    var dialogUI = remember { DialogUI() }
-
-    // Build the TextFieldColors from DialogUI inside a @Composable scope
-    val textFieldColors = TextFieldDefaults.colors(
-        focusedContainerColor = dialogUI.focusedContainerColor,
-        unfocusedContainerColor = dialogUI.unfocusedContainerColor,
-    )
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
-            shape = dialogUI.shape,
+            shape = RoundedCornerShape(24.dp),
             shadowElevation = 6.dp,
             modifier = Modifier
                 .padding(16.dp)
@@ -284,23 +284,35 @@ fun AddShoppingListDialog(showDialog: Boolean, onDismiss: () -> Unit, onConfirm:
                     onValueChange = { shoppingListName = it },
                     placeholder = { Text("Navn...") },
                     singleLine = true,
-                    shape = dialogUI.shape,
-                    colors = textFieldColors,
+                    shape = RoundedCornerShape(24.dp),
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+
+                        focusedTextColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    ),
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(min = 44.dp)
                 )
                 Spacer(modifier = Modifier.height(12.dp))
 
-                //Action row for confirm/dismiss
+                //confirm/dismiss
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    TextButton(onClick = onDismiss) { Text("Annuller") }
+                    TextButton(
+                        onClick = onDismiss,
+                    ) {
+                        Text(
+                            text = "Annuller",
+                            color = Color.Gray
+                        )
+                    }
                     Spacer(modifier = Modifier.width(8.dp))
-                    // Confirm is enabled only when both fields are provided
                     Button(onClick = { onConfirm(shoppingListName) }) {
                         Text("Tilføj")
                     }
@@ -310,7 +322,6 @@ fun AddShoppingListDialog(showDialog: Boolean, onDismiss: () -> Unit, onConfirm:
     }
 
 }
-
 
 /**
  * Prompts the user for product info which can be used to create a product
@@ -327,13 +338,7 @@ fun AddProductDialog(showDialog: Boolean, onDismiss: () -> Unit, onConfirm: (nam
     var productPriceText by rememberSaveable { mutableStateOf("") }
     var storeDropdownExpanded by remember { mutableStateOf(false) }
     var selectedStore by rememberSaveable { mutableStateOf<Store?>(standardStore) }
-    val dialogUI = remember { DialogUI() }
 
-    //UI
-    val colors = TextFieldDefaults.colors (
-        focusedContainerColor = dialogUI.focusedContainerColor,
-        unfocusedContainerColor = dialogUI.unfocusedContainerColor
-    )
     AlertDialog(
         onDismissRequest = onDismiss,
         shape = RoundedCornerShape(16.dp),
@@ -350,8 +355,14 @@ fun AddProductDialog(showDialog: Boolean, onDismiss: () -> Unit, onConfirm: (nam
                     onValueChange = { productName = it },
                     placeholder = { Text("Navn...") },
                     singleLine = true,
-                    shape = dialogUI.shape,
-                    colors = colors,
+                    shape = RoundedCornerShape(24.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+
+                        focusedTextColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    ),
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -365,8 +376,14 @@ fun AddProductDialog(showDialog: Boolean, onDismiss: () -> Unit, onConfirm: (nam
                         onValueChange = { productPriceText = it },
                         placeholder = { Text("Pris...") },
                         singleLine = true,
-                        shape = dialogUI.shape,
-                        colors = colors,
+                        shape = RoundedCornerShape(24.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+
+                            focusedTextColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onSecondaryContainer
+                        ),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier
                             .weight(1f)
@@ -382,11 +399,17 @@ fun AddProductDialog(showDialog: Boolean, onDismiss: () -> Unit, onConfirm: (nam
                     ) {
                         OutlinedTextField(
                             value = selectedStore?.name ?: "Vælg butik",
-                            onValueChange = { /* READ ONLY */},
+                            onValueChange = { /* READ ONLY */ },
                             readOnly = true,
                             trailingIcon = { Icon(Icons.Default.ArrowDropDown, contentDescription = null) },
-                            shape = dialogUI.shape,
-                            colors = colors,
+                            shape = RoundedCornerShape(24.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+
+                                focusedTextColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                                unfocusedTextColor = MaterialTheme.colorScheme.onSecondaryContainer
+                            ),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .menuAnchor()
@@ -426,13 +449,8 @@ fun AddProductDialog(showDialog: Boolean, onDismiss: () -> Unit, onConfirm: (nam
     )
 }
 
-/**
- * //TODO: STANDARDIZE THE UI IN THIS
- */
 @Composable
-fun AddListDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
-    var listName by remember { mutableStateOf("") }
-
+fun DeleteConfirmationDialog(title: String, body: String, onDismiss: () -> Unit, onConfirm: () -> Unit) {
     Dialog(onDismissRequest = onDismiss) {
         Card(
             modifier = Modifier
@@ -440,7 +458,7 @@ fun AddListDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
                 .padding(16.dp),
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(
-                containerColor = Color.White // TODO: Replace with theme color
+                containerColor = Color.White
             )
         ) {
             Column(
@@ -448,83 +466,16 @@ fun AddListDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Text(
-                    text = "Tilføj ny indkøbsliste",
+                    text = title,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black // TODO: Replace with theme color
-                )
-
-                OutlinedTextField(
-                    value = listName,
-                    onValueChange = { listName = it },
-                    label = { Text("Navn på liste") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
-                )
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    TextButton(
-                        onClick = onDismiss
-                    ) {
-                        Text(
-                            "Annuller",
-                            color = Color.Gray // TODO: Replace with theme color
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Button(
-                        onClick = {
-                            if (listName.isNotBlank()) {
-                                onConfirm(listName.trim())
-                            }
-                        },
-                        enabled = listName.isNotBlank(),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF4CAF50) // TODO: Replace with theme color
-                        )
-                    ) {
-                        Text("Tilføj")
-                    }
-                }
-            }
-        }
-    }
-}
-
-/**
- * //TODO: STANDARDIZE THE UI IN THIS
- */
-@Composable
-fun DeleteConfirmationDialog(shoppingList: ShoppingList, onDismiss: () -> Unit, onConfirm: () -> Unit) {
-    Dialog(onDismissRequest = onDismiss) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = Color.White // TODO: Replace with theme color
-            )
-        ) {
-            Column(
-                modifier = Modifier.padding(24.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                Text(
-                    text = "Slet indkøbsliste?",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black // TODO: Replace with theme color
+                    color = Color.Black
                 )
 
                 Text(
-                    text = "JEG ER ØDELAGT FIX MIG",
+                    text = body,
                     fontSize = 16.sp,
-                    color = Color.Gray // TODO: Replace with theme color
+                    color = Color.Gray
                 )
 
                 Row(
@@ -537,14 +488,14 @@ fun DeleteConfirmationDialog(shoppingList: ShoppingList, onDismiss: () -> Unit, 
                     ) {
                         Text(
                             "Annuller",
-                            color = Color.Gray // TODO: Replace with theme color
+                            color = Color.Gray
                         )
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     Button(
                         onClick = onConfirm,
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.Red // TODO: Replace with theme color
+                            containerColor = Color.Red
                         )
                     ) {
                         Text("Slet")

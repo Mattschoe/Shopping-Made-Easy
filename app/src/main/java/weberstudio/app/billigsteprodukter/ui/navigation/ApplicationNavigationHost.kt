@@ -120,7 +120,6 @@ fun ApplicationNavigationHost(navController: NavHostController = rememberNavCont
                 pageContent = { padding ->
                     ShoppingListUndermenuContent(
                         modifier = Modifier.padding(padding),
-                        navController = navController,
                         viewModel = viewModel
                     )
                 },

@@ -3,7 +3,6 @@ package weberstudio.app.billigsteprodukter.ui.pages.shoppingList
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -68,7 +67,6 @@ import kotlinx.coroutines.delay
 import weberstudio.app.billigsteprodukter.R
 import weberstudio.app.billigsteprodukter.data.Product
 import weberstudio.app.billigsteprodukter.data.ShoppingList
-import weberstudio.app.billigsteprodukter.ui.components.AddListDialog
 import weberstudio.app.billigsteprodukter.ui.components.DeleteConfirmationDialog
 import weberstudio.app.billigsteprodukter.ui.components.ReceiptTotalCard
 import weberstudio.app.billigsteprodukter.ui.components.SearchBar
@@ -80,7 +78,7 @@ import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ShoppingListsPage(modifier: Modifier = Modifier, navController: NavController, onSortMenuClick: () -> Unit = {}, viewModel: ShoppingListsViewModel) {
+fun ShoppingListsPage(modifier: Modifier = Modifier, navController: NavController, viewModel: ShoppingListsViewModel) {
     val shoppingLists by viewModel.shoppingLists.collectAsState()
 
 
@@ -114,22 +112,12 @@ fun ShoppingListsPage(modifier: Modifier = Modifier, navController: NavControlle
         }
     }
 
-    //Add List Dialog
-    if (showAddDialog) {
-        AddListDialog(
-            onDismiss = { showAddDialog = false },
-            onConfirm = { listName ->
-                viewModel.addShoppingList(listName)
-                showAddDialog = false
-            }
-        )
-    }
-
     //Delete Confirmation Dialog
     if (showDeleteDialog) {
         shoppingListToDelete?.let { list ->
             DeleteConfirmationDialog(
-                shoppingList = list,
+                title = "Slet indkøbsliste?",
+                body = "Dette kan ikke fortrydes",
                 onDismiss = { showDeleteDialog = false },
                 onConfirm = {
                     viewModel.deleteShoppingList(list)
@@ -148,7 +136,7 @@ fun ShoppingListItem(shoppingList: ShoppingList, onClick: () -> Unit, onDeleteCl
             .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFFE8F5E8) // TODO: Replace with theme color
+            containerColor = MaterialTheme.colorScheme.primaryContainer
         ),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 2.dp
@@ -168,12 +156,12 @@ fun ShoppingListItem(shoppingList: ShoppingList, onClick: () -> Unit, onDeleteCl
                     text = shoppingList.name,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
-                    color = Color.Black // TODO: Replace with theme color
+                    color = Color.Black
                 )
                 Text(
                     text = "Oprettet den: ${shoppingList.createdDate}",
                     fontSize = 14.sp,
-                    color = Color.Gray // TODO: Replace with theme color
+                    color = Color.Gray
                 )
             }
 
@@ -184,7 +172,7 @@ fun ShoppingListItem(shoppingList: ShoppingList, onClick: () -> Unit, onDeleteCl
                 Icon(
                     imageVector = Icons.Default.Close,
                     contentDescription = "Slet liste",
-                    tint = Color.Gray, // TODO: Replace with theme color
+                    tint = Color.Gray,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -193,7 +181,7 @@ fun ShoppingListItem(shoppingList: ShoppingList, onClick: () -> Unit, onDeleteCl
 }
 
 @Composable
-fun ShoppingListUndermenuContent(modifier: Modifier, navController: NavController, viewModel: ShoppingListUndermenuViewModel) {
+fun ShoppingListUndermenuContent(modifier: Modifier, viewModel: ShoppingListUndermenuViewModel) {
     val filteredList = viewModel.filteredStore2ProductsAdded2Store.collectAsState().value
     val isStoreExpanded by viewModel.isStoreExpanded.collectAsState()
     val storeTotals by viewModel.storeTotals.collectAsState()

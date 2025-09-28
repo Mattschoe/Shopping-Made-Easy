@@ -375,8 +375,14 @@ data class BudgetCategory(
 )
 
 //region HELPER FUNCTIONS
+/**
+ * Formats currencies into danish standard like so:
+ * "1234" -> "1.234"
+ * "12345" -> "12.345"
+ * "1234567" -> "1.234.567"
+ */
 fun formatCurrencyToString(input: String): String {
-    // Remove all non-digits
+    val isNegative = input.trimStart().startsWith("-")
     val digitsOnly = input.filter { it.isDigit() }
 
     if (digitsOnly.isEmpty()) return ""
@@ -385,14 +391,24 @@ fun formatCurrencyToString(input: String): String {
     val amount = digitsOnly.toDoubleOrNull() ?: 0.0
     val formatted = NumberFormat.getNumberInstance(Locale.forLanguageTag("da-DK")).format(amount)
 
-    return formatted
+    return if (isNegative) "-$formatted" else formatted
 }
 
+/**
+ * Does the opposite of [formatCurrencyToString] so:
+ * "1234" -> 1234f
+ * "1234567" -> 1234567f
+ * "1234,56" -> 1234.56f
+ */
 fun formatCurrencyToFloat(input: String): Float {
-    return input.trim()
+    val trimmed = input.trim()
+    val isNegative = trimmed.startsWith("-")
+    val processed = trimmed
+        .removePrefix("-")
         .replace(".", "")
         .replace(",", ".")
         .toFloat()
+    return if (isNegative) -processed else processed
 }
 
 fun parseAmount(formattedAmount: String): Double {
@@ -606,24 +622,24 @@ fun BudgetCircle(modifier: Modifier = Modifier, totalSpent: Float, remaining: Fl
             Text(
                 text = "Tilbage:",
                 fontSize = 14.sp,
-                color = Color.Gray // TODO: Change to your app's secondary text color
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
-                text = "${remaining.toInt()}kr",
+                text = "${formatCurrencyToString(remaining.toInt().toString())}kr",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
-                color = if (remaining < 0) Color.Red else Color.Black // TODO: Change colors
+                color = if (remaining < 0) Color.Red else Color.Black
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = "Brugt:",
                 fontSize = 12.sp,
-                color = Color.Gray // TODO: Change to your app's secondary text color
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
-                text = "${totalSpent.toInt()}kr",
+                text = "${formatCurrencyToString(totalSpent.toInt().toString())}kr",
                 fontSize = 16.sp,
-                color = Color(0xFFFF5722) // TODO: Change to your app's expense color
+                color = Color.Red
             )
         }
     }

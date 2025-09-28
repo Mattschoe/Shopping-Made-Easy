@@ -64,9 +64,7 @@ fun MainPageContent(modifier: Modifier = Modifier, navController: NavController,
     Column(
         modifier = modifier
             .padding(12.dp) //Standard padding from screen edge
-            .fillMaxSize()
-            //.border(2.dp, Color.Magenta)
-                ,
+            .fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         //region BUDGET CARD
@@ -80,25 +78,19 @@ fun MainPageContent(modifier: Modifier = Modifier, navController: NavController,
             Column(
                 modifier = Modifier
                     .weight(1.5f)
-                    //.border(2.dp, Color.Magenta)
             ) {
                 NoBudgetCard(
                     onClick = { navController.navigate(PageNavigation.Budget.route) }
                 )
             }
         } else {
-            Column(
-                modifier = Modifier
-                    .border(2.dp, Color.Magenta)
-            ) {
-                currentBudget?.let { currentBudget ->
-                    BudgetCard(
-                        onClick = { navController.navigate(PageNavigation.Budget.route) },
-                        currentBudget = currentBudget.budget,
-                        currentReceipts = currentReceipts,
-                        currentExpenses = currentExpenses
-                    )
-                }
+            currentBudget?.let { currentBudget ->
+                BudgetCard(
+                    onClick = { navController.navigate(PageNavigation.Budget.route) },
+                    currentBudget = currentBudget.budget,
+                    currentReceipts = currentReceipts,
+                    currentExpenses = currentExpenses
+                )
             }
         }
         //endregion
@@ -109,7 +101,6 @@ fun MainPageContent(modifier: Modifier = Modifier, navController: NavController,
         Column(
             modifier = Modifier
                 .weight(1f)
-                //.border(2.dp, Color.Red)
         ) {
             Text(
                 text = "Seneste Aktivitet",

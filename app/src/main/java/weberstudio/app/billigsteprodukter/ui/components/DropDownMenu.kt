@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -41,10 +42,11 @@ fun StoreScopeDropDownMenu(
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
+                .fillMaxHeight()
                 .clip(RoundedCornerShape(24.dp))
                 .background(Color(0xFFE5FFEB)) //Temp
                 .clickable { isDropDownExpanded = true }
-                .padding(horizontal = 16.dp, vertical = 12.dp)
+                .padding(horizontal = 16.dp)
         ) {
             Text(
                 text = if (!allStoresEnabled) currentStore.name else "Alle butikker",

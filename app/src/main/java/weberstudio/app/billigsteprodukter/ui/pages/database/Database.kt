@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -76,7 +78,6 @@ fun DatabaseContent(
         BoxWithConstraints(
             modifier = Modifier
                 .height(150.dp) //Size of images (ish)
-                //.border(4.dp, Color.Green)
         ) {
             val pageInset: Dp = maxWidth * 0.17f //The small "before" and "after" stores you can see in the pager
             HorizontalPager(
@@ -85,13 +86,10 @@ fun DatabaseContent(
                 pageSpacing = 8.dp,
                 modifier = Modifier
                     .fillMaxWidth()
-                //.padding(horizontal = 16.dp)
-                ,
             ) { page ->
                 Box(
                     modifier = Modifier
                         .fillMaxSize(),
-                        //.border(width = 3.dp, color = Color.Magenta)
                     contentAlignment = Alignment.Center
                 ) {
                     val store = stores[page]
@@ -109,17 +107,28 @@ fun DatabaseContent(
         }
 
 
-        //Search
+        //Search + Store filter
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                //.border(width = 4.dp, color = Color.Red)
+                .height(IntrinsicSize.Min)
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            SearchBar(modifier = Modifier.weight(2f), searchQuery =  viewModel.searchQuery.collectAsState().value, onQueryChange =  viewModel::setSearchQuery )
+            SearchBar(
+                modifier = Modifier
+                    .weight(1f, fill = false),
+                searchQuery =  viewModel.searchQuery.collectAsState().value,
+                onQueryChange =  viewModel::setSearchQuery
+            )
             Spacer(modifier = Modifier.width((8.dp)))
-            StoreScopeDropDownMenu(modifier = Modifier.weight(1.33f), currentStore = currentStore, allStoresEnabled = allStoresEnabled, onAllStoresToggle = viewModel::setSearchAllStores)
+            StoreScopeDropDownMenu(
+                modifier = Modifier
+                    .wrapContentWidth(),
+                currentStore = currentStore,
+                allStoresEnabled = allStoresEnabled,
+                onAllStoresToggle = viewModel::setSearchAllStores
+            )
         }
 
         //Product list/grid
@@ -131,7 +140,6 @@ fun DatabaseContent(
             modifier = Modifier
                 .weight(1f) //Takes the rest of the space. OBS: DONT USE WEIGHT ANYWHERE ELSE FOR THIS TO WORK
                 .fillMaxSize()
-                //.border(width = 4.dp, color = Color.Black)
                 .padding(4.dp)
         ) {
             items(filteredAndRankedProducts) { product ->

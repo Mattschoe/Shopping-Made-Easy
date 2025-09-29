@@ -82,4 +82,10 @@ class BudgetViewModel(application: Application): AndroidViewModel(application) {
             ))
         }
     }
+
+    fun updateBudget(newBudget: Budget) {
+        viewModelScope.launch {
+            budgetRepo.updateBudget(newBudget)
+        }
+    }
 }

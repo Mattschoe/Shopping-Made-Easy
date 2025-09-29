@@ -129,9 +129,10 @@ fun NoBudgetCard(modifier: Modifier = Modifier, onClick: () -> Unit) {
     ) {
         BudgetCircle(
             modifier = Modifier.weight(1f),
+            currentBudget = 0f,
             totalSpent = 0f,
             remaining = 0f,
-            spentPercentage = 0f
+            spentPercentage = 0f,
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -184,9 +185,10 @@ fun BudgetCard(modifier: Modifier = Modifier, onClick: () -> Unit, currentBudget
         contentAlignment = Alignment.Center
     ) {
         BudgetCircle(
+            currentBudget = currentBudget,
             totalSpent = totalSpent,
             remaining = remaining,
-            spentPercentage = spentPercentage
+            spentPercentage = spentPercentage,
         )
     }
 }

@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
@@ -41,6 +42,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -52,13 +54,18 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.core.text.isDigitsOnly
 import weberstudio.app.billigsteprodukter.R
 import weberstudio.app.billigsteprodukter.data.Budget
 import weberstudio.app.billigsteprodukter.data.ExtraExpense
@@ -99,7 +106,10 @@ fun BudgetPage(modifier: Modifier = Modifier, viewModel: BudgetViewModel) {
             selectedMonth = currentBudget.month,
             selectedYear = currentBudget.year,
             onAddExpense = { name, price -> viewModel.addExtraSpendingToCurrentBudget(name, price) },
-            onMonthSelected = { month, year -> viewModel.loadBudget(month, year) }
+            onMonthSelected = { month, year -> viewModel.loadBudget(month, year) },
+            onBudgetChanged = { newBudget ->
+                viewModel.updateBudget(currentBudget.copy(budget = newBudget))
+            }
         )
     }
 }
@@ -388,7 +398,8 @@ fun BudgetPageUI(
     selectedMonth: Month = Month.from(LocalDate.now()),
     selectedYear: Year = Year.from(LocalDate.now()),
     onAddExpense: (String, Float) -> Unit,
-    onMonthSelected: (Month, Year) -> Unit
+    onMonthSelected: (Month, Year) -> Unit,
+    onBudgetChanged: (Float) -> Unit
 ) {
     var showAddExpenseDialog by remember { mutableStateOf(false) }
     var showMonthPicker by remember { mutableStateOf(false) }
@@ -413,9 +424,13 @@ fun BudgetPageUI(
 
         //BUDGET CIRCLE
         BudgetCircle(
+            currentBudget = currentBudget,
             totalSpent = totalSpent,
             remaining = remaining,
-            spentPercentage = spentPercentage
+            spentPercentage = spentPercentage,
+            onPriceChanged = { newPrice ->
+                onBudgetChanged(newPrice)
+            }
         )
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -468,7 +483,6 @@ fun BudgetPageUI(
         )
     }
     //endregion
-
 }
 
 @Composable
@@ -527,7 +541,7 @@ private fun BudgetHeader(selectedMonth: String, onMonthClick: () -> Unit, onAddC
 }
 
 @Composable
-fun BudgetCircle(modifier: Modifier = Modifier, totalSpent: Float, remaining: Float, spentPercentage: Float) {
+fun BudgetCircle(modifier: Modifier = Modifier, currentBudget: Float, totalSpent: Float, remaining: Float, spentPercentage: Float, onPriceChanged: ((Float) -> Unit)? = null) {
     val animatedProgress by animateFloatAsState(
         targetValue = spentPercentage,
         animationSpec = tween(durationMillis = 1000, easing = EaseOutCubic),
@@ -535,11 +549,19 @@ fun BudgetCircle(modifier: Modifier = Modifier, totalSpent: Float, remaining: Fl
     )
 
     val backgroundCircleColor = MaterialTheme.colorScheme.surfaceContainer
+    var changePrice by remember { mutableStateOf(false) }
 
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(250.dp),
+            .height(250.dp)
+            .then(
+                if (onPriceChanged != null) {
+                    Modifier.clickable { changePrice = true }
+                } else {
+                    Modifier
+                }
+            ),
         contentAlignment = Alignment.Center
     ) {
         Canvas(
@@ -594,6 +616,17 @@ fun BudgetCircle(modifier: Modifier = Modifier, totalSpent: Float, remaining: Fl
                 color = MaterialTheme.colorScheme.error
             )
         }
+    }
+
+    if (onPriceChanged != null && changePrice) {
+        ChangePriceDialog(
+            originalBudget = currentBudget,
+            onDismiss = { changePrice = false },
+            onConfirm = { newPrice ->
+                onPriceChanged(newPrice)
+                changePrice = false
+            }
+        )
     }
 }
 
@@ -677,7 +710,8 @@ private fun AddExpenseDialog(onDismiss: () -> Unit, onConfirm: (String, Float) -
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = MaterialTheme.colorScheme.onPrimaryContainer,
                         unfocusedBorderColor = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
+                    ),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
 
                 Spacer(modifier = Modifier.height(20.dp))
@@ -827,6 +861,103 @@ private fun ViewExpensesDialog(onDismiss: () -> Unit, receipts: List<ReceiptWith
                         Text(
                             text = "Luk",
                             color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ChangePriceDialog(originalBudget: Float, onDismiss: () -> Unit, onConfirm: (Float) -> Unit) {
+    var newBudget by remember { mutableStateOf(TextFieldValue("")) }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer
+            )
+        ) {
+            Column(
+                modifier = Modifier.padding(20.dp)
+            ) {
+                Text(
+                    text = "Skift budgetmål",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                OutlinedTextField(
+                    value = newBudget,
+                    onValueChange = { input ->
+                        val filtered = input.text.filter { it.isDigit() || it == ',' || it == '.' }
+
+                        if (filtered.count { it == ',' } <= 1) {
+                            val parts = filtered.split(",")
+                            val validInput = if (parts.size > 1 && parts[1].length > 2) {
+                                "${parts[0]},${parts[1].take(2)}"
+                            } else {
+                                filtered
+                            }
+
+                            val formatted = formatInputToDanishCurrency(validInput)
+
+                            //Makes sure curser is always at the end of the number
+                            newBudget = TextFieldValue(
+                                text = formatted,
+                                selection = TextRange(formatted.length)
+                            )
+                        }
+                    },
+                    label = { Text(
+                        text = "Nuværende: ${formatCurrencyToString(originalBudget)}",
+                        color = Color.Gray,
+                        fontStyle = FontStyle.Italic
+                    )},
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    ),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text(
+                            text = "Annuller",
+                            color = Color.Gray
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
+                        onClick = {
+                            val formatted = newBudget.text.replace(".", "").replace(",", ".")
+                            val priceFloat = formatted.toFloatOrNull()
+                            if (priceFloat != null) {
+                                onConfirm(priceFloat)
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer
+                        )
+                    ) {
+                        Text(
+                            text = "Tilføj",
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                     }
                 }
@@ -1083,6 +1214,30 @@ fun formatCurrencyToFloat(input: String): Float {
         .replace(",", ".")
         .toFloat()
     return if (isNegative) -processed else processed
+}
+
+/**
+ * Formats raw numbers in strings from input fields to danish pretty looking strings that match danish standard
+ */
+fun formatInputToDanishCurrency(input: String): String {
+    if (input.isEmpty()) return ""
+
+    val parts = input.split(",")
+    val intPart = parts[0].replace(".", "")
+    val decimalPart = if (parts.size > 1) parts[1] else null
+
+    val formattedInt = if (intPart.length > 3) {
+        intPart.reversed()
+            .chunked(3)
+            .joinToString(".")
+            .reversed()
+    } else {
+        intPart
+    }
+
+    if (decimalPart != null) return "$formattedInt,$decimalPart"
+    if (input.endsWith(",")) return "$formattedInt,"
+    else return formattedInt
 }
 
 fun parseAmount(formattedAmount: String): Double {

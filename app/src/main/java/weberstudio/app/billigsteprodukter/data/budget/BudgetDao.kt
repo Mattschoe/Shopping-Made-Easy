@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 import weberstudio.app.billigsteprodukter.data.Budget
 import weberstudio.app.billigsteprodukter.data.ExtraExpense
@@ -17,6 +18,9 @@ interface BudgetDao {
 
     @Insert
     suspend fun insertExtraExpense(expense: ExtraExpense): Long
+
+    @Update
+    suspend fun updateBudget(budget: Budget)
 
     @Delete
     suspend fun deleteBudget(budget: Budget)

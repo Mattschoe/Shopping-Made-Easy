@@ -20,4 +20,6 @@ interface BudgetRepository {
     suspend fun getExpenses(month: Month, year: Year): Flow<List<ExtraExpense>>
 
     suspend fun insertExtraExpense(expense: ExtraExpense)
+
+    suspend fun updateBudget(budget: Budget)
 }

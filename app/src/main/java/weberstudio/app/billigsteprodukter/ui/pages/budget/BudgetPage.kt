@@ -24,9 +24,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -53,24 +50,26 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import weberstudio.app.billigsteprodukter.R
 import weberstudio.app.billigsteprodukter.data.Budget
 import weberstudio.app.billigsteprodukter.data.ExtraExpense
-import weberstudio.app.billigsteprodukter.data.Product
-import weberstudio.app.billigsteprodukter.data.Receipt
 import weberstudio.app.billigsteprodukter.data.ReceiptWithProducts
-import weberstudio.app.billigsteprodukter.logic.Store
 import java.text.DecimalFormat
 import java.text.NumberFormat
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.Month
 import java.time.Year
+import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 
@@ -85,7 +84,7 @@ fun BudgetPage(modifier: Modifier = Modifier, viewModel: BudgetViewModel) {
         PreBudgetPageUI(
             modifier = modifier
         ) { newBudget ->
-                viewModel.addBudget(newBudget)
+            viewModel.addBudget(newBudget)
         }
     }
 
@@ -107,7 +106,6 @@ fun BudgetPage(modifier: Modifier = Modifier, viewModel: BudgetViewModel) {
 
 //region UI
 //region PreBudgetPageUI
-val BudgetGreen = Color(0xFF4CAF50)
 /**
  * The UI for the user to input a monthly budget so we can navigate them to [BudgetPageUI]
  */
@@ -125,7 +123,7 @@ fun PreBudgetPageUI(modifier: Modifier = Modifier, newBudget: (Budget) -> Unit) 
             modifier = Modifier
                 .fillMaxWidth()
                 .height(300.dp),
-            shape = RoundedCornerShape(24.dp)
+            shape = RoundedCornerShape(24.dp),
         ) {
             Column(
                 modifier = Modifier
@@ -136,7 +134,6 @@ fun PreBudgetPageUI(modifier: Modifier = Modifier, newBudget: (Budget) -> Unit) 
                     text = "Hvad er budgettet på\nmad for denne måned?",
                     fontSize = 24.sp,
                     textAlign = TextAlign.Left,
-                    color = Color.Black,
                     lineHeight = 22.sp
                 )
 
@@ -147,13 +144,13 @@ fun PreBudgetPageUI(modifier: Modifier = Modifier, newBudget: (Budget) -> Unit) 
                         .height(48.dp),
                     shape = RoundedCornerShape(24.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = BudgetGreen // TODO: Change color here
+                        containerColor = MaterialTheme.colorScheme.primary
                     )
                 ) {
                     Text(
                         text = "Opret budget",
                         fontSize = 16.sp,
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onPrimary
                     )
                 }
             }
@@ -192,7 +189,7 @@ fun BudgetDialog(onDismiss: () -> Unit, onClick: (Budget) -> Unit) {
                 .height(500.dp),
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(
-                containerColor = Color.White
+                containerColor = MaterialTheme.colorScheme.secondaryContainer
             )
         ) {
             Column(
@@ -200,15 +197,16 @@ fun BudgetDialog(onDismiss: () -> Unit, onClick: (Budget) -> Unit) {
                     .fillMaxSize()
                     .padding(16.dp)
             ) {
-                // Header
+                //Header
                 Text(
                     text = "Budget for ${currentMonth.toDanishString()} $currentYear",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
 
-                // Total budget field
+                //Total budget field
                 BudgetInputField(
                     label = "Ialt",
                     value = totalBudget,
@@ -218,7 +216,7 @@ fun BudgetDialog(onDismiss: () -> Unit, onClick: (Budget) -> Unit) {
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
 
-                // Category fields
+                //Category fields
                 LazyColumn(
                     modifier = Modifier
                         .weight(1f)
@@ -244,7 +242,7 @@ fun BudgetDialog(onDismiss: () -> Unit, onClick: (Budget) -> Unit) {
                         )
                     }
 
-                    // Add new category button
+                    //Add new category button
                     item {
                         OutlinedButton(
                             onClick = {
@@ -262,14 +260,15 @@ fun BudgetDialog(onDismiss: () -> Unit, onClick: (Budget) -> Unit) {
                                 .height(56.dp),
                             shape = RoundedCornerShape(28.dp),
                             colors = ButtonDefaults.outlinedButtonColors(
-                                containerColor = Color.Transparent
+                                containerColor = MaterialTheme.colorScheme.secondary,
+                                contentColor = MaterialTheme.colorScheme.onSecondary
                             ),
                             border = ButtonDefaults.outlinedButtonBorder().copy(
                                 width = 1.dp
                             )
                         ) {
                             Icon(
-                                Icons.Default.Add,
+                                imageVector = ImageVector.vectorResource(R.drawable.check_icon),
                                 contentDescription = "Tilføj kategori",
                                 modifier = Modifier.size(20.dp)
                             )
@@ -279,7 +278,7 @@ fun BudgetDialog(onDismiss: () -> Unit, onClick: (Budget) -> Unit) {
                     }
                 }
 
-                // Done button
+                //Done button
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End
@@ -296,10 +295,10 @@ fun BudgetDialog(onDismiss: () -> Unit, onClick: (Budget) -> Unit) {
                         modifier = Modifier
                             .size(48.dp)
                             .clip(RoundedCornerShape(24.dp))
-                            .background(BudgetGreen) // TODO: Change color here
+                            .background(MaterialTheme.colorScheme.primary)
                     ) {
                         Icon(
-                            Icons.Default.Check,
+                            imageVector = ImageVector.vectorResource(R.drawable.check_icon),
                             contentDescription = "Færdig",
                             tint = Color.White,
                             modifier = Modifier.size(24.dp)
@@ -336,9 +335,9 @@ fun BudgetInputField(
             modifier = Modifier.weight(1f),
             shape = RoundedCornerShape(28.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = BudgetGreen, // TODO: Change color here
-                focusedLabelColor = BudgetGreen,  // TODO: Change color here
-                unfocusedBorderColor = BudgetGreen.copy(alpha = 0.5f) // TODO: Change color here
+                focusedBorderColor = MaterialTheme.colorScheme.outline,
+                focusedLabelColor = MaterialTheme.colorScheme.outline,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
             ),
             singleLine = true,
             suffix = {
@@ -346,7 +345,7 @@ fun BudgetInputField(
                     Text(
                         text = "${DecimalFormat("#.#").format(percentage)}%",
                         fontSize = 12.sp,
-                        color = Color.Gray
+                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
                     )
                 }
             }
@@ -373,8 +372,683 @@ data class BudgetCategory(
     var amount: String = "",
     val isDeletable: Boolean = false
 )
+//endregion
 
-//region HELPER FUNCTIONS
+//region BUDGETPAGE UI
+/**
+ * The UI for the full budget page with graph
+ */
+@Composable
+fun BudgetPageUI(
+    modifier: Modifier = Modifier,
+    currentBudget: Float,
+    totalSpent: Float,
+    receipts: List<ReceiptWithProducts>,
+    expenses: List<ExtraExpense>,
+    selectedMonth: Month = Month.from(LocalDate.now()),
+    selectedYear: Year = Year.from(LocalDate.now()),
+    onAddExpense: (String, Float) -> Unit,
+    onMonthSelected: (Month, Year) -> Unit
+) {
+    var showAddExpenseDialog by remember { mutableStateOf(false) }
+    var showMonthPicker by remember { mutableStateOf(false) }
+    var showViewReceiptsDialog by remember { mutableStateOf(false) }
+
+    val remaining = currentBudget - totalSpent
+    val spentPercentage = if (currentBudget > 0) (totalSpent / currentBudget).coerceIn(0f, 1f) else 0f
+
+    Column(
+        modifier = modifier
+            .padding(12.dp)
+            .fillMaxSize()
+    ) {
+        //MONTH DROPDOWN AND ADD BUTTON
+        BudgetHeader(
+            selectedMonth = "${selectedMonth.toDanishString()} ${selectedYear.value}",
+            onMonthClick = { showMonthPicker = true },
+            onAddClick = { showAddExpenseDialog = true }
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        //BUDGET CIRCLE
+        BudgetCircle(
+            totalSpent = totalSpent,
+            remaining = remaining,
+            spentPercentage = spentPercentage
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        //VIEW RECEIPTS
+        ViewReceiptsButton(
+            onClick = { showViewReceiptsDialog = true }
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        //TIPS
+        BudgetTipsSection(
+            tips = getCurrentTips(spentPercentage)
+        )
+    }
+
+    //region DIALOGS
+    //Add expense dialog
+    if (showAddExpenseDialog) {
+        AddExpenseDialog(
+            onDismiss = { showAddExpenseDialog = false },
+            onConfirm = { name, price ->
+                onAddExpense(name, price)
+                showAddExpenseDialog = false
+            }
+        )
+    }
+
+    //Month picker dialog
+    if (showMonthPicker) {
+        DatePickerDialog(
+            currentMonth = selectedMonth,
+            currentYear = selectedYear,
+            onDismiss = { showMonthPicker = false },
+            onMonthSelected = { month, year ->
+                onMonthSelected(month, year)
+                showMonthPicker = false
+            }
+        )
+    }
+
+    //View receipts dialog
+    if (showViewReceiptsDialog) {
+        ViewExpensesDialog(
+            onDismiss = { showViewReceiptsDialog = false },
+            receipts = receipts,
+            expenses = expenses,
+            selectedMonth = selectedMonth.toDanishString()
+        )
+    }
+    //endregion
+
+}
+
+@Composable
+private fun BudgetHeader(selectedMonth: String, onMonthClick: () -> Unit, onAddClick: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        //region Month selector dropdown
+        Card(
+            modifier = Modifier
+                .weight(1f)
+                .clickable { onMonthClick() },
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer
+            ),
+            shape = RoundedCornerShape(8.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = selectedMonth,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+                Icon(
+                    imageVector = ImageVector.vectorResource(R.drawable.dropdown_icon),
+                    contentDescription = "Vælg måned",
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+        }
+        //endregion
+
+        Spacer(modifier = Modifier.width(12.dp))
+
+        //region Add button
+        FloatingActionButton(
+            onClick = onAddClick,
+            modifier = Modifier.size(48.dp),
+            containerColor = MaterialTheme.colorScheme.secondary,
+            contentColor = MaterialTheme.colorScheme.onSecondary
+        ) {
+            Icon(
+                imageVector = ImageVector.vectorResource(R.drawable.add_icon),
+                contentDescription = "Tilføj udgift"
+            )
+        }
+        //endregion
+    }
+}
+
+@Composable
+fun BudgetCircle(modifier: Modifier = Modifier, totalSpent: Float, remaining: Float, spentPercentage: Float) {
+    val animatedProgress by animateFloatAsState(
+        targetValue = spentPercentage,
+        animationSpec = tween(durationMillis = 1000, easing = EaseOutCubic),
+        label = "BudgetProgress"
+    )
+
+    val backgroundCircleColor = MaterialTheme.colorScheme.surfaceContainer
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(250.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Canvas(
+            modifier = Modifier.size(200.dp)
+        ) {
+            val strokeWidth = 20.dp.toPx()
+            val radius = size.width / 2 - strokeWidth / 2
+
+            //Background circle
+            drawCircle(
+                color = backgroundCircleColor,
+                radius = radius,
+                style = Stroke(width = strokeWidth)
+            )
+
+            //Progress arc
+            if (animatedProgress > 0) {
+                drawArc(
+                    color = Color.Red,
+                    startAngle = -90f,
+                    sweepAngle = 360f * animatedProgress,
+                    useCenter = false,
+                    style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+                )
+            }
+        }
+
+        //Center text
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "Tilbage:",
+                fontSize = 14.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = "${formatCurrencyToString(remaining.toInt().toString())}kr",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = if (remaining < 0) Color.Red else MaterialTheme.colorScheme.primaryContainer
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Brugt:",
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = "${formatCurrencyToString(totalSpent.toInt().toString())}kr",
+                fontSize = 16.sp,
+                color = MaterialTheme.colorScheme.error
+            )
+        }
+    }
+}
+
+@Composable
+private fun BudgetTipsSection(tips: List<String>) {
+    Column {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(bottom = 12.dp)
+        ) {
+            Text(
+                text = "Tips & Indsigter",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                text = "💡",
+                fontSize = 16.sp
+            )
+        }
+
+        tips.forEach { tip ->
+            Text(
+                text = "- $tip",
+                fontSize = 14.sp,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(bottom = 8.dp),
+                lineHeight = 20.sp
+            )
+        }
+    }
+}
+
+@Composable
+private fun AddExpenseDialog(onDismiss: () -> Unit, onConfirm: (String, Float) -> Unit) {
+    var name by remember { mutableStateOf("") }
+    var price by remember { mutableStateOf("") }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer
+            )
+        ) {
+            Column(
+                modifier = Modifier.padding(20.dp)
+            ) {
+                Text(
+                    text = "Ekstra udgift",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Navn...") },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                OutlinedTextField(
+                    value = price,
+                    onValueChange = { price = it },
+                    label = { Text("Pris...") },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text(
+                            text = "Annuller",
+                            color = Color.Gray
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
+                        onClick = {
+                            val priceFloat = price.toFloatOrNull()
+                            if (name.isNotBlank() && priceFloat != null && priceFloat > 0) {
+                                onConfirm(name, priceFloat)
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer
+                        )
+                    ) {
+                        Text(
+                            text = "Tilføj",
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DatePickerDialog(currentMonth: Month, currentYear: Year, onDismiss: () -> Unit, onMonthSelected: (Month, Year) -> Unit) {
+    val years = listOf(Year.of(2025))
+    val year2Month = years.flatMap { year ->
+        Month.entries.map { month ->
+            month to year
+        }
+    }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer
+            )
+        ) {
+            Column(
+                modifier = Modifier.padding(20.dp)
+            ) {
+                Text(
+                    text = "Vælg måned",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                year2Month.forEach { (month, year) ->
+                    val isSelected = month == currentMonth && year == currentYear
+
+                    Text(
+                        text = "${month.toDanishString()} ${year.value}",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onMonthSelected(month, year) }
+                            .padding(vertical = 12.dp),
+                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSecondaryContainer,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text(
+                            text = "Luk",
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ViewExpensesDialog(onDismiss: () -> Unit, receipts: List<ReceiptWithProducts>, expenses: List<ExtraExpense>, selectedMonth: String) {
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(0.8f),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer
+            )
+        ) {
+            Column(
+                modifier = Modifier.padding(20.dp)
+            ) {
+                Text(
+                    text = "Udgifter for $selectedMonth",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(vertical = 16.dp)
+                ) {
+                    items(receipts) { receipt ->
+                        ReceiptCard(receipt = receipt)
+                    }
+                    items(expenses) { expense ->
+                        ExpenseCard(expense = expense)
+                    }
+                }
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text(
+                            text = "Luk",
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ReceiptCard(modifier: Modifier = Modifier, receipt: ReceiptWithProducts) {
+    var openReceipt by remember { mutableStateOf(false) }
+
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = { openReceipt = true })
+            .padding(horizontal = 8.dp),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondary,
+            contentColor = MaterialTheme.colorScheme.onSecondary
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "${receipt.receipt.store}: ${receipt.receipt.total}kr",
+                style = MaterialTheme.typography.bodyLarge
+            )
+            Text(
+                text = DateTimeFormatter.ofPattern("dd/MM").format(receipt.receipt.date),
+                style = MaterialTheme.typography.bodyLarge,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+
+    if (openReceipt) {
+        ReceiptDialog(
+            onDismiss = { openReceipt = false },
+            receipt = receipt
+        )
+    }
+}
+
+@Composable
+private fun ExpenseCard(modifier: Modifier = Modifier, expense: ExtraExpense) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondary,
+            contentColor = MaterialTheme.colorScheme.onSecondary
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "${expense.name.trim()}: ${formatCurrencyToString(expense.price)}kr",
+                style = MaterialTheme.typography.bodyLarge
+            )
+            Text(
+                text = DateTimeFormatter.ofPattern("dd/MM").format(expense.date),
+                style = MaterialTheme.typography.bodyLarge
+            )
+        }
+    }
+}
+
+@Composable
+private fun ReceiptDialog(onDismiss: () -> Unit, receipt: ReceiptWithProducts) {
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(0.8f)
+                .padding(16.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer
+            )
+        ) {
+            Column(
+                modifier = Modifier.padding(20.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "${DateTimeFormatter.ofPattern("dd/MM").format(receipt.receipt.date)}:",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                    Text(
+                        text = "${formatCurrencyToString(receipt.receipt.total)}kr",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                }
+
+                LazyColumn {
+                    items(receipt.products) { product ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                modifier = Modifier
+                                    .weight(1f, fill = false),
+                                text = product.name,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                overflow = TextOverflow.Ellipsis,
+                                maxLines = 1
+                            )
+                            Text(
+                                text = formatCurrencyToString(product.price),
+                                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text(
+                            text = "Luk",
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+            }
+
+        }
+    }
+}
+
+@Composable
+private fun ViewReceiptsButton(onClick: () -> Unit) {
+    Button(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(48.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.primary
+        ),
+        shape = RoundedCornerShape(8.dp)
+    ) {
+        Text(
+            text = "Se udgifter for måneden",
+            color = MaterialTheme.colorScheme.onPrimary,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Medium
+        )
+    }
+}
+//endregion
+
+//region HELPER FUNCTION
+private fun getCurrentTips(spentPercentage: Float): List<String> {
+    return when {
+        spentPercentage > 1.0f -> BudgetTips.OVERSPENDING.tips
+        spentPercentage < 0.7f -> BudgetTips.UNDER_BUDGET.tips
+        else -> BudgetTips.GENERAL.tips
+    }
+}
+
+/**
+ * Extension function for translating Month objects
+ */
+fun Month.toDanishString(): String = when(this) {
+    Month.JANUARY -> "Januar"
+    Month.FEBRUARY -> "Februar"
+    Month.MARCH -> "Marts"
+    Month.APRIL -> "April"
+    Month.MAY -> "Maj"
+    Month.JUNE -> "Juni"
+    Month.JULY -> "Juli"
+    Month.AUGUST -> "August"
+    Month.SEPTEMBER -> "September"
+    Month.OCTOBER -> "Oktober"
+    Month.NOVEMBER -> "November"
+    Month.DECEMBER -> "December"
+}
+
+/**
+ * Formats currencies into danish standard like so:
+ * "1234" -> "1.234"
+ * "12345" -> "12.345"
+ * "1234567" -> "1.234.567"
+ */
+fun formatCurrencyToString(input: Number): String {
+    val amount = input.toDouble()
+    return NumberFormat.getNumberInstance(Locale.forLanguageTag("da-DK")).format(amount)
+}
+
 /**
  * Formats currencies into danish standard like so:
  * "1234" -> "1.234"
@@ -420,632 +1094,5 @@ fun parseAmount(formattedAmount: String): Double {
         .replace(",", ".")
 
     return cleaned.toDoubleOrNull() ?: 0.0
-}
-//endregion
-//endregion
-
-//region BUDGETPAGE UI
-/**
- * The UI for the full budget page with graph
- */
-@Composable
-fun BudgetPageUI(
-    modifier: Modifier = Modifier,
-    currentBudget: Float,
-    totalSpent: Float,
-    receipts: List<ReceiptWithProducts>,
-    expenses: List<ExtraExpense>,
-    selectedMonth: Month = Month.from(LocalDate.now()),
-    selectedYear: Year = Year.from(LocalDate.now()),
-    onAddExpense: (String, Float) -> Unit,
-    onMonthSelected: (Month, Year) -> Unit
-) {
-    var showAddExpenseDialog by remember { mutableStateOf(false) }
-    var showMonthPicker by remember { mutableStateOf(false) }
-    var showViewReceiptsDialog by remember { mutableStateOf(false) }
-
-    val remaining = currentBudget - totalSpent
-    val spentPercentage = if (currentBudget > 0) (totalSpent / currentBudget).coerceIn(0f, 1f) else 0f
-
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(Color.White) // TODO: Change to your app's background color
-            .padding(16.dp)
-    ) {
-        // Header with dropdown and add button
-        BudgetHeader(
-            selectedMonth = "${selectedMonth.toDanishString()} ${selectedYear.value}",
-            onMonthClick = { showMonthPicker = true },
-            onAddClick = { showAddExpenseDialog = true }
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        //Budget circle with animation
-        BudgetCircle(
-            totalSpent = totalSpent,
-            remaining = remaining,
-            spentPercentage = spentPercentage
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        //View receipts button
-        ViewReceiptsButton(
-            onClick = { showViewReceiptsDialog = true }
-        )
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        //Tips section
-        BudgetTipsSection(
-            tips = getCurrentTips(spentPercentage)
-        )
-    }
-
-    //region DIALOGS
-    //Add expense dialog
-    if (showAddExpenseDialog) {
-        AddExpenseDialog(
-            onDismiss = { showAddExpenseDialog = false },
-            onConfirm = { name, price ->
-                onAddExpense(name, price)
-                showAddExpenseDialog = false
-            }
-        )
-    }
-
-    //Month picker dialog
-    if (showMonthPicker) {
-        DatePickerDialog(
-            currentMonth = selectedMonth,
-            currentYear = selectedYear,
-            onDismiss = { showMonthPicker = false },
-            onMonthSelected = { month, year ->
-                onMonthSelected(month, year)
-                showMonthPicker = false
-            }
-        )
-    }
-
-    //View receipts dialog
-    if (showViewReceiptsDialog) {
-        ViewReceiptsDialog(
-            onDismiss = { showViewReceiptsDialog = false },
-            receipts = receipts,
-            expenses = expenses,
-            selectedMonth = selectedMonth.toDanishString()
-        )
-    }
-    //endregion
-
-}
-
-@Composable
-private fun BudgetHeader(selectedMonth: String, onMonthClick: () -> Unit, onAddClick: () -> Unit) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // Month selector dropdown
-        Card(
-            modifier = Modifier
-                .weight(1f)
-                .clickable { onMonthClick() },
-            colors = CardDefaults.cardColors(
-                containerColor = Color(0xFFF5F5F5) // TODO: Change to your app's card background
-            ),
-            shape = RoundedCornerShape(8.dp)
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(12.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = selectedMonth,
-                    color = Color.Black // TODO: Change to your app's text color
-                )
-                Icon(
-                    imageVector = Icons.Default.ArrowDropDown,
-                    contentDescription = "Vælg måned",
-                    tint = Color.Black // TODO: Change to your app's icon color
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.width(12.dp))
-
-        // Add button
-        FloatingActionButton(
-            onClick = onAddClick,
-            modifier = Modifier.size(48.dp),
-            containerColor = Color(0xFF4CAF50), // TODO: Change to your app's accent color
-            contentColor = Color.White
-        ) {
-            Icon(
-                imageVector = Icons.Default.Add,
-                contentDescription = "Tilføj udgift"
-            )
-        }
-    }
-}
-
-@Composable
-fun BudgetCircle(modifier: Modifier = Modifier, totalSpent: Float, remaining: Float, spentPercentage: Float) {
-    // Animation for the progress ring
-    val animatedProgress by animateFloatAsState(
-        targetValue = spentPercentage,
-        animationSpec = tween(durationMillis = 1000, easing = EaseOutCubic),
-        label = "BudgetProgress"
-    )
-
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(250.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Canvas(
-            modifier = Modifier.size(200.dp)
-        ) {
-            val strokeWidth = 20.dp.toPx()
-            val radius = size.width / 2 - strokeWidth / 2
-
-            // Background circle
-            drawCircle(
-                color = Color(0xFFE0E0E0), // TODO: Change to your app's inactive color
-                radius = radius,
-                style = Stroke(width = strokeWidth)
-            )
-
-            // Progress arc
-            if (animatedProgress > 0) {
-                drawArc(
-                    color = if (spentPercentage > 1f) Color.Red else Color(0xFFFF5722), // TODO: Change colors
-                    startAngle = -90f,
-                    sweepAngle = 360f * animatedProgress,
-                    useCenter = false,
-                    style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
-                )
-            }
-        }
-
-        // Center text
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "Tilbage:",
-                fontSize = 14.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                text = "${formatCurrencyToString(remaining.toInt().toString())}kr",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                color = if (remaining < 0) Color.Red else Color.Black
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Brugt:",
-                fontSize = 12.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                text = "${formatCurrencyToString(totalSpent.toInt().toString())}kr",
-                fontSize = 16.sp,
-                color = Color.Red
-            )
-        }
-    }
-}
-
-@Composable
-private fun BudgetTipsSection(tips: List<String>) {
-    Column {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(bottom = 12.dp)
-        ) {
-            Text(
-                text = "Tips & Indsigter",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black // TODO: Change to your app's primary text color
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(
-                text = "💡",
-                fontSize = 16.sp
-            )
-        }
-
-        tips.forEach { tip ->
-            Text(
-                text = "- $tip",
-                fontSize = 14.sp,
-                color = Color.Black, // TODO: Change to your app's text color
-                modifier = Modifier.padding(bottom = 8.dp),
-                lineHeight = 20.sp
-            )
-        }
-    }
-}
-
-@Composable
-private fun AddExpenseDialog(onDismiss: () -> Unit, onConfirm: (String, Float) -> Unit) {
-    var name by remember { mutableStateOf("") }
-    var price by remember { mutableStateOf("") }
-
-    Dialog(onDismissRequest = onDismiss) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = Color.White // TODO: Change to your app's dialog background
-            )
-        ) {
-            Column(
-                modifier = Modifier.padding(20.dp)
-            ) {
-                Text(
-                    text = "Ekstra udgift",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black // TODO: Change to your app's primary text color
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Navn...") },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFF4CAF50), // TODO: Change to your app's accent color
-                        unfocusedBorderColor = Color.Gray
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                OutlinedTextField(
-                    value = price,
-                    onValueChange = { price = it },
-                    label = { Text("Pris...") },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFF4CAF50), // TODO: Change to your app's accent color
-                        unfocusedBorderColor = Color.Gray
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    TextButton(onClick = onDismiss) {
-                        Text(
-                            text = "Annuller",
-                            color = Color.Gray // TODO: Change to your app's secondary text color
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Button(
-                        onClick = {
-                            val priceFloat = price.toFloatOrNull()
-                            if (name.isNotBlank() && priceFloat != null && priceFloat > 0) {
-                                onConfirm(name, priceFloat)
-                            }
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF4CAF50) // TODO: Change to your app's accent color
-                        )
-                    ) {
-                        Text("Tilføj")
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun DatePickerDialog(currentMonth: Month, currentYear: Year, onDismiss: () -> Unit, onMonthSelected: (Month, Year) -> Unit) {
-    val years = listOf(Year.of(2025))
-    val year2Month = years.flatMap { year ->
-        Month.entries.map { month ->
-            month to year
-        }
-    }
-
-    Dialog(onDismissRequest = onDismiss) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = Color.White // TODO: Change to your app's dialog background
-            )
-        ) {
-            Column(
-                modifier = Modifier.padding(20.dp)
-            ) {
-                Text(
-                    text = "Vælg måned",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black // TODO: Change to your app's primary text color
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                year2Month.forEach { (month, year) ->
-                    val isSelected = month == currentMonth && year == currentYear
-
-                    Text(
-                        text = "${month.toDanishString()} ${year.value}",
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onMonthSelected(month, year) }
-                            .padding(vertical = 12.dp),
-                        color = if (isSelected) Color(0xFF4CAF50) else Color.Black, // TODO: Change colors
-                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    TextButton(onClick = onDismiss) {
-                        Text(
-                            text = "Luk",
-                            color = Color.Gray // TODO: Change to your app's secondary text color
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun ViewReceiptsDialog(onDismiss: () -> Unit, receipts: List<ReceiptWithProducts>, expenses: List<ExtraExpense>, selectedMonth: String) {
-    Dialog(onDismissRequest = onDismiss) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight(0.8f)
-                .padding(16.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = Color.White // TODO: Change to your app's dialog background
-            )
-        ) {
-            Column(
-                modifier = Modifier.padding(20.dp)
-            ) {
-                Text(
-                    text = "Udgifter for $selectedMonth",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black // TODO: Change to your app's primary text color
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    contentPadding = PaddingValues(vertical = 16.dp)
-                ) {
-                    items(receipts) { receipt ->
-                        ReceiptCard(receipt = receipt)
-                    }
-                    items(expenses) { expense ->
-                        ExpenseCard(expense = expense)
-                    }
-                }
-
-                Spacer(modifier = Modifier.weight(1f))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    TextButton(onClick = onDismiss) {
-                        Text(
-                            text = "Luk",
-                            color = Color.Gray // TODO: Change to your app's secondary text color
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun ReceiptCard(modifier: Modifier = Modifier, receipt: ReceiptWithProducts) {
-    var openReceipt by remember { mutableStateOf(false) }
-
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable(onClick = { openReceipt = true })
-            .padding(horizontal = 8.dp),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
-        Box(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Text(
-                text = "${receipt.receipt.date}: ${receipt.receipt.total}kr",
-                style = MaterialTheme.typography.bodyLarge
-            )
-        }
-    }
-
-    if (openReceipt) {
-        ReceiptDialog(
-            onDismiss = { openReceipt = false },
-            receipt = receipt
-        )
-    }
-}
-
-@Composable
-private fun ExpenseCard(modifier: Modifier = Modifier, expense: ExtraExpense) {
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 8.dp),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
-        Box(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Text(
-                text = "${expense.name}: ${expense.price}kr ${expense.date}",
-                style = MaterialTheme.typography.bodyLarge
-            )
-        }
-    }
-}
-
-@Composable
-private fun ReceiptDialog(onDismiss: () -> Unit, receipt: ReceiptWithProducts) {
-    Dialog(onDismissRequest = onDismiss) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight(0.8f)
-                .padding(16.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = Color.White // TODO: Change to your app's dialog background
-            )
-        ) {
-            Column(
-                modifier = Modifier.padding(20.dp)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = "${receipt.receipt.date}:",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black // TODO: Change to your app's primary text color
-                    )
-                    Text(
-                        text = "${receipt.receipt.total}kr",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black // TODO: Change to your app's primary text color
-                    )
-                }
-
-                LazyColumn() {
-                    items(receipt.products) { product ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 4.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(text = product.name)
-                            Text(text = product.price.toString())
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.weight(1f))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    TextButton(onClick = onDismiss) {
-                        Text(
-                            text = "Luk",
-                            color = Color.Gray // TODO: Change to your app's secondary text color
-                        )
-                    }
-                }
-            }
-
-        }
-    }
-}
-
-@Composable
-private fun ViewReceiptsButton(onClick: () -> Unit) {
-    Button(
-        onClick = onClick,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(48.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = Color(0xFF4CAF50) // TODO: Change to your app's accent color
-        ),
-        shape = RoundedCornerShape(8.dp)
-    ) {
-        Text(
-            text = "Se udgifter for måneden",
-            color = Color.White,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Medium
-        )
-    }
-}
-//endregion
-
-//region HELPER FUNCTION
-private fun getCurrentTips(spentPercentage: Float): List<String> {
-    return when {
-        spentPercentage > 1.0f -> BudgetTips.OVERSPENDING.tips
-        spentPercentage < 0.7f -> BudgetTips.UNDER_BUDGET.tips
-        else -> BudgetTips.GENERAL.tips
-    }
-}
-
-/**
- * Extension function for translating Month objects
- */
-fun Month.toDanishString(): String = when(this) {
-    Month.JANUARY -> "Januar"
-    Month.FEBRUARY -> "Februar"
-    Month.MARCH -> "Marts"
-    Month.APRIL -> "April"
-    Month.MAY -> "Maj"
-    Month.JUNE -> "Juni"
-    Month.JULY -> "Juli"
-    Month.AUGUST -> "August"
-    Month.SEPTEMBER -> "September"
-    Month.OCTOBER -> "Oktober"
-    Month.NOVEMBER -> "November"
-    Month.DECEMBER -> "December"
 }
 //endregion

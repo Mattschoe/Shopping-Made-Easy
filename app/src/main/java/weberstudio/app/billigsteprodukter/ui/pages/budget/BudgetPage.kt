@@ -1037,81 +1037,6 @@ private fun ChangePriceDialog(originalBudget: Float, onDismiss: () -> Unit, onCo
 }
 
 @Composable
-private fun ReceiptCard(modifier: Modifier = Modifier, receipt: ReceiptWithProducts) {
-    var openReceipt by remember { mutableStateOf(false) }
-
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable(onClick = { openReceipt = true })
-            .padding(horizontal = 8.dp),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.secondary,
-            contentColor = MaterialTheme.colorScheme.onSecondary
-        )
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "${receipt.receipt.store}: ${receipt.receipt.total}kr",
-                style = MaterialTheme.typography.bodyLarge
-            )
-            Text(
-                text = DateTimeFormatter.ofPattern("dd/MM").format(receipt.receipt.date),
-                style = MaterialTheme.typography.bodyLarge,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-    }
-
-    if (openReceipt) {
-        ReceiptDialog(
-            onDismiss = { openReceipt = false },
-            receipt = receipt
-        )
-    }
-}
-
-@Composable
-private fun ExpenseCard(modifier: Modifier = Modifier, expense: ExtraExpense) {
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 8.dp),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.secondary,
-            contentColor = MaterialTheme.colorScheme.onSecondary
-        )
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "${expense.name.trim()}: ${formatCurrencyToString(expense.price)}kr",
-                style = MaterialTheme.typography.bodyLarge
-            )
-            Text(
-                text = DateTimeFormatter.ofPattern("dd/MM").format(expense.date),
-                style = MaterialTheme.typography.bodyLarge
-            )
-        }
-    }
-}
-
-@Composable
 private fun ReceiptDialog(onDismiss: () -> Unit, receipt: ReceiptWithProducts) {
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -1186,6 +1111,81 @@ private fun ReceiptDialog(onDismiss: () -> Unit, receipt: ReceiptWithProducts) {
                 }
             }
 
+        }
+    }
+}
+
+@Composable
+private fun ReceiptCard(modifier: Modifier = Modifier, receipt: ReceiptWithProducts) {
+    var openReceipt by remember { mutableStateOf(false) }
+
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = { openReceipt = true })
+            .padding(horizontal = 8.dp),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondary,
+            contentColor = MaterialTheme.colorScheme.onSecondary
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "${receipt.receipt.store}: ${receipt.receipt.total}kr",
+                style = MaterialTheme.typography.bodyLarge
+            )
+            Text(
+                text = DateTimeFormatter.ofPattern("dd/MM").format(receipt.receipt.date),
+                style = MaterialTheme.typography.bodyLarge,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+
+    if (openReceipt) {
+        ReceiptDialog(
+            onDismiss = { openReceipt = false },
+            receipt = receipt
+        )
+    }
+}
+
+@Composable
+private fun ExpenseCard(modifier: Modifier = Modifier, expense: ExtraExpense) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondary,
+            contentColor = MaterialTheme.colorScheme.onSecondary
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "${expense.name.trim()}: ${formatCurrencyToString(expense.price)}kr",
+                style = MaterialTheme.typography.bodyLarge
+            )
+            Text(
+                text = DateTimeFormatter.ofPattern("dd/MM").format(expense.date),
+                style = MaterialTheme.typography.bodyLarge
+            )
         }
     }
 }

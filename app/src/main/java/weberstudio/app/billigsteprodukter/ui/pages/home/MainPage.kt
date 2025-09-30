@@ -30,7 +30,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -43,10 +42,10 @@ import weberstudio.app.billigsteprodukter.data.RecentActivity
 import weberstudio.app.billigsteprodukter.data.getIcon
 import weberstudio.app.billigsteprodukter.logic.CameraViewModel
 import weberstudio.app.billigsteprodukter.logic.ActivityViewModel
+import weberstudio.app.billigsteprodukter.logic.Formatter.toDanishString
 import weberstudio.app.billigsteprodukter.ui.navigation.PageNavigation
 import weberstudio.app.billigsteprodukter.ui.pages.budget.BudgetCircle
 import weberstudio.app.billigsteprodukter.ui.pages.budget.BudgetViewModel
-import weberstudio.app.billigsteprodukter.ui.pages.budget.toDanishString
 
 /**
  * The UI content of the *Main* Page

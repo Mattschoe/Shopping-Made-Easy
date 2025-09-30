@@ -33,7 +33,6 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
@@ -66,15 +65,16 @@ import weberstudio.app.billigsteprodukter.R
 import weberstudio.app.billigsteprodukter.data.Budget
 import weberstudio.app.billigsteprodukter.data.ExtraExpense
 import weberstudio.app.billigsteprodukter.data.ReceiptWithProducts
+import weberstudio.app.billigsteprodukter.logic.Formatter.danishCurrencyToFloat
+import weberstudio.app.billigsteprodukter.logic.Formatter.formatInputToDanishCurrency
+import weberstudio.app.billigsteprodukter.logic.Formatter.toDanishString
+import weberstudio.app.billigsteprodukter.logic.Formatter.filterInputToValidNumberInput
 import java.text.DecimalFormat
-import java.text.NumberFormat
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.LocalTime
 import java.time.Month
 import java.time.Year
 import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 
 @Composable
@@ -616,7 +616,7 @@ fun BudgetCircle(modifier: Modifier = Modifier, currentBudget: Float, totalSpent
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
-                text = "${formatCurrencyToString(remaining.toInt().toString())}kr",
+                text = "${formatInputToDanishCurrency(remaining.toInt().toString())}kr",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = if (remaining < 0) Color.Red else MaterialTheme.colorScheme.primaryContainer
@@ -628,7 +628,7 @@ fun BudgetCircle(modifier: Modifier = Modifier, currentBudget: Float, totalSpent
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
-                text = "${formatCurrencyToString(totalSpent.toInt().toString())}kr",
+                text = "${formatInputToDanishCurrency(totalSpent.toInt().toString())}kr",
                 fontSize = 16.sp,
                 color = MaterialTheme.colorScheme.error
             )
@@ -940,7 +940,7 @@ private fun ChangePriceDialog(originalBudget: Float, onDismiss: () -> Unit, onCo
                         }
                     },
                     label = { Text(
-                        text = "Nuværende: ${formatCurrencyToString(originalBudget)}",
+                        text = "Nuværende: ${formatInputToDanishCurrency(originalBudget.toString())}",
                         color = Color.Gray,
                         fontStyle = FontStyle.Italic
                     )},
@@ -1011,7 +1011,7 @@ private fun ReceiptDialog(onDismiss: () -> Unit, receipt: ReceiptWithProducts) {
                         color = MaterialTheme.colorScheme.onSecondaryContainer
                     )
                     Text(
-                        text = "${formatCurrencyToString(receipt.receipt.total)}kr",
+                        text = "${formatInputToDanishCurrency(receipt.receipt.total.toString())}kr",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSecondaryContainer
@@ -1035,7 +1035,7 @@ private fun ReceiptDialog(onDismiss: () -> Unit, receipt: ReceiptWithProducts) {
                                 maxLines = 1
                             )
                             Text(
-                                text = formatCurrencyToString(product.price),
+                                text = formatInputToDanishCurrency(product.price.toString()),
                                 color = MaterialTheme.colorScheme.onSecondaryContainer,
                             )
                         }
@@ -1125,7 +1125,7 @@ private fun ExpenseCard(modifier: Modifier = Modifier, expense: ExtraExpense) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "${expense.name.trim()}: ${formatCurrencyToString(expense.price)}kr",
+                text = "${expense.name.trim()}: ${formatInputToDanishCurrency(expense.price.toString())}kr",
                 style = MaterialTheme.typography.bodyLarge
             )
             Text(
@@ -1158,115 +1158,12 @@ private fun ViewReceiptsButton(onClick: () -> Unit) {
 }
 //endregion
 
-//region HELPER FUNCTION
-/**
- * Filters, Checks and formats user input into a valid number input.
- * Often used in combination with [formatInputToDanishCurrency].
- * Will return emptyString if number is not valid
- */
-private fun filterInputToValidNumberInput(input: String): String {
-    val filtered = input.filter { it.isDigit() || it == ',' || it == '.' }
-
-    if (filtered.count { it == ',' } <= 1) {
-        val parts = filtered.split(",")
-        val validInput = if (parts.size > 1 && parts[1].length > 2) {
-            "${parts[0]},${parts[1].take(2)}"
-        } else {
-            filtered
-        }
-        return validInput
-    }
-    return ""
-}
-
+//region HELPER FUNCTIONS
 private fun getCurrentTips(spentPercentage: Float): List<String> {
     return when {
         spentPercentage > 1.0f -> BudgetTips.OVERSPENDING.tips
         spentPercentage < 0.7f -> BudgetTips.UNDER_BUDGET.tips
         else -> BudgetTips.GENERAL.tips
     }
-}
-
-/**
- * Extension function for translating Month objects
- */
-fun Month.toDanishString(): String = when(this) {
-    Month.JANUARY -> "Januar"
-    Month.FEBRUARY -> "Februar"
-    Month.MARCH -> "Marts"
-    Month.APRIL -> "April"
-    Month.MAY -> "Maj"
-    Month.JUNE -> "Juni"
-    Month.JULY -> "Juli"
-    Month.AUGUST -> "August"
-    Month.SEPTEMBER -> "September"
-    Month.OCTOBER -> "Oktober"
-    Month.NOVEMBER -> "November"
-    Month.DECEMBER -> "December"
-}
-
-/**
- * Formats currencies into danish standard like so:
- * "1234" -> "1.234"
- * "12345" -> "12.345"
- * "1234567" -> "1.234.567"
- */
-fun formatCurrencyToString(input: Number): String {
-    val amount = input.toDouble()
-    return NumberFormat.getNumberInstance(Locale.forLanguageTag("da-DK")).format(amount)
-}
-
-/**
- * Formats currencies into danish standard like so:
- * "1234" -> "1.234"
- * "12345" -> "12.345"
- * "1234567" -> "1.234.567"
- */
-fun formatCurrencyToString(input: String): String {
-    val isNegative = input.trimStart().startsWith("-")
-    val digitsOnly = input.filter { it.isDigit() }
-
-    if (digitsOnly.isEmpty()) return ""
-
-    // Convert to double and format
-    val amount = digitsOnly.toDoubleOrNull() ?: 0.0
-    val formatted = NumberFormat.getNumberInstance(Locale.forLanguageTag("da-DK")).format(amount)
-
-    return if (isNegative) "-$formatted" else formatted
-}
-
-/**
- * Formats raw numbers in strings from input fields to danish pretty looking strings that match danish standard
- */
-fun formatInputToDanishCurrency(input: String): String {
-    if (input.isEmpty()) return ""
-
-    val parts = input.split(",")
-    val intPart = parts[0].replace(".", "")
-    val decimalPart = if (parts.size > 1) parts[1] else null
-
-    val formattedInt = if (intPart.length > 3) {
-        intPart.reversed()
-            .chunked(3)
-            .joinToString(".")
-            .reversed()
-    } else {
-        intPart
-    }
-
-    if (decimalPart != null) return "$formattedInt,$decimalPart"
-    if (input.endsWith(",")) return "$formattedInt,"
-    else return formattedInt
-}
-
-/**
- * Formats the output of [formatInputToDanishCurrency] back into a float
- */
-fun danishCurrencyToFloat(danishCurrency: String): Float {
-    if (danishCurrency.isEmpty()) return 0.0f
-    return danishCurrency
-        .replace(".", "")
-        .replace(",", ".")
-        .toFloat()
 }
 //endregion

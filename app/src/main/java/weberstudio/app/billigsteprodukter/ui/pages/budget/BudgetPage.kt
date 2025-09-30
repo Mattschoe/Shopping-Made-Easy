@@ -22,7 +22,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
@@ -42,7 +41,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -57,7 +55,6 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
@@ -65,7 +62,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import androidx.core.text.isDigitsOnly
 import weberstudio.app.billigsteprodukter.R
 import weberstudio.app.billigsteprodukter.data.Budget
 import weberstudio.app.billigsteprodukter.data.ExtraExpense
@@ -74,6 +70,7 @@ import java.text.DecimalFormat
 import java.text.NumberFormat
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.Month
 import java.time.Year
 import java.time.format.DateTimeFormatter
@@ -86,13 +83,22 @@ fun BudgetPage(modifier: Modifier = Modifier, viewModel: BudgetViewModel) {
     val currentReceipts by viewModel.currentReceipts.collectAsState()
     val currentExpenses by viewModel.currentExtraExpenses.collectAsState()
 
+    var selectedMonth by remember { mutableStateOf(Month.from(LocalDateTime.now())) }
+    var selectedYear by remember { mutableStateOf(Year.from(LocalDateTime.now())) }
+
     //Hvis useren ikke har givet budgetInput for de intro pagen
     if (currentBudget == null) {
         PreBudgetPageUI(
-            modifier = modifier
-        ) { newBudget ->
-            viewModel.addBudget(newBudget)
-        }
+            modifier = modifier,
+            selectedMonth = selectedMonth,
+            selectedYear = selectedYear,
+            onMonthSelected = { month, year ->
+                selectedMonth = month
+                selectedYear = year
+                viewModel.loadBudget(month, year)
+            },
+            newBudget = { newBudget -> viewModel.addBudget(newBudget) }
+        )
     }
 
     //Hvis useren har givet et budget så viser vi dem statistik pagen
@@ -106,7 +112,11 @@ fun BudgetPage(modifier: Modifier = Modifier, viewModel: BudgetViewModel) {
             selectedMonth = currentBudget.month,
             selectedYear = currentBudget.year,
             onAddExpense = { name, price -> viewModel.addExtraSpendingToCurrentBudget(name, price) },
-            onMonthSelected = { month, year -> viewModel.loadBudget(month, year) },
+            onMonthSelected = { month, year ->
+                selectedMonth = month
+                selectedYear = year
+                viewModel.loadBudget(month, year)
+            },
             onBudgetChanged = { newBudget ->
                 viewModel.updateBudget(currentBudget.copy(budget = newBudget))
             }
@@ -120,8 +130,9 @@ fun BudgetPage(modifier: Modifier = Modifier, viewModel: BudgetViewModel) {
  * The UI for the user to input a monthly budget so we can navigate them to [BudgetPageUI]
  */
 @Composable
-fun PreBudgetPageUI(modifier: Modifier = Modifier, newBudget: (Budget) -> Unit) {
-    var showDialog by remember { mutableStateOf(false) }
+fun PreBudgetPageUI(modifier: Modifier = Modifier, newBudget: (Budget) -> Unit, onMonthSelected: (Month, Year) -> Unit, selectedMonth: Month, selectedYear: Year) {
+    var showCreateBudgetDialog by remember { mutableStateOf(false) }
+    var showMonthPicker by remember { mutableStateOf(false) }
 
     Box(
         modifier = modifier
@@ -141,45 +152,105 @@ fun PreBudgetPageUI(modifier: Modifier = Modifier, newBudget: (Budget) -> Unit) 
                     .padding(24.dp)
             ) {
                 Text(
-                    text = "Hvad er budgettet på\nmad for denne måned?",
+                    text = "Hvad er budgettet på\nmad for ${selectedMonth.toDanishString()} måned?",
                     fontSize = 24.sp,
                     textAlign = TextAlign.Left,
                     lineHeight = 22.sp
                 )
 
-                Button(
-                    onClick = { showDialog = true },
+                Column(
                     modifier = Modifier
-                        .fillMaxWidth(0.6f)
-                        .height(48.dp),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary
-                    )
+                        .fillMaxHeight(),
+                    verticalArrangement = Arrangement.SpaceEvenly,
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    Button(
+                        onClick = { showCreateBudgetDialog = true },
+                        modifier = Modifier
+                            .fillMaxWidth(0.8f)
+                            .height(48.dp),
+                        shape = RoundedCornerShape(24.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
+                    ) {
+                        Text(
+                            text = "Opret budget",
+                            fontSize = 16.sp,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
+
                     Text(
-                        text = "Opret budget",
-                        fontSize = 16.sp,
-                        color = MaterialTheme.colorScheme.onPrimary
+                        text = "eller",
+                        fontSize = 20.sp,
+                        color = Color.Gray,
+                        fontStyle = FontStyle.Italic
                     )
+
+                    //Month picker dropdown
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth(0.8f)
+                            .height(48.dp)
+                            .clickable { showMonthPicker = true },
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer
+                        ),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Se budget for andre måneder",
+                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                            Icon(
+                                imageVector = ImageVector.vectorResource(R.drawable.dropdown_icon),
+                                contentDescription = "Vælg måned",
+                                tint = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                        }
+                    }
                 }
             }
         }
     }
 
-    if (showDialog) {
+    //region DIALOGS
+    if (showCreateBudgetDialog) {
         BudgetDialog(
-            onDismiss = { showDialog = false },
+            selectedMonth = selectedMonth,
+            onDismiss = { showCreateBudgetDialog = false },
             onClick = { budget ->
-                showDialog = false
+                showCreateBudgetDialog = false
                 newBudget(budget)
             }
         )
     }
+
+
+    if (showMonthPicker) {
+        DatePickerDialog(
+            currentMonth = null,
+            currentYear = null,
+            onDismiss = { showMonthPicker = false },
+            onMonthSelected = { month, year ->
+                onMonthSelected(month, year)
+                showMonthPicker = false
+            }
+        )
+    }
+    //endregion
 }
 
 @Composable
-fun BudgetDialog(onDismiss: () -> Unit, onClick: (Budget) -> Unit) {
+fun BudgetDialog(selectedMonth: Month, onDismiss: () -> Unit, onClick: (Budget) -> Unit) {
     var totalBudget by remember { mutableStateOf("") }
     var categories by remember { mutableStateOf(
         mutableListOf(
@@ -188,7 +259,6 @@ fun BudgetDialog(onDismiss: () -> Unit, onClick: (Budget) -> Unit) {
             BudgetCategory("tor", "Tør")
         )
     ) }
-    val currentMonth by remember { mutableStateOf(Month.from(LocalDateTime.now())) }
     val currentYear by remember { mutableStateOf(Year.from(LocalDateTime.now())) }
 
 
@@ -209,7 +279,7 @@ fun BudgetDialog(onDismiss: () -> Unit, onClick: (Budget) -> Unit) {
             ) {
                 //Header
                 Text(
-                    text = "Budget for ${currentMonth.toDanishString()} $currentYear",
+                    text = "Budget for ${selectedMonth.toDanishString()} $currentYear",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSecondaryContainer,
@@ -296,7 +366,7 @@ fun BudgetDialog(onDismiss: () -> Unit, onClick: (Budget) -> Unit) {
                     IconButton(
                         onClick = {
                             val budget = Budget(
-                                month = currentMonth,
+                                month = selectedMonth,
                                 year = currentYear,
                                 budget = formatCurrencyToFloat(totalBudget)
                             )
@@ -750,7 +820,7 @@ private fun AddExpenseDialog(onDismiss: () -> Unit, onConfirm: (String, Float) -
 }
 
 @Composable
-private fun DatePickerDialog(currentMonth: Month, currentYear: Year, onDismiss: () -> Unit, onMonthSelected: (Month, Year) -> Unit) {
+private fun DatePickerDialog(currentMonth: Month?, currentYear: Year?, onDismiss: () -> Unit, onMonthSelected: (Month, Year) -> Unit) {
     val years = listOf(Year.of(2025))
     val year2Month = years.flatMap { year ->
         Month.entries.map { month ->

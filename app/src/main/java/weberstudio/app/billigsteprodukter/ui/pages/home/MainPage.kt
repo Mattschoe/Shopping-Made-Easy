@@ -46,6 +46,7 @@ import weberstudio.app.billigsteprodukter.logic.ActivityViewModel
 import weberstudio.app.billigsteprodukter.ui.navigation.PageNavigation
 import weberstudio.app.billigsteprodukter.ui.pages.budget.BudgetCircle
 import weberstudio.app.billigsteprodukter.ui.pages.budget.BudgetViewModel
+import weberstudio.app.billigsteprodukter.ui.pages.budget.toDanishString
 
 /**
  * The UI content of the *Main* Page
@@ -69,7 +70,7 @@ fun MainPageContent(modifier: Modifier = Modifier, navController: NavController,
     ) {
         //region BUDGET CARD
         Text(
-            text = "Budget",
+            text = "${currentBudget?.month?.toDanishString()} Budget",
             style = MaterialTheme.typography.displaySmall,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground

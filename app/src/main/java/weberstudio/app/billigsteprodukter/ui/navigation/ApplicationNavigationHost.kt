@@ -39,6 +39,9 @@ import weberstudio.app.billigsteprodukter.ui.pages.shoppingList.ShoppingListUnde
 import weberstudio.app.billigsteprodukter.ui.pages.shoppingList.ShoppingListUndermenuViewModel
 import weberstudio.app.billigsteprodukter.ui.pages.shoppingList.ShoppingListsPage
 import weberstudio.app.billigsteprodukter.ui.pages.shoppingList.ShoppingListsViewModel
+import java.time.LocalDateTime
+import java.time.Month
+import java.time.Year
 
 /**
  * The host that's responsible for navigation between pages in the application
@@ -154,12 +157,33 @@ fun ApplicationNavigationHost(navController: NavHostController = rememberNavCont
         }
 
         //Budget
-        composable(PageNavigation.Budget.route) { backStackEntry ->
+        composable(
+            PageNavigation.Budget.route,
+            arguments = listOf(
+                navArgument("year") { type = NavType.StringType },
+                navArgument("month") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
             val budgetViewModel: BudgetViewModel = viewModel(backStackEntry)
+            val month = backStackEntry.arguments?.getString("month")?.let {
+                try {
+                    Month.valueOf(it)
+                } catch (_: Exception) {
+                    Month.from(LocalDateTime.now())
+                }
+            } ?: Month.from(LocalDateTime.now())
+            val year = backStackEntry.arguments?.getString("year")?.let {
+                try {
+                    Year.parse(it)
+                } catch (_: Exception) {
+                    Year.from(LocalDateTime.now())
+                }
+            } ?: Year.from(LocalDateTime.now())
+
             PageShell(
                 navController,
                 title = "Budget",
-                pageContent = { padding -> BudgetPage(Modifier.padding(padding), budgetViewModel) }
+                pageContent = { padding -> BudgetPage(Modifier.padding(padding), budgetViewModel, month, year) }
             )
         }
 

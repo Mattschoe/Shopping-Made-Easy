@@ -1,6 +1,7 @@
 package weberstudio.app.billigsteprodukter.logic
 
 import java.time.Month
+import java.util.Locale
 
 /**
  * This object has the single focus of formatting and standardizing text UI for the user.
@@ -69,6 +70,31 @@ object Formatter {
         if (decimalPart != null) return "$formattedInt,$decimalPart"
         if (input.endsWith(",")) return "$formattedInt,"
         else return formattedInt
+    }
+
+    /**
+     * Formats a float to danish currency. A lot like [formatInputToDanishCurrency], but expects a
+     * float standard (so '.' instead of ',') when formatting.
+     * 1234.95f -> "1.234,95"
+     * 2500.0f -> "2.500"
+     */
+    fun formatFloatToDanishCurrency(value: Float): String {
+        val formatted = String.format("%.2f", value)
+
+        val parts = formatted.split(".")
+        val intPart = parts[0]
+        var decimalPart = parts.getOrNull(1) ?: ""
+
+        val formattedInt = if (intPart.length > 3) {
+            intPart.reversed()
+                .chunked(3)
+                .joinToString(".")
+                .reversed()
+        } else {
+            intPart
+        }
+
+        return if (decimalPart == "00") formattedInt else "$formattedInt,$decimalPart"
     }
 
     /**

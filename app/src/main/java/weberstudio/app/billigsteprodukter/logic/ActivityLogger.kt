@@ -6,6 +6,10 @@ import weberstudio.app.billigsteprodukter.data.Receipt
 import weberstudio.app.billigsteprodukter.data.RecentActivity
 import weberstudio.app.billigsteprodukter.data.ShoppingList
 import weberstudio.app.billigsteprodukter.data.recentactivity.ActivityRepository
+import weberstudio.app.billigsteprodukter.logic.Formatter.filterInputToValidNumberInput
+import weberstudio.app.billigsteprodukter.logic.Formatter.formatFloatToDanishCurrency
+import weberstudio.app.billigsteprodukter.logic.Formatter.formatInputToDanishCurrency
+import weberstudio.app.billigsteprodukter.logic.Formatter.toDanishString
 import java.time.format.DateTimeFormatter
 
 class ActivityLogger(private val activityRepo: ActivityRepository) {
@@ -21,7 +25,7 @@ class ActivityLogger(private val activityRepo: ActivityRepository) {
     suspend fun logBudgetCreated(budget: Budget) {
         val activity = RecentActivity(
             activityType = ActivityType.BUDGET_CREATED,
-            displayInfo = "Lavede budget på: ${budget.budget}kr for ${budget.month} måned",
+            displayInfo = "Lavede budget på: ${formatFloatToDanishCurrency(budget.budget)}kr for ${budget.month.toDanishString()} måned",
             budgetMonth = budget.month,
             budgetYear = budget.year
         )

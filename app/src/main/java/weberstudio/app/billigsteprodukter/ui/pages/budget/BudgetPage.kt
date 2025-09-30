@@ -78,13 +78,14 @@ import java.time.format.DateTimeFormatter
 
 
 @Composable
-fun BudgetPage(modifier: Modifier = Modifier, viewModel: BudgetViewModel) {
+fun BudgetPage(modifier: Modifier = Modifier, viewModel: BudgetViewModel, month: Month, year: Year) {
     val currentBudget by viewModel.currentBudget.collectAsState()
     val currentReceipts by viewModel.currentReceipts.collectAsState()
     val currentExpenses by viewModel.currentExtraExpenses.collectAsState()
 
-    var selectedMonth by remember { mutableStateOf(Month.from(LocalDateTime.now())) }
-    var selectedYear by remember { mutableStateOf(Year.from(LocalDateTime.now())) }
+    var selectedMonth by remember { mutableStateOf(month) }
+    var selectedYear by remember { mutableStateOf(year) }
+    viewModel.loadBudget(selectedMonth, selectedYear)
 
     //Hvis useren ikke har givet budgetInput for de intro pagen
     if (currentBudget == null) {
@@ -222,7 +223,7 @@ fun PreBudgetPageUI(modifier: Modifier = Modifier, newBudget: (Budget) -> Unit, 
         }
     }
 
-    //region DIALOGS
+    //region DIALOGS<
     if (showCreateBudgetDialog) {
         BudgetDialog(
             selectedMonth = selectedMonth,

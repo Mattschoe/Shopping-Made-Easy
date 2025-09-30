@@ -1,7 +1,6 @@
 package weberstudio.app.billigsteprodukter.ui.pages.home
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -36,6 +35,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import weberstudio.app.billigsteprodukter.data.ActivityType
 import weberstudio.app.billigsteprodukter.data.ExtraExpense
 import weberstudio.app.billigsteprodukter.data.ReceiptWithProducts
 import weberstudio.app.billigsteprodukter.data.RecentActivity
@@ -113,7 +113,17 @@ fun MainPageContent(modifier: Modifier = Modifier, navController: NavController,
                 modifier = Modifier
             ) {
                 items(recentActivities) { activity ->
-                    LatestActivityCard(Modifier, activity, {})
+                    LatestActivityCard(
+                        modifier = Modifier,
+                        activity = activity,
+                        onClick = {
+                            when(activity.activityType) {
+                                ActivityType.RECEIPT_SCANNED -> ""
+                                ActivityType.BUDGET_CREATED -> navController.navigate(PageNavigation.createBudgetRoute(activity.budgetMonth!!, activity.budgetYear!!))
+                                ActivityType.SHOPPING_LIST_CREATED -> ""
+                            }
+                        }
+                    )
                 }
             }
         }

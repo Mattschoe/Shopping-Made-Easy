@@ -145,8 +145,8 @@ fun DatabaseContent(
             items(filteredAndRankedProducts) { product ->
                 ProductCard(
                     name = product.name,
-                    price = product.price.toString(), //TODO Product skal være en string og ikke float
-                    isFavorite = false,
+                    price = product.price,
+                    isFavorite = product.isFavorite,
                     onFavoriteClick = { viewModel.toggleFavorite(product) }
                 )
             }

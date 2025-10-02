@@ -1,11 +1,7 @@
 package weberstudio.app.billigsteprodukter.ui.components
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -15,8 +11,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
@@ -33,18 +27,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
-@Preview
-@Composable
-fun Test() {
-    ProductCard(name = "Spaghetti Bolognese m. Parmasan", price = "399.99kr", isFavorite = false, onFavoriteClick = { } )
-}
+import weberstudio.app.billigsteprodukter.logic.Formatter.formatFloatToDanishCurrency
+import weberstudio.app.billigsteprodukter.logic.Formatter.formatInputToDanishCurrency
 
 @Composable
-fun ProductCard(modifier: Modifier  = Modifier, name: String, price: String, isFavorite: Boolean, onFavoriteClick: () -> Unit) {
+fun ProductCard(modifier: Modifier  = Modifier, name: String, price: Float, isFavorite: Boolean, onFavoriteClick: () -> Unit) {
     Card(
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(
@@ -100,7 +89,7 @@ fun ProductCard(modifier: Modifier  = Modifier, name: String, price: String, isF
 
                 //Pris/Beskrivelse
                 Text(
-                    text = price,
+                    text = formatFloatToDanishCurrency(price),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.5f)

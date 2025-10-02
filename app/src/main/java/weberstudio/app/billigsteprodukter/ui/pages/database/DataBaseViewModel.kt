@@ -97,17 +97,18 @@ class DataBaseViewModel(application: Application): AndroidViewModel(application)
                 val query = _searchQuery.value.trim().lowercase()
 
                 // If no search query, return products as-is (maybe with a limit)
-                if (query.isBlank() || query.length < minimumQueryLength) {
-                    return@map products.take(itemLimit)
+                val sortedProducts = if (query.isBlank() || query.length < minimumQueryLength) {
+                    products.take(itemLimit)
+                } else {
+                    //Otherwise, rank and filter by search relevance
+                    products
+                        .map { it to MatchScoreCalculator.calculate(it.name, query) }
+                        .filter { it.second > 0 }
+                        .sortedByDescending { it.second }
+                        .map { it.first }
+                        .take(itemLimit)
                 }
-
-                // Otherwise, rank and filter by search relevance
-                products
-                    .map { it to MatchScoreCalculator.calculate(it.name, query) }
-                    .filter { it.second > 0 }
-                    .sortedByDescending { it.second }
-                    .map { it.first }
-                    .take(itemLimit)
+                sortedProducts.sortedByDescending { it.isFavorite }
             }
             .stateIn(
                 scope = viewModelScope,

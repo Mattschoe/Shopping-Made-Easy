@@ -33,6 +33,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
@@ -41,6 +42,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import weberstudio.app.billigsteprodukter.logic.Store
 import weberstudio.app.billigsteprodukter.ui.components.ProductCard
+import weberstudio.app.billigsteprodukter.ui.components.ProductCardSkeleton
 import weberstudio.app.billigsteprodukter.ui.components.SearchBar
 import weberstudio.app.billigsteprodukter.ui.components.StoreScopeDropDownMenu
 
@@ -51,13 +53,12 @@ fun DatabaseContent(
     modifier: Modifier,
     viewModel: DataBaseViewModel,
 ) {
-    //TODO: Det her skal ændres siden det bare er alfabetisk rækkefølge, bliver nødt til at finde en måde at sortere dem ud efter dem som har mest data eller lade useren "hjerte" deres yndlingsstore
-
-    //region Loads the products by checking when the HorizontalPager updates
     val stores = remember { Store.entries.toList() }
-    val filteredAndRankedProducts by viewModel.filteredProductsFlow().collectAsState()
+    val filteredAndRankedProducts by viewModel.filteredProductsFlow.collectAsState()
     val currentStore by viewModel.currentStore.collectAsState()
     val allStoresEnabled by viewModel.allStoresSearchEnabled.collectAsState()
+    val isLoading by viewModel.isCurrentStoreLoading.collectAsState()
+
     val pagerState = rememberPagerState(initialPage = 0, pageCount = { stores.size })
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.currentPage }
@@ -68,9 +69,7 @@ fun DatabaseContent(
                 }
             }
     }
-    //endregion
 
-    //UI
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -141,8 +140,12 @@ fun DatabaseContent(
                 .weight(1f) //Takes the rest of the space. OBS: DONT USE WEIGHT ANYWHERE ELSE FOR THIS TO WORK
                 .fillMaxSize()
                 .padding(4.dp)
+                .graphicsLayer {}
         ) {
-            items(filteredAndRankedProducts) { product ->
+            items(
+                items = filteredAndRankedProducts,
+                key = { product -> product.businessID}
+            ) { product ->
                 ProductCard(
                     name = product.name,
                     price = product.price,

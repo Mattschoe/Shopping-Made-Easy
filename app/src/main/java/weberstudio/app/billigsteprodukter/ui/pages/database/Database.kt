@@ -142,10 +142,7 @@ fun DatabaseContent(
                 .padding(4.dp)
                 .graphicsLayer {}
         ) {
-            items(
-                items = filteredAndRankedProducts,
-                key = { product -> product.businessID}
-            ) { product ->
+            items(filteredAndRankedProducts) { product ->
                 ProductCard(
                     name = product.name,
                     price = product.price,

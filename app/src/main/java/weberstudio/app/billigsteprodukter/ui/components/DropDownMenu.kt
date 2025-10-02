@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -25,9 +26,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import weberstudio.app.billigsteprodukter.R
 import weberstudio.app.billigsteprodukter.logic.Store
 
 @Composable
@@ -44,25 +48,28 @@ fun StoreScopeDropDownMenu(
             modifier = Modifier
                 .fillMaxHeight()
                 .clip(RoundedCornerShape(24.dp))
-                .background(Color(0xFFE5FFEB)) //Temp
+                .background(MaterialTheme.colorScheme.primaryContainer)
                 .clickable { isDropDownExpanded = true }
                 .padding(horizontal = 16.dp)
         ) {
             Text(
                 text = if (!allStoresEnabled) currentStore.name else "Alle butikker",
                 fontSize = 14.sp,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
             )
             Spacer(Modifier.width(4.dp))
             Icon(
-               imageVector = Icons.Default.ArrowDropDown, //TEMP
-               contentDescription = "Skift søgning imellem ${currentStore.name} og alle butikker"
+                imageVector = ImageVector.vectorResource(R.drawable.dropdown_icon),
+                contentDescription = "Skift søgning imellem ${currentStore.name} og alle butikker",
+                tint = MaterialTheme.colorScheme.onPrimaryContainer
             )
         }
         DropdownMenu(
             expanded = isDropDownExpanded,
             onDismissRequest = { isDropDownExpanded = false },
-            modifier = Modifier.background(Color.White)
+            modifier = Modifier
+                .background(MaterialTheme.colorScheme.surface)
         ) {
             //Butiksnavn
             DropdownMenuItem(
@@ -70,7 +77,13 @@ fun StoreScopeDropDownMenu(
                     onAllStoresToggle(false)
                     isDropDownExpanded = false
                 },
-                text = { Text(text = currentStore.name, fontSize = 14.sp) }
+                text = {
+                    Text(
+                        text = currentStore.name,
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
             )
 
             //Alle butikker
@@ -79,7 +92,13 @@ fun StoreScopeDropDownMenu(
                     onAllStoresToggle(true)
                     isDropDownExpanded = false
                 },
-                text = { Text(text = "Alle butikker", fontSize = 14.sp) }
+                text = {
+                    Text(
+                        text = "Alle butikker",
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
             )
         }
     }

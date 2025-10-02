@@ -61,8 +61,8 @@ fun DatabaseContent(
     val pagerState = rememberPagerState(initialPage = 0, pageCount = { stores.size })
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.currentPage }
-            .distinctUntilChanged() //Avoids small scroll/jitters
-            .collectLatest { index -> //Cancels old load and runs new load, prevents backlog
+            .distinctUntilChanged()
+            .collectLatest { index ->
                 stores.getOrNull(index)?.let { store ->
                     viewModel.selectStore(store)
                 }
@@ -77,7 +77,7 @@ fun DatabaseContent(
     ) {
         BoxWithConstraints(
             modifier = Modifier
-                .height(150.dp) //Size of images (ish)
+                .height(150.dp)
         ) {
             val pageInset: Dp = maxWidth * 0.17f //The small "before" and "after" stores you can see in the pager
             HorizontalPager(
@@ -98,7 +98,7 @@ fun DatabaseContent(
                         contentDescription = "Logo for ${store.name}",
                         contentScale = ContentScale.Fit,
                         modifier = Modifier
-                            .fillMaxSize() //Logo size
+                            .fillMaxSize()
                             .wrapContentSize()
                             .clip(RoundedCornerShape(8.dp))
                     )

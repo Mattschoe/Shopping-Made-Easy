@@ -73,6 +73,7 @@ import weberstudio.app.billigsteprodukter.ui.components.SearchBar
 import weberstudio.app.billigsteprodukter.ui.navigation.PageNavigation
 import java.math.BigDecimal
 import java.math.RoundingMode
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 
@@ -157,7 +158,7 @@ fun ShoppingListItem(shoppingList: ShoppingList, onClick: () -> Unit, onDeleteCl
                     color = Color.Black
                 )
                 Text(
-                    text = "Oprettet den: ${shoppingList.createdDate}",
+                    text = "Oprettet den: ${DateTimeFormatter.ofPattern("dd/MM - yyyy").format(shoppingList.createdDate)}",
                     fontSize = 14.sp,
                     color = Color.Gray
                 )

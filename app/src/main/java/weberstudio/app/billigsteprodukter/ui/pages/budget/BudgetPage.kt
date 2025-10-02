@@ -32,6 +32,8 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonColors
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -253,15 +255,8 @@ fun PreBudgetPageUI(modifier: Modifier = Modifier, newBudget: (Budget) -> Unit, 
 @Composable
 fun BudgetDialog(selectedMonth: Month, onDismiss: () -> Unit, onClick: (Budget) -> Unit) {
     var totalBudget by remember { mutableStateOf(TextFieldValue("")) }
-    var categories by remember { mutableStateOf(
-        mutableListOf(
-            BudgetCategory("kol", "Køl"),
-            BudgetCategory("frys", "Frys"),
-            BudgetCategory("tor", "Tør")
-        )
-    ) }
     val currentYear by remember { mutableStateOf(Year.from(LocalDateTime.now())) }
-
+    val isValid = totalBudget.text.trim().isNotEmpty()
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -322,13 +317,18 @@ fun BudgetDialog(selectedMonth: Month, onDismiss: () -> Unit, onClick: (Budget) 
                         },
                         modifier = Modifier
                             .size(48.dp)
-                            .clip(RoundedCornerShape(24.dp))
-                            .background(MaterialTheme.colorScheme.primary)
+                            .clip(RoundedCornerShape(24.dp)),
+                        colors = IconButtonDefaults.iconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary,
+                            disabledContainerColor = Color.Gray.copy(alpha = 0.5f),
+                            disabledContentColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f)
+                        ),
+                        enabled = isValid
                     ) {
                         Icon(
                             imageVector = ImageVector.vectorResource(R.drawable.check_icon),
                             contentDescription = "Færdig",
-                            tint = Color.White,
                             modifier = Modifier.size(24.dp)
                         )
                     }
@@ -684,13 +684,14 @@ private fun BudgetTipsSection(tips: List<String>) {
 private fun AddExpenseDialog(onDismiss: () -> Unit, onConfirm: (String, Float) -> Unit) {
     var name by remember { mutableStateOf("") }
     var price by remember { mutableStateOf(TextFieldValue("")) }
+    val isValid = name.trim().isNotEmpty() && price.text.trim().isNotEmpty()
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(24.dp),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.secondaryContainer
             )
@@ -712,6 +713,7 @@ private fun AddExpenseDialog(onDismiss: () -> Unit, onConfirm: (String, Float) -
                     onValueChange = { name = it },
                     label = { Text("Navn...") },
                     modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(24.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = MaterialTheme.colorScheme.onPrimaryContainer,
                         unfocusedBorderColor = MaterialTheme.colorScheme.onSecondaryContainer
@@ -739,6 +741,7 @@ private fun AddExpenseDialog(onDismiss: () -> Unit, onConfirm: (String, Float) -
                         focusedBorderColor = MaterialTheme.colorScheme.onPrimaryContainer,
                         unfocusedBorderColor = MaterialTheme.colorScheme.onSecondaryContainer
                     ),
+                    shape = RoundedCornerShape(24.dp),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
 
@@ -763,12 +766,13 @@ private fun AddExpenseDialog(onDismiss: () -> Unit, onConfirm: (String, Float) -
                             }
                         },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer
-                        )
+                            containerColor = MaterialTheme.colorScheme.primary
+                        ),
+                        enabled = isValid
                     ) {
                         Text(
                             text = "Tilføj",
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                            color = MaterialTheme.colorScheme.onPrimary
                         )
                     }
                 }

@@ -31,6 +31,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
@@ -48,6 +49,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
@@ -82,7 +85,8 @@ fun AddProductToListDialog(
             shape = RoundedCornerShape(24.dp),
             shadowElevation = 6.dp,
             modifier = Modifier
-                .padding(16.dp)
+                .padding(16.dp),
+            color = MaterialTheme.colorScheme.secondaryContainer
         ) {
             Column(
                 modifier = Modifier
@@ -91,7 +95,8 @@ fun AddProductToListDialog(
             ) {
                 Text(
                     text = "Tilføj til indkøbsliste",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Medium)
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Medium),
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
                 )
                 Spacer(modifier = Modifier.height(12.dp))
 
@@ -110,11 +115,8 @@ fun AddProductToListDialog(
                         .fillMaxWidth()
                         .heightIn(min = 44.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-                        unfocusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-
-                        focusedTextColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                        unfocusedTextColor = MaterialTheme.colorScheme.onSecondaryContainer
+                        focusedBorderColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.onSecondaryContainer
                     )
                 )
                 Spacer(modifier = Modifier.height(12.dp))
@@ -181,19 +183,18 @@ fun AddProductToListDialog(
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedContainerColor =
                                 if (selectedStore != null) MaterialTheme.colorScheme.secondaryContainer
-                                else MaterialTheme.colorScheme.surface,
+                                else Color.Gray.copy(alpha = 0.5f),
 
                             unfocusedContainerColor =
                                 if (selectedStore != null) MaterialTheme.colorScheme.secondaryContainer
-                                else MaterialTheme.colorScheme.surface,
+                                else Color.Gray.copy(alpha = 0.5f),
 
                             focusedTextColor =
                                 if (selectedStore != null) MaterialTheme.colorScheme.onSecondaryContainer
-
-                                else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                else MaterialTheme.colorScheme.onSurface,
                             unfocusedTextColor =
                                 if (selectedStore != null) MaterialTheme.colorScheme.onSecondaryContainer
-                                else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                else MaterialTheme.colorScheme.onSurface,
                         ),
                         singleLine = true,
                         shape = RoundedCornerShape(24.dp),
@@ -265,7 +266,8 @@ fun AddShoppingListDialog(showDialog: Boolean, onDismiss: () -> Unit, onConfirm:
             shape = RoundedCornerShape(24.dp),
             shadowElevation = 6.dp,
             modifier = Modifier
-                .padding(16.dp)
+                .padding(16.dp),
+            color = MaterialTheme.colorScheme.secondaryContainer
         ) {
             Column(
                 modifier = Modifier
@@ -274,7 +276,8 @@ fun AddShoppingListDialog(showDialog: Boolean, onDismiss: () -> Unit, onConfirm:
             ) {
                 Text(
                     text = "Giv din indkøbsliste et navn!",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Medium)
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Medium),
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
                 )
                 Spacer(modifier = Modifier.height(12.dp))
 
@@ -285,12 +288,9 @@ fun AddShoppingListDialog(showDialog: Boolean, onDismiss: () -> Unit, onConfirm:
                     placeholder = { Text("Navn...") },
                     singleLine = true,
                     shape = RoundedCornerShape(24.dp),
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-                        unfocusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-
-                        focusedTextColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                        unfocusedTextColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.onSecondaryContainer,
                     ),
                     modifier = Modifier
                         .fillMaxWidth()
@@ -314,7 +314,10 @@ fun AddShoppingListDialog(showDialog: Boolean, onDismiss: () -> Unit, onConfirm:
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     Button(onClick = { onConfirm(shoppingListName) }) {
-                        Text("Tilføj")
+                        Text(
+                            text = "Tilføj",
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
                     }
                 }
             }

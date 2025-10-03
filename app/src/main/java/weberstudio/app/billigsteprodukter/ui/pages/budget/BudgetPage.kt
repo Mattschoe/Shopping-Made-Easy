@@ -394,13 +394,6 @@ fun BudgetInputField(
         }
     }
 }
-
-data class BudgetCategory(
-    val id: String,
-    val name: String,
-    var amount: String = "",
-    val isDeletable: Boolean = false
-)
 //endregion
 
 //region BUDGETPAGE UI
@@ -946,7 +939,7 @@ private fun ChangePriceDialog(originalBudget: Float, onDismiss: () -> Unit, onCo
                         }
                     },
                     label = { Text(
-                        text = "Nuværende: ${formatInputToDanishCurrency(originalBudget.toString())}",
+                        text = "Nuværende: ${formatFloatToDanishCurrency(originalBudget)}",
                         color = Color.Gray,
                         fontStyle = FontStyle.Italic
                     )},

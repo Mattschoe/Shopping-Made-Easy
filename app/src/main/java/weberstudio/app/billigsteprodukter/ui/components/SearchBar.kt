@@ -32,8 +32,8 @@ fun SearchBar(modifier: Modifier = Modifier, searchQuery: String, onQueryChange:
         colors = OutlinedTextFieldDefaults.colors(
             focusedContainerColor = MaterialTheme.colorScheme.surface,
             unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-            focusedBorderColor = Color.Black,
-            unfocusedBorderColor = Color.Black
+            focusedBorderColor = MaterialTheme.colorScheme.onSurface,
+            unfocusedBorderColor = MaterialTheme.colorScheme.onSurface
         ),
         modifier = modifier
     )

@@ -79,7 +79,7 @@ object Formatter {
      * 2500.0f -> "2.500"
      */
     fun formatFloatToDanishCurrency(value: Float): String {
-        val formatted = String.format("%.2f", value)
+        val formatted = String.format(Locale.US, "%.2f", value)
 
         val parts = formatted.split(".")
         val intPart = parts[0]

@@ -71,6 +71,7 @@ import weberstudio.app.billigsteprodukter.logic.Formatter.danishCurrencyToFloat
 import weberstudio.app.billigsteprodukter.logic.Formatter.formatInputToDanishCurrency
 import weberstudio.app.billigsteprodukter.logic.Formatter.toDanishString
 import weberstudio.app.billigsteprodukter.logic.Formatter.filterInputToValidNumberInput
+import weberstudio.app.billigsteprodukter.logic.Formatter.formatFloatToDanishCurrency
 import java.text.DecimalFormat
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -393,13 +394,6 @@ fun BudgetInputField(
         }
     }
 }
-
-data class BudgetCategory(
-    val id: String,
-    val name: String,
-    var amount: String = "",
-    val isDeletable: Boolean = false
-)
 //endregion
 
 //region BUDGETPAGE UI
@@ -945,7 +939,7 @@ private fun ChangePriceDialog(originalBudget: Float, onDismiss: () -> Unit, onCo
                         }
                     },
                     label = { Text(
-                        text = "Nuværende: ${formatInputToDanishCurrency(originalBudget.toString())}",
+                        text = "Nuværende: ${formatFloatToDanishCurrency(originalBudget)}",
                         color = Color.Gray,
                         fontStyle = FontStyle.Italic
                     )},
@@ -1016,7 +1010,7 @@ private fun ReceiptDialog(onDismiss: () -> Unit, receipt: ReceiptWithProducts) {
                         color = MaterialTheme.colorScheme.onSecondaryContainer
                     )
                     Text(
-                        text = "${formatInputToDanishCurrency(receipt.receipt.total.toString())}kr",
+                        text = "${formatFloatToDanishCurrency(receipt.receipt.total)}kr",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSecondaryContainer
@@ -1040,7 +1034,7 @@ private fun ReceiptDialog(onDismiss: () -> Unit, receipt: ReceiptWithProducts) {
                                 maxLines = 1
                             )
                             Text(
-                                text = formatInputToDanishCurrency(product.price.toString()),
+                                text = formatFloatToDanishCurrency(product.price),
                                 color = MaterialTheme.colorScheme.onSecondaryContainer,
                             )
                         }
@@ -1090,7 +1084,7 @@ private fun ReceiptCard(modifier: Modifier = Modifier, receipt: ReceiptWithProdu
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "${receipt.receipt.store}: ${receipt.receipt.total}kr",
+                text = "${receipt.receipt.store}: ${formatFloatToDanishCurrency(receipt.receipt.total)}kr",
                 style = MaterialTheme.typography.bodyLarge
             )
             Text(

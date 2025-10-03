@@ -62,6 +62,12 @@ interface ReceiptDao {
     @Query("SELECT * FROM receipts WHERE date BETWEEN :startDate AND :endDate ORDER BY date")
     fun getReceiptsBetweenDates(startDate: Long, endDate: Long): Flow<List<ReceiptWithProducts>>
 
+    @Query("""
+        UPDATE receipts
+        SET total = COALESCE((SELECT SUM(price) FROM products WHERE store = :store), 0)
+        WHERE store = :store""")
+    suspend fun recomputeTotalForReceiptsInStore(store: Store)
+
     @Transaction
     @Query("SELECT * FROM receipts ORDER BY date DESC")
     fun getAllReceipts(): Flow<List<Receipt>>
@@ -94,8 +100,8 @@ interface ReceiptDao {
     @Query("SELECT COUNT(*) FROM receipts")
     suspend fun getReceiptCount(): Int
 
-    @Query("SELECT COUNT(*) FROM products WHERE receiptId = :receiptId")
-    suspend fun getProductCountForReceipt(receiptId: Long): Int
+    @Query("SELECT COUNT(*) FROM products WHERE receiptID = :receiptID")
+    suspend fun getProductCountForReceipt(receiptID: Long): Int
     //endregion
     //endregion
 }

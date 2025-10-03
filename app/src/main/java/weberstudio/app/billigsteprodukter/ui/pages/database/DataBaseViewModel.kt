@@ -211,13 +211,16 @@ class DataBaseViewModel(application: Application): AndroidViewModel(application)
         viewModelScope.launch {
             receiptRepo.deleteProduct(product)
 
-
+            //Updates list cache
             _storeProductsCache.update { cache ->
                 cache[product.store]?.let { products ->
                     val updated = products.filterNot { it.databaseID == product.databaseID }
                     cache + (product.store to updated)
                 } ?: cache
             }
+
+            //Updates receipt total. A bit scuffed since we just update ever receipt from the store, but this is because a product can be linked to multiple receipts.
+            receiptRepo.recomputeTotalForReceiptsInStore(product.store)
         }
     }
 

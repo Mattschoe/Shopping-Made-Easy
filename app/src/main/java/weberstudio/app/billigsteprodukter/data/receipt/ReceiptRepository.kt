@@ -33,7 +33,7 @@ interface ReceiptRepository {
     /**
      * Get a specific receipt with all its products.
      */
-    suspend fun getReceiptWithProducts(receiptId: Long): ReceiptWithProducts?
+    suspend fun getReceiptWithProducts(receiptID: Long): ReceiptWithProducts?
     //endregion
 
     //region PRODUCT OPERATION
@@ -77,6 +77,8 @@ interface ReceiptRepository {
      * Searches for products in the whole database, based on the query given as argument
      */
     fun searchProductsContaining(query: String): Flow<List<Product>>
+
+    suspend fun recomputeTotalForReceiptsInStore(store: Store)
 
     /**
      * Searches for products with the query, in the store given as argument.

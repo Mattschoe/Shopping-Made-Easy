@@ -7,7 +7,6 @@ import weberstudio.app.billigsteprodukter.data.Product
 import weberstudio.app.billigsteprodukter.data.Receipt
 import weberstudio.app.billigsteprodukter.data.ReceiptWithProducts
 import weberstudio.app.billigsteprodukter.logic.Store
-import java.time.LocalDate
 import java.time.Month
 import java.time.Year
 import java.time.YearMonth
@@ -89,6 +88,10 @@ class OfflineReceiptRepository(private val dao: ReceiptDao) : ReceiptRepository 
 
     override suspend fun deleteProduct(product: Product) {
         dao.deleteProduct(product)
+    }
+
+    override suspend fun recomputeTotalForReceiptsInStore(store: Store) {
+        return dao.recomputeTotalForReceiptsInStore(store)
     }
 
     /**

@@ -74,6 +74,7 @@ import weberstudio.app.billigsteprodukter.ui.components.ProductCard
 import weberstudio.app.billigsteprodukter.ui.components.ProductCardSkeleton
 import weberstudio.app.billigsteprodukter.ui.components.SearchBar
 import weberstudio.app.billigsteprodukter.ui.components.StoreScopeDropDownMenu
+import kotlin.math.max
 import kotlin.math.roundToInt
 
 @SuppressLint("UnusedBoxWithConstraintsScope")
@@ -232,7 +233,24 @@ fun DatabaseContent(
                                         draggedCardSize.height / 2f
                                     )
                                     val expanded = trashRectBoundsPx?.let { it.inflate(24f) }
-                                    val droppedInTrash = expanded?.contains(center) == true
+                                    var droppedInTrash = expanded?.contains(center) == true
+
+                                    if (!droppedInTrash && trashRectBoundsPx != null) {
+                                        val trashCenter = Offset(
+                                            (trashRectBoundsPx!!.left + trashRectBoundsPx!!.right) / 2f,
+                                            (trashRectBoundsPx!!.top + trashRectBoundsPx!!.bottom) / 2f
+                                        )
+
+
+                                        val trashRadius = max(trashRectBoundsPx!!.width, trashRectBoundsPx!!.height) / 2f
+                                        val cardRadius = kotlin.math.hypot(
+                                            draggedCardSize.width.toFloat(),
+                                            draggedCardSize.height.toFloat()
+                                        ) / 2f
+                                        val gracePx = with(density) { 20.dp.toPx() }
+                                        val distance = (center - trashCenter).getDistance()
+                                        droppedInTrash = distance <= (trashRadius + cardRadius + gracePx)
+                                    }
 
                                     if (droppedInTrash && draggedProduct != null) {
                                         val product2Delete = draggedProduct!!
@@ -409,6 +427,5 @@ fun DatabaseContent(
         }
     }
     //endregion
-
 }
 

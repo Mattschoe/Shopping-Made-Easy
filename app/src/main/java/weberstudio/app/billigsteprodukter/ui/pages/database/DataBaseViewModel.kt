@@ -207,6 +207,20 @@ class DataBaseViewModel(application: Application): AndroidViewModel(application)
         }
     }
 
+    fun deleteProduct(product: Product) {
+        viewModelScope.launch {
+            receiptRepo.deleteProduct(product)
+
+
+            _storeProductsCache.update { cache ->
+                cache[product.store]?.let { products ->
+                    val updated = products.filterNot { it.databaseID == product.databaseID }
+                    cache + (product.store to updated)
+                } ?: cache
+            }
+        }
+    }
+
     /**
      * Changes the state of which store the user is looking at
      */

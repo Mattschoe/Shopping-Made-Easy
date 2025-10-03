@@ -87,6 +87,9 @@ class OfflineReceiptRepository(private val dao: ReceiptDao) : ReceiptRepository 
         return dao.getReceiptsBetweenDates(startDate, endDate)
     }
 
+    override suspend fun deleteProduct(product: Product) {
+        dao.deleteProduct(product)
+    }
 
     /**
      * Updates and refreshes the streams so the UI is informed of changes. Method should be called on any Insertion/Update/Deletion of [_lastReceipt]
@@ -94,6 +97,4 @@ class OfflineReceiptRepository(private val dao: ReceiptDao) : ReceiptRepository 
     private suspend fun updateStreams(productsList: List<Product>) {
         _lastReceipt.emit(productsList)
     }
-
-
 }

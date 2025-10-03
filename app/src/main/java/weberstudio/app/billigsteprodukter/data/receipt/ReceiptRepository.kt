@@ -23,6 +23,8 @@ interface ReceiptRepository {
      */
     suspend fun addReceiptProducts(receipt: Receipt, products: Set<Product>): Long
 
+    suspend fun deleteProduct(product: Product)
+
     /**
      * Get receipts within a date range for budget tracking.
      */

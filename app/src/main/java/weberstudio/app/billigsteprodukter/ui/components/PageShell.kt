@@ -48,6 +48,7 @@ import weberstudio.app.billigsteprodukter.ui.pages.home.MainPageContent
 fun PageShell(navController: NavHostController,
               title: String,
               modifier: Modifier = Modifier,
+              cameraViewModel: CameraViewModel,
               pageContent: @Composable (PaddingValues) -> Unit,
               floatingActionButton: (@Composable () -> Unit)? = null,
 ) {
@@ -89,7 +90,7 @@ fun PageShell(navController: NavHostController,
                 )
             }
         },
-        bottomBar = { NavigationBar(navController) },
+        bottomBar = { NavigationBar(navController, cameraViewModel) },
         floatingActionButton = {
             if (floatingActionButton != null) floatingActionButton()
         },
@@ -99,7 +100,7 @@ fun PageShell(navController: NavHostController,
 }
 
 @Composable
-fun NavigationBar(navController: NavController) {
+fun NavigationBar(navController: NavController, cameraViewModel: CameraViewModel) {
     NavigationBar(
         windowInsets = NavigationBarDefaults.windowInsets,
         containerColor = MaterialTheme.colorScheme.surface,
@@ -108,10 +109,10 @@ fun NavigationBar(navController: NavController) {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route
         val cameraScope = rememberCoroutineScope()
-        val cameraViewModel: CameraViewModel = viewModel()
         val launchCamera = launchCamera(
             onImageCaptured = { uri, context ->
                 cameraScope.launch { cameraViewModel.processImage(uri, context) }
+                navController.navigate(PageNavigation.ReceiptScanning.route)
             }
         )
 

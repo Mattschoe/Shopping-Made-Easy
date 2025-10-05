@@ -1,6 +1,7 @@
 package weberstudio.app.billigsteprodukter.ui.navigation
 
 import android.app.Application
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -47,7 +48,15 @@ import java.time.Year
  * The host that's responsible for navigation between pages in the application
  */
 @Composable
-fun ApplicationNavigationHost(navController: NavHostController = rememberNavController(), startPage: String = PageNavigation.ReceiptRoute.route) {
+fun ApplicationNavigationHost(
+    navController: NavHostController = rememberNavController(),
+    startPage: String = PageNavigation.ReceiptRoute.route
+) {
+    val context = LocalContext.current
+    val cameraViewModel: CameraViewModel = viewModel(
+        viewModelStoreOwner = context as ComponentActivity
+    )
+
     NavHost(
         navController = navController,
         startDestination = startPage,
@@ -57,9 +66,6 @@ fun ApplicationNavigationHost(navController: NavHostController = rememberNavCont
         //Main Screen
         composable(PageNavigation.Home.route) { backStackEntry ->
             val context = LocalContext.current
-            val cameraViewModel: CameraViewModel = viewModel(backStackEntry) {
-                CameraViewModel(context.applicationContext as Application)
-            }
             val budgetViewModel: BudgetViewModel = viewModel(backStackEntry) {
                 BudgetViewModel(context.applicationContext as Application)
             }
@@ -69,6 +75,7 @@ fun ApplicationNavigationHost(navController: NavHostController = rememberNavCont
             PageShell(
                 navController,
                 title = "Forside",
+                cameraViewModel = cameraViewModel,
                 pageContent =  { padding -> MainPageContent(Modifier.padding(padding), navController, cameraViewModel, budgetViewModel, activityViewModel) }
             )
         }
@@ -83,6 +90,7 @@ fun ApplicationNavigationHost(navController: NavHostController = rememberNavCont
             PageShell(
                 navController,
                 title = "Indkøbslister",
+                cameraViewModel = cameraViewModel,
                 pageContent = { padding ->
                     ShoppingListsPage(
                         modifier = Modifier.padding(padding),
@@ -120,6 +128,7 @@ fun ApplicationNavigationHost(navController: NavHostController = rememberNavCont
             PageShell(
                 navController,
                 title = "Indkøbsliste",
+                cameraViewModel = cameraViewModel,
                 pageContent = { padding ->
                     ShoppingListUndermenuContent(
                         modifier = Modifier.padding(padding),
@@ -152,6 +161,7 @@ fun ApplicationNavigationHost(navController: NavHostController = rememberNavCont
             PageShell(
                 navController,
                 title = "Oversigt",
+                cameraViewModel = cameraViewModel,
                 pageContent =  { padding -> DatabaseContent(Modifier.padding(padding), databaseViewModel) }
             )
         }
@@ -183,6 +193,7 @@ fun ApplicationNavigationHost(navController: NavHostController = rememberNavCont
             PageShell(
                 navController,
                 title = "Budget",
+                cameraViewModel = cameraViewModel,
                 pageContent = { padding -> BudgetPage(Modifier.padding(padding), budgetViewModel, month, year) }
             )
         }
@@ -192,6 +203,7 @@ fun ApplicationNavigationHost(navController: NavHostController = rememberNavCont
             PageShell(
                 navController,
                 title = "Indstillinger",
+                cameraViewModel = cameraViewModel,
                 pageContent = { padding -> SettingsPageContent(Modifier.padding(padding)) }
             )
         }
@@ -203,11 +215,7 @@ fun ApplicationNavigationHost(navController: NavHostController = rememberNavCont
         ) {
             //Receipt Main page
             composable(PageNavigation.ReceiptHome.route) { backStackEntry ->
-                val parentBackStackEntry = remember(backStackEntry) { navController.getBackStackEntry("receiptRoute") }
                 val context = LocalContext.current
-                val cameraViewModel: CameraViewModel = viewModel(parentBackStackEntry) {
-                    CameraViewModel(context.applicationContext as Application)
-                }
                 val budgetViewModel: BudgetViewModel = viewModel(backStackEntry) {
                     BudgetViewModel(context.applicationContext as Application)
                 }
@@ -217,20 +225,17 @@ fun ApplicationNavigationHost(navController: NavHostController = rememberNavCont
                 PageShell(
                     navController,
                     title = "Hjem",
+                    cameraViewModel = cameraViewModel,
                     pageContent = { padding -> MainPageContent(Modifier.padding(padding), navController, cameraViewModel, budgetViewModel, activityViewModel) }
                 )
             }
 
             //Receipt Content
             composable(PageNavigation.ReceiptScanning.route) { backStackEntry ->
-                val parentBackStackEntry = remember(backStackEntry) { navController.getBackStackEntry("receiptRoute") }
-                val context = LocalContext.current
-                val cameraViewModel: CameraViewModel = viewModel(parentBackStackEntry) {
-                    CameraViewModel(context.applicationContext as Application)
-                }
                 PageShell(
                     navController,
                     title = "Kvitteringsoversigt",
+                    cameraViewModel = cameraViewModel,
                     pageContent = { padding ->
                         val receiptViewModel: ReceiptScanningViewModel = viewModel(backStackEntry)
                         ReceiptScanningContent(Modifier.padding(padding), navController, cameraViewModel, receiptViewModel)

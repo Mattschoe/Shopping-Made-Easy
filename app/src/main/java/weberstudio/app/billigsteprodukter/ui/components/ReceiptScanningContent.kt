@@ -1,5 +1,6 @@
 package weberstudio.app.billigsteprodukter.ui.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -7,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -41,10 +43,13 @@ import weberstudio.app.billigsteprodukter.R
  */
 @Composable
 fun ProductRow(productName: String, productPrice: String, onThreeDotMenuClick: () -> Unit) {
-    DefaultProductCard(
+    Card(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp, vertical = 6.dp),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Row(
             modifier = Modifier
@@ -58,16 +63,16 @@ fun ProductRow(productName: String, productPrice: String, onThreeDotMenuClick: (
             ) {
                 //Name
                 Text(
-                   text = productName,
+                    text = productName,
                     style = MaterialTheme.typography.bodyLarge,
-                    color = Color.Black
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 //Price
                 Text(
                     text = productPrice,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Black
+                    color = Color.Gray
                 )
             }
             /*
@@ -96,11 +101,17 @@ fun ProductRow(productName: String, productPrice: String, onThreeDotMenuClick: (
  */
 @Composable
 fun ReceiptTotalCard(modifier: Modifier = Modifier, totalPrice: String) {
-    DefaultProductCard(
-        modifier = modifier
+    Card(
+        modifier = modifier,
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Row(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
         ) {
@@ -108,7 +119,7 @@ fun ReceiptTotalCard(modifier: Modifier = Modifier, totalPrice: String) {
                 text = "Total:",
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black,
+                color = MaterialTheme.colorScheme.onPrimary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -125,20 +136,6 @@ fun ReceiptTotalCard(modifier: Modifier = Modifier, totalPrice: String) {
     }
 }
 
-/**
- * The standard UI Card for the ReceiptScanning oversigt
- */
-@Composable
-fun DefaultProductCard(modifier: Modifier = Modifier, content: @Composable (ColumnScope.() -> Unit)) {
-    Card(
-        modifier = modifier,
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        content = content
-    )
-}
-
 @Composable
 fun AddProductToReceiptButton(modifier: Modifier = Modifier, addProductToReceipt: () -> Unit) {
     Card(
@@ -147,7 +144,7 @@ fun AddProductToReceiptButton(modifier: Modifier = Modifier, addProductToReceipt
             .padding(horizontal = 16.dp, vertical = 6.dp)
             .clickable(onClick = addProductToReceipt),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.Green),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondary),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Box(
@@ -159,7 +156,8 @@ fun AddProductToReceiptButton(modifier: Modifier = Modifier, addProductToReceipt
                 imageVector = Icons.Default.Add,
                 contentDescription = "Tilføj produkter til kvitteringen",
                 modifier = Modifier
-                    .size(48.dp)
+                    .size(48.dp),
+                tint = MaterialTheme.colorScheme.onSecondary
             )
         }
     }

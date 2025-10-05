@@ -234,7 +234,7 @@ fun ApplicationNavigationHost(
             composable(PageNavigation.ReceiptScanning.route) { backStackEntry ->
                 PageShell(
                     navController,
-                    title = "Kvitteringsoversigt",
+                    title = "Oversigt",
                     cameraViewModel = cameraViewModel,
                     pageContent = { padding ->
                         val receiptViewModel: ReceiptScanningViewModel = viewModel(backStackEntry)

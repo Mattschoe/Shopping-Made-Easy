@@ -3,11 +3,13 @@ package weberstudio.app.billigsteprodukter.ui.pages.receiptScanning
 import android.icu.text.DecimalFormat
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -21,10 +23,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import kotlinx.coroutines.launch
 import weberstudio.app.billigsteprodukter.logic.CameraViewModel
+import weberstudio.app.billigsteprodukter.logic.Formatter.formatFloatToDanishCurrency
 import weberstudio.app.billigsteprodukter.logic.Store
 import weberstudio.app.billigsteprodukter.ui.ParsingState
 import weberstudio.app.billigsteprodukter.ui.components.AddProductDialog
@@ -94,21 +98,25 @@ fun ReceiptScanningContent(modifier: Modifier = Modifier, navController: NavCont
                 ) {
                     if (store != null) LogoBarHandler(modifier = Modifier.fillMaxSize(), storeName = store.name)
                 }
-                Row(
+
+                TotalAndFilterRow(
                     modifier = Modifier
-                        .fillMaxSize(),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    TotalAndFilterRow(modifier = Modifier.fillMaxSize(), totalPrice =  "193,5", filterMenuOnClick =  { })
-                }
+                        .fillMaxWidth()
+                        .heightIn(min = 56.dp),
+                    totalPrice = formatFloatToDanishCurrency(products.sumOf { it.price.toDouble() }.toFloat()),
+                    filterMenuOnClick =  { }
+                )
             }
         }
         item {
             AddProductToReceiptButton(addProductToReceipt = { showAddProductDialog = true } )
         }
         items(products) { product ->
-            ProductRow(product.name, DecimalFormat("#.##").format(product.price) + "kr") {
-            }
+            ProductRow(
+                product.name,
+                formatFloatToDanishCurrency(product.price) + "kr",
+                onThreeDotMenuClick = { }
+            )
         }
     }
 

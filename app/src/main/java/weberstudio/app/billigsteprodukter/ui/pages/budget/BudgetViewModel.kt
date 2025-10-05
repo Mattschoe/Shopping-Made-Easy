@@ -9,6 +9,7 @@ import kotlinx.coroutines.launch
 import weberstudio.app.billigsteprodukter.ReceiptApp
 import weberstudio.app.billigsteprodukter.data.Budget
 import weberstudio.app.billigsteprodukter.data.ExtraExpense
+import weberstudio.app.billigsteprodukter.data.Receipt
 import weberstudio.app.billigsteprodukter.data.ReceiptWithProducts
 import weberstudio.app.billigsteprodukter.data.budget.BudgetRepository
 import weberstudio.app.billigsteprodukter.data.receipt.ReceiptRepository
@@ -86,6 +87,12 @@ class BudgetViewModel(application: Application): AndroidViewModel(application) {
     fun updateBudget(newBudget: Budget) {
         viewModelScope.launch {
             budgetRepo.updateBudget(newBudget)
+        }
+    }
+
+    fun deleteReceipt(receipt: Receipt) {
+        viewModelScope.launch {
+            receiptRepo.deleteReceipt(receipt)
         }
     }
 }

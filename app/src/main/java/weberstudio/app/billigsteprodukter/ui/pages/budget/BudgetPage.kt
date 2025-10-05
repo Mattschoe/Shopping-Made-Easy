@@ -1,5 +1,6 @@
 package weberstudio.app.billigsteprodukter.ui.pages.budget
 
+import android.util.Log
 import androidx.compose.animation.core.EaseOutCubic
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -123,7 +124,8 @@ fun BudgetPage(modifier: Modifier = Modifier, viewModel: BudgetViewModel, month:
             },
             onBudgetChanged = { newBudget ->
                 viewModel.updateBudget(currentBudget.copy(budget = newBudget))
-            }
+            },
+            onDeleteReceipt = { receipt -> viewModel.deleteReceipt(receipt.receipt) }
         )
     }
 }
@@ -411,7 +413,8 @@ fun BudgetPageUI(
     selectedYear: Year = Year.from(LocalDate.now()),
     onAddExpense: (String, Float) -> Unit,
     onMonthSelected: (Month, Year) -> Unit,
-    onBudgetChanged: (Float) -> Unit
+    onBudgetChanged: (Float) -> Unit,
+    onDeleteReceipt: (ReceiptWithProducts) -> Unit
 ) {
     var showAddExpenseDialog by remember { mutableStateOf(false) }
     var showMonthPicker by remember { mutableStateOf(false) }
@@ -491,7 +494,8 @@ fun BudgetPageUI(
             onDismiss = { showViewReceiptsDialog = false },
             receipts = receipts,
             expenses = expenses,
-            selectedMonth = selectedMonth.toDanishString()
+            selectedMonth = selectedMonth.toDanishString(),
+            onDeleteReceipt = onDeleteReceipt
         )
     }
     //endregion
@@ -839,7 +843,7 @@ private fun DatePickerDialog(currentMonth: Month?, currentYear: Year?, onDismiss
 }
 
 @Composable
-private fun ViewExpensesDialog(onDismiss: () -> Unit, receipts: List<ReceiptWithProducts>, expenses: List<ExtraExpense>, selectedMonth: String) {
+private fun ViewExpensesDialog(onDismiss: () -> Unit, receipts: List<ReceiptWithProducts>, expenses: List<ExtraExpense>, selectedMonth: String, onDeleteReceipt: (ReceiptWithProducts) -> Unit) {
     Dialog(onDismissRequest = onDismiss) {
         Card(
             modifier = Modifier
@@ -871,7 +875,10 @@ private fun ViewExpensesDialog(onDismiss: () -> Unit, receipts: List<ReceiptWith
                     contentPadding = PaddingValues(vertical = 16.dp)
                 ) {
                     items(receipts) { receipt ->
-                        ReceiptCard(receipt = receipt)
+                        ReceiptCard(
+                            receipt = receipt,
+                            onDeleteReceipt = onDeleteReceipt
+                        )
                     }
                     items(expenses) { expense ->
                         ExpenseCard(expense = expense)
@@ -980,7 +987,7 @@ private fun ChangePriceDialog(originalBudget: Float, onDismiss: () -> Unit, onCo
 }
 
 @Composable
-private fun ReceiptDialog(onDismiss: () -> Unit, receipt: ReceiptWithProducts) {
+private fun ReceiptDialog(onDismiss: () -> Unit, receipt: ReceiptWithProducts, onDeleteReceipt: (ReceiptWithProducts) -> Unit) {
     Dialog(onDismissRequest = onDismiss) {
         Card(
             modifier = Modifier
@@ -1043,8 +1050,15 @@ private fun ReceiptDialog(onDismiss: () -> Unit, receipt: ReceiptWithProducts) {
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
+                    TextButton(onClick = { onDeleteReceipt(receipt) }) {
+                        Text(
+                            text = "Slet",
+                            color = Color.Gray
+                        )
+                    }
+
                     TextButton(onClick = onDismiss) {
                         Text(
                             text = "Luk",
@@ -1059,7 +1073,7 @@ private fun ReceiptDialog(onDismiss: () -> Unit, receipt: ReceiptWithProducts) {
 }
 
 @Composable
-private fun ReceiptCard(modifier: Modifier = Modifier, receipt: ReceiptWithProducts) {
+private fun ReceiptCard(modifier: Modifier = Modifier, receipt: ReceiptWithProducts, onDeleteReceipt: (ReceiptWithProducts) -> Unit) {
     var openReceipt by remember { mutableStateOf(false) }
 
     Card(
@@ -1096,6 +1110,10 @@ private fun ReceiptCard(modifier: Modifier = Modifier, receipt: ReceiptWithProdu
     if (openReceipt) {
         ReceiptDialog(
             onDismiss = { openReceipt = false },
+            onDeleteReceipt =  { receipt ->
+                onDeleteReceipt(receipt)
+                openReceipt = false
+            },
             receipt = receipt
         )
     }

@@ -999,6 +999,8 @@ private fun ChangePriceDialog(originalBudget: Float, onDismiss: () -> Unit, onCo
 
 @Composable
 private fun ReceiptDialog(onDismiss: () -> Unit, receipt: ReceiptWithProducts, onDeleteReceipt: (ReceiptWithProducts) -> Unit) {
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
     Dialog(onDismissRequest = onDismiss) {
         Card(
             modifier = Modifier
@@ -1063,7 +1065,7 @@ private fun ReceiptDialog(onDismiss: () -> Unit, receipt: ReceiptWithProducts, o
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    TextButton(onClick = { onDeleteReceipt(receipt) }) {
+                    TextButton(onClick = { showDeleteDialog = true }) {
                         Text(
                             text = "Slet",
                             color = Color.Gray
@@ -1078,8 +1080,19 @@ private fun ReceiptDialog(onDismiss: () -> Unit, receipt: ReceiptWithProducts, o
                     }
                 }
             }
-
         }
+    }
+
+    if (showDeleteDialog) {
+        DeleteConfirmationDialog(
+            title = "Slet kvittering?",
+            body = "Er du sikker på du vil slette kvitteringen? Dette kan ikke fortrydes",
+            onDismiss = { showDeleteDialog = false },
+            onConfirm = {
+                onDeleteReceipt(receipt)
+                showDeleteDialog = false
+            },
+        )
     }
 }
 
@@ -1179,8 +1192,6 @@ private fun ExpenseCard(modifier: Modifier = Modifier, expense: ExtraExpense, on
     }
     //endregion
 }
-
-
 
 @Composable
 private fun ViewReceiptsButton(onClick: () -> Unit) {

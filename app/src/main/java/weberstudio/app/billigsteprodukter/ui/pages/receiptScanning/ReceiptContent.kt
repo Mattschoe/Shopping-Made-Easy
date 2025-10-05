@@ -32,14 +32,11 @@ import weberstudio.app.billigsteprodukter.ui.components.AddProductToReceiptButto
 import weberstudio.app.billigsteprodukter.ui.components.ErrorMessageLarge
 import weberstudio.app.billigsteprodukter.ui.components.LogoBarHandler
 import weberstudio.app.billigsteprodukter.ui.components.ProductRow
-import weberstudio.app.billigsteprodukter.ui.components.SaveImage
 import weberstudio.app.billigsteprodukter.ui.components.TotalAndFilterRow
 import weberstudio.app.billigsteprodukter.ui.components.launchCamera
 import weberstudio.app.billigsteprodukter.ui.navigation.PageNavigation
 
-/**
- * @param uiContent the UI that activates the [SaveImage] function
- */
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ReceiptScanningContent(modifier: Modifier = Modifier, navController: NavController, cameraViewModel: CameraViewModel, receiptViewModel: ReceiptScanningViewModel) {
@@ -116,7 +113,7 @@ fun ReceiptScanningContent(modifier: Modifier = Modifier, navController: NavCont
         }
     }
 
-    //Hidden UI
+    //region DIALOGS
     AddProductDialog(
         showDialog = showAddProductDialog,
         onDismiss = { showAddProductDialog = false },
@@ -126,4 +123,5 @@ fun ReceiptScanningContent(modifier: Modifier = Modifier, navController: NavCont
         },
         standardStore = store
     )
+    //endregion
 }

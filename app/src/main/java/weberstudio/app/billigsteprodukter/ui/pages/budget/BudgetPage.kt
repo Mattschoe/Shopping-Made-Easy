@@ -865,7 +865,8 @@ private fun ViewExpensesDialog(onDismiss: () -> Unit, receipts: List<ReceiptWith
 
                 LazyColumn(
                     modifier = Modifier
-                        .fillMaxWidth(),
+                        .fillMaxWidth()
+                        .weight(1f),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                     contentPadding = PaddingValues(vertical = 16.dp)
                 ) {
@@ -877,8 +878,7 @@ private fun ViewExpensesDialog(onDismiss: () -> Unit, receipts: List<ReceiptWith
                     }
                 }
 
-                Spacer(modifier = Modifier.weight(1f))
-
+                //Bottom bar
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End

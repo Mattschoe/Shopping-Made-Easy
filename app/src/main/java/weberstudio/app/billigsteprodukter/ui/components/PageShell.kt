@@ -108,10 +108,9 @@ fun NavigationBar(navController: NavController, cameraViewModel: CameraViewModel
     ) {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route
-        val cameraScope = rememberCoroutineScope()
         val launchCamera = launchCamera(
             onImageCaptured = { uri, context ->
-                cameraScope.launch { cameraViewModel.processImage(uri, context) }
+                cameraViewModel.processImage(uri, context)
                 navController.navigate(PageNavigation.ReceiptScanning.route)
             }
         )

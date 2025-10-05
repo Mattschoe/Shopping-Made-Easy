@@ -42,10 +42,9 @@ import weberstudio.app.billigsteprodukter.ui.navigation.PageNavigation
 fun ReceiptScanningContent(modifier: Modifier = Modifier, navController: NavController, cameraViewModel: CameraViewModel, receiptViewModel: ReceiptScanningViewModel) {
     //region Checks for parsing errors first:
     val parsingState by cameraViewModel.getParserState()
-    val cameraScope = rememberCoroutineScope()
     val launchCamera = launchCamera(
         onImageCaptured = { uri, context ->
-            cameraScope.launch { cameraViewModel.processImage(uri, context) }
+            cameraViewModel.processImage(uri, context)
         }
     )
 

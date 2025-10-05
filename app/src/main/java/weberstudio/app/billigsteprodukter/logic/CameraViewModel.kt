@@ -33,32 +33,33 @@ class CameraViewModel(application: Application): AndroidViewModel(application) {
      * @param imageURI the URI of the image that needs processing
      * @param context
      */
-    suspend fun processImage(imageURI: Uri, context: Context) {
-        println("Processing Image..")
-        parsingState.value = ParsingState.InProgress
-        //Tries to read image
-        try {
-            val textRecognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
-            val image = ImagePreprocessor.preprocessForMlKit(context, imageURI)
+    fun processImage(imageURI: Uri, context: Context) {
+        viewModelScope.launch {
+            parsingState.value = ParsingState.InProgress
 
-            //Tries to process image
+            //Tries to read image
             try {
-                val imageText = textRecognizer.process(image).await() //Venter på at vi har læst billedet før vi proceeder
+                val textRecognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+                val image = ImagePreprocessor.preprocessForMlKit(context, imageURI)
 
-                //Success
-                println("Result Success!")
-                processImageInfo(imageText)
-                textRecognizer.close()
-            } catch (e: Exception) {
-                //Failure
-                parsingState.value = ParsingState.Error("MLKit Text recognition failed! $e")
-                textRecognizer.close()
+                //Tries to process image
+                try {
+                    val imageText = textRecognizer.process(image).await() //Venter på at vi har læst billedet før vi proceeder
+
+                    //Success
+                    processImageInfo(imageText)
+                    textRecognizer.close()
+                } catch (e: Exception) {
+                    //Failure
+                    parsingState.value = ParsingState.Error("MLKit Text recognition failed! $e")
+                    textRecognizer.close()
+                }
+            } catch(e: Exception) {
+                parsingState.value = ParsingState.Error("Error loading image!: ${e.message}")
             }
-        } catch(e: Exception) {
-            parsingState.value = ParsingState.Error("Error loading image!: ${e.message}")
+            println("Result after!")
+            Log.d("STATUS", "Finished parsing with parsing-state: ${parsingState.value}")
         }
-        println("Result after!")
-        Log.d("STATUS", "Finished parsing with parsing-state: ${parsingState.value}")
     }
 
     /**

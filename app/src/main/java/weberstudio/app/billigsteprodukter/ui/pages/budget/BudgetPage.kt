@@ -775,8 +775,6 @@ private fun AddExpenseDialog(onDismiss: () -> Unit, onConfirm: (String, Float) -
     }
 }
 
-
-
 @Composable
 private fun DatePickerDialog(currentMonth: Month?, currentYear: Year?, onDismiss: () -> Unit, onMonthSelected: (Month, Year) -> Unit) {
     val years = listOf(Year.of(2025))
@@ -1124,7 +1122,7 @@ private fun ExpenseCard(modifier: Modifier = Modifier, expense: ExtraExpense) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "${expense.name.trim()}: ${formatInputToDanishCurrency(expense.price.toString())}kr",
+                text = "${expense.name.trim()}: ${formatFloatToDanishCurrency(expense.price)}kr",
                 style = MaterialTheme.typography.bodyLarge
             )
             Text(

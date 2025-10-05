@@ -95,4 +95,10 @@ class BudgetViewModel(application: Application): AndroidViewModel(application) {
             receiptRepo.deleteReceipt(receipt)
         }
     }
+
+    fun deleteExpense(expense: ExtraExpense) {
+        viewModelScope.launch {
+            budgetRepo.deleteExtraExpense(expense)
+        }
+    }
 }

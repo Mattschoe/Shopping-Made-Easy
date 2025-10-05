@@ -1,11 +1,9 @@
 package weberstudio.app.billigsteprodukter.ui.pages.budget
 
-import android.util.Log
 import androidx.compose.animation.core.EaseOutCubic
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -33,7 +31,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonColors
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -73,6 +70,7 @@ import weberstudio.app.billigsteprodukter.logic.Formatter.formatInputToDanishCur
 import weberstudio.app.billigsteprodukter.logic.Formatter.toDanishString
 import weberstudio.app.billigsteprodukter.logic.Formatter.filterInputToValidNumberInput
 import weberstudio.app.billigsteprodukter.logic.Formatter.formatFloatToDanishCurrency
+import weberstudio.app.billigsteprodukter.ui.components.DeleteConfirmationDialog
 import java.text.DecimalFormat
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -125,7 +123,8 @@ fun BudgetPage(modifier: Modifier = Modifier, viewModel: BudgetViewModel, month:
             onBudgetChanged = { newBudget ->
                 viewModel.updateBudget(currentBudget.copy(budget = newBudget))
             },
-            onDeleteReceipt = { receipt -> viewModel.deleteReceipt(receipt.receipt) }
+            onDeleteReceipt = { receipt -> viewModel.deleteReceipt(receipt.receipt) },
+            onDeleteExpense = { expense -> viewModel.deleteExpense(expense) }
         )
     }
 }
@@ -414,7 +413,8 @@ fun BudgetPageUI(
     onAddExpense: (String, Float) -> Unit,
     onMonthSelected: (Month, Year) -> Unit,
     onBudgetChanged: (Float) -> Unit,
-    onDeleteReceipt: (ReceiptWithProducts) -> Unit
+    onDeleteReceipt: (ReceiptWithProducts) -> Unit,
+    onDeleteExpense: (ExtraExpense) -> Unit
 ) {
     var showAddExpenseDialog by remember { mutableStateOf(false) }
     var showMonthPicker by remember { mutableStateOf(false) }
@@ -495,7 +495,8 @@ fun BudgetPageUI(
             receipts = receipts,
             expenses = expenses,
             selectedMonth = selectedMonth.toDanishString(),
-            onDeleteReceipt = onDeleteReceipt
+            onDeleteReceipt = onDeleteReceipt,
+            onDeleteExpense = onDeleteExpense
         )
     }
     //endregion
@@ -843,7 +844,14 @@ private fun DatePickerDialog(currentMonth: Month?, currentYear: Year?, onDismiss
 }
 
 @Composable
-private fun ViewExpensesDialog(onDismiss: () -> Unit, receipts: List<ReceiptWithProducts>, expenses: List<ExtraExpense>, selectedMonth: String, onDeleteReceipt: (ReceiptWithProducts) -> Unit) {
+private fun ViewExpensesDialog(
+    onDismiss: () -> Unit,
+    receipts: List<ReceiptWithProducts>,
+    expenses: List<ExtraExpense>,
+    selectedMonth: String,
+    onDeleteReceipt: (ReceiptWithProducts) -> Unit,
+    onDeleteExpense: (ExtraExpense) -> Unit
+) {
     Dialog(onDismissRequest = onDismiss) {
         Card(
             modifier = Modifier
@@ -881,7 +889,10 @@ private fun ViewExpensesDialog(onDismiss: () -> Unit, receipts: List<ReceiptWith
                         )
                     }
                     items(expenses) { expense ->
-                        ExpenseCard(expense = expense)
+                        ExpenseCard(
+                            expense = expense,
+                            onDeleteExpense = onDeleteExpense
+                        )
                     }
                 }
 
@@ -1120,11 +1131,14 @@ private fun ReceiptCard(modifier: Modifier = Modifier, receipt: ReceiptWithProdu
 }
 
 @Composable
-private fun ExpenseCard(modifier: Modifier = Modifier, expense: ExtraExpense) {
+private fun ExpenseCard(modifier: Modifier = Modifier, expense: ExtraExpense, onDeleteExpense: (ExtraExpense) -> Unit) {
+    var showDeleteExpenseDialog by remember { mutableStateOf(false) }
+
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp),
+            .padding(horizontal = 8.dp)
+            .clickable { showDeleteExpenseDialog = true },
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         colors = CardDefaults.cardColors(
@@ -1149,7 +1163,24 @@ private fun ExpenseCard(modifier: Modifier = Modifier, expense: ExtraExpense) {
             )
         }
     }
+
+
+    //region DIALOGS
+    if (showDeleteExpenseDialog) {
+        DeleteConfirmationDialog(
+            title = "Slet udgift?",
+            body = "Er du sikker på du vil slette: \n ${expense.name}",
+            onDismiss = { showDeleteExpenseDialog = false },
+            onConfirm = {
+                onDeleteExpense(expense)
+                showDeleteExpenseDialog = false
+            }
+        )
+    }
+    //endregion
 }
+
+
 
 @Composable
 private fun ViewReceiptsButton(onClick: () -> Unit) {

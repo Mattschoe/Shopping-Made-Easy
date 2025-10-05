@@ -51,7 +51,7 @@ class CameraViewModel(application: Application): AndroidViewModel(application) {
                 textRecognizer.close()
             } catch (e: Exception) {
                 //Failure
-                ParsingState.Error("MLKit Text recognition failed! $e")
+                parsingState.value = ParsingState.Error("MLKit Text recognition failed! $e")
                 textRecognizer.close()
             }
         } catch(e: Exception) {

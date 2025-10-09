@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -222,10 +223,17 @@ fun ApplicationNavigationHost(
                 cameraViewModel = cameraViewModel,
                 pageContent = { padding ->
                     val receiptViewModel: ReceiptScanningViewModel = viewModel(backStackEntry)
-                    if (receiptID != 0L) {
-                        receiptViewModel.changeLastReceipt(receiptID)
+                    LaunchedEffect(receiptID) {
+                        receiptViewModel.clearReceipt() //Make sure we dont show last scan before loadingState
+                        if (receiptID == 0L) receiptViewModel.showLoadingState()
+                        else receiptViewModel.loadReceipt(receiptID)
                     }
-                    ReceiptScanningContent(Modifier.padding(padding), navController, cameraViewModel, receiptViewModel)
+
+                    ReceiptScanningContent(
+                        Modifier.padding(padding),
+                        navController, cameraViewModel,
+                        receiptViewModel
+                    )
                 }
             )
         }

@@ -1,9 +1,7 @@
 package weberstudio.app.billigsteprodukter.ui.pages.receiptScanning
 
-import android.icu.text.DecimalFormat
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,120 +11,197 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import kotlinx.coroutines.launch
 import weberstudio.app.billigsteprodukter.logic.CameraViewModel
 import weberstudio.app.billigsteprodukter.logic.Formatter.formatFloatToDanishCurrency
-import weberstudio.app.billigsteprodukter.logic.Store
 import weberstudio.app.billigsteprodukter.ui.ParsingState
+import weberstudio.app.billigsteprodukter.ui.ReceiptUIState
 import weberstudio.app.billigsteprodukter.ui.components.AddProductDialog
 import weberstudio.app.billigsteprodukter.ui.components.AddProductToReceiptButton
 import weberstudio.app.billigsteprodukter.ui.components.ErrorMessageLarge
 import weberstudio.app.billigsteprodukter.ui.components.LogoBarHandler
+import weberstudio.app.billigsteprodukter.ui.components.LogoBarSkeleton
 import weberstudio.app.billigsteprodukter.ui.components.ProductRow
+import weberstudio.app.billigsteprodukter.ui.components.ProductRowSkeleton
 import weberstudio.app.billigsteprodukter.ui.components.TotalAndFilterRow
+import weberstudio.app.billigsteprodukter.ui.components.TotalAndFilterRowSkeleton
 import weberstudio.app.billigsteprodukter.ui.components.launchCamera
 import weberstudio.app.billigsteprodukter.ui.navigation.PageNavigation
 
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun ReceiptScanningContent(modifier: Modifier = Modifier, navController: NavController, cameraViewModel: CameraViewModel, receiptViewModel: ReceiptScanningViewModel) {
+fun ReceiptScanningContent(
+    modifier: Modifier = Modifier,
+    navController: NavController,
+    cameraViewModel: CameraViewModel,
+    receiptViewModel: ReceiptScanningViewModel
+) {
     //region Checks for parsing errors first:
     val parsingState by cameraViewModel.getParserState()
+    val uiState by receiptViewModel.uiState.collectAsState()
+    var showAddProductDialog by rememberSaveable { mutableStateOf(false) }
     val launchCamera = launchCamera(
         onImageCaptured = { uri, context ->
             cameraViewModel.processImage(uri, context)
         }
     )
 
-    //What to show depending on the state of parsing
-    when (parsingState) {
-        ParsingState.InProgress -> { CircularProgressIndicator() }
-        is ParsingState.Error -> {
-            val errorMessage = (parsingState as ParsingState.Error).message
-            ErrorMessageLarge(
-                "Fejl i scanning!",
-                errorMessage,
-                onDismissRequest = {
-                    cameraViewModel.clearParserState()
-                    navController.navigate(PageNavigation.Home.route)
-                },
-                onConfirmError = { launchCamera() }, //Launches camera again if user clicks "Prøv igen"
-                onDismissError = { } //Goes back to last screen if user presses "Cancel"
-            )
+    //Handles state changes based on parsing state
+    LaunchedEffect(parsingState) {
+        when (parsingState) {
+            ParsingState.InProgress -> { receiptViewModel.showLoadingState() }
+            is ParsingState.Success -> { cameraViewModel.clearParserState() }
+            else -> {  }
         }
-        is ParsingState.Success -> { }
-        else -> println(parsingState)
+    }
+
+    if (parsingState is ParsingState.Error) {
+        val errorMessage = (parsingState as ParsingState.Error).message
+        ErrorMessageLarge(
+            errorTitle = "Fejl i scanning!",
+            errorMessage = errorMessage,
+            onDismissRequest = {
+                cameraViewModel.clearParserState()
+                navController.navigate(PageNavigation.Home.route)
+            },
+            onConfirmError = {
+                cameraViewModel.clearParserState()
+                launchCamera()
+            },
+            onDismissError = { cameraViewModel.clearParserState() }
+        )
     }
     //endregion
 
-    val products by receiptViewModel.currentReceipt.collectAsState()
-    val store by receiptViewModel.currentStore.collectAsState()
-    var showAddProductDialog by rememberSaveable { mutableStateOf(false) }
+    when (val currentState = uiState) {
+        is ReceiptUIState.Loading -> { LoadingSkeleton(modifier) }
+        is ReceiptUIState.Success -> {
+            ReceiptContent(
+                modifier = modifier,
+                products = currentState.products,
+                store = currentState.store,
+                onAddProductClick = { showAddProductDialog = true }
+            )
+        }
+        is ReceiptUIState.Empty -> {
+            LazyColumn(modifier = modifier) {
+                //Nothing bruh
+            }
+        }
+    }
 
-    //UI
-    LazyColumn(
-        modifier = modifier
-    ) {
+    //region DIALOGS
+    //Add Product Dialog
+    if (uiState is ReceiptUIState.Success) {
+        val store = (uiState as ReceiptUIState.Success).store
+        AddProductDialog(
+            showDialog = showAddProductDialog,
+            onDismiss = { showAddProductDialog = false },
+            onConfirm = { name, price, productStore ->
+                store?.let {
+                    cameraViewModel.addProductToCurrentReceipt(name, price, it)
+                }
+                showAddProductDialog = false
+            },
+            standardStore = store
+        )
+    }
+    //endregion
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun LoadingSkeleton(modifier: Modifier = Modifier) {
+    LazyColumn(modifier = modifier) {
         stickyHeader {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.background) //Før padding så det dækker helt
+                    .background(MaterialTheme.colorScheme.background)
                     .padding(horizontal = 16.dp, vertical = 4.dp)
             ) {
+                //Logo skeleton
                 Row(
-                    modifier = Modifier
-                        .fillMaxSize(),
+                    modifier = Modifier.fillMaxSize(),
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    LogoBarHandler(modifier = Modifier.fillMaxSize(), storeName = store!!.name)
+                    LogoBarSkeleton(modifier = Modifier.fillMaxWidth())
                 }
 
+                TotalAndFilterRowSkeleton(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 56.dp)
+                )
+            }
+        }
+
+        items(8) {
+            ProductRowSkeleton()
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun ReceiptContent(
+    modifier: Modifier = Modifier,
+    products: List<weberstudio.app.billigsteprodukter.data.Product>,
+    store: weberstudio.app.billigsteprodukter.logic.Store?,
+    onAddProductClick: () -> Unit
+) {
+    LazyColumn(modifier = modifier) {
+        stickyHeader {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.background)
+                    .padding(horizontal = 16.dp, vertical = 4.dp)
+            ) {
+                //Store logo
+                Row(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    if (store != null) {
+                        LogoBarHandler(modifier = Modifier.fillMaxSize(), storeName = store.name)
+                    }
+                }
+
+                //Total and filter
                 TotalAndFilterRow(
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(min = 56.dp),
                     totalPrice = formatFloatToDanishCurrency(products.sumOf { it.price.toDouble() }.toFloat()),
-                    filterMenuOnClick =  { }
+                    filterMenuOnClick = { /* TODO: Implement filter */ }
                 )
             }
         }
+
+        //Add product button
         item {
-            AddProductToReceiptButton(addProductToReceipt = { showAddProductDialog = true } )
+            AddProductToReceiptButton(addProductToReceipt = onAddProductClick)
         }
+
+        //Product list
         items(products) { product ->
             ProductRow(
-                product.name,
-                formatFloatToDanishCurrency(product.price) + "kr",
-                onThreeDotMenuClick = { }
+                productName = product.name,
+                productPrice = formatFloatToDanishCurrency(product.price) + "kr",
+                onThreeDotMenuClick = { /* TODO: Implement menu */ }
             )
         }
     }
-
-    //region DIALOGS
-    AddProductDialog(
-        showDialog = showAddProductDialog,
-        onDismiss = { showAddProductDialog = false },
-        onConfirm = { name, price, store ->
-            cameraViewModel.addProductToCurrentReceipt(name, price, store)
-            showAddProductDialog = false
-        },
-        standardStore = store
-    )
-    //endregion
 }

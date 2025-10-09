@@ -21,5 +21,7 @@ interface BudgetRepository {
 
     suspend fun insertExtraExpense(expense: ExtraExpense)
 
+    suspend fun deleteExtraExpense(expense: ExtraExpense)
+
     suspend fun updateBudget(budget: Budget)
 }

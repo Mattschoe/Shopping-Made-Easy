@@ -25,6 +25,9 @@ interface BudgetDao {
     @Delete
     suspend fun deleteBudget(budget: Budget)
 
+    @Delete
+    suspend fun deleteExtraExpense(expense: ExtraExpense)
+
     //region QUERIES
     @Query("DELETE FROM budgets WHERE month = :month AND year = :year")
     suspend fun deleteBudgetByDate(month: Month, year: Year)

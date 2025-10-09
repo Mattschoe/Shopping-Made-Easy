@@ -23,6 +23,10 @@ class OfflineReceiptRepository(private val dao: ReceiptDao) : ReceiptRepository 
         return receiptID
     }
 
+    override suspend fun deleteReceipt(receipt: Receipt) {
+        dao.deleteReceipt(receipt)
+    }
+
     override suspend fun getReceiptWithProducts(receiptID: Long): ReceiptWithProducts? {
         return dao.getReceiptWithProducts(receiptID)
     }

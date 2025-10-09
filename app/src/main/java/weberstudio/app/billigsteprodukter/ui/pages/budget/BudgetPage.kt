@@ -4,7 +4,6 @@ import androidx.compose.animation.core.EaseOutCubic
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -32,7 +31,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonColors
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -72,6 +70,7 @@ import weberstudio.app.billigsteprodukter.logic.Formatter.formatInputToDanishCur
 import weberstudio.app.billigsteprodukter.logic.Formatter.toDanishString
 import weberstudio.app.billigsteprodukter.logic.Formatter.filterInputToValidNumberInput
 import weberstudio.app.billigsteprodukter.logic.Formatter.formatFloatToDanishCurrency
+import weberstudio.app.billigsteprodukter.ui.components.DeleteConfirmationDialog
 import java.text.DecimalFormat
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -123,7 +122,9 @@ fun BudgetPage(modifier: Modifier = Modifier, viewModel: BudgetViewModel, month:
             },
             onBudgetChanged = { newBudget ->
                 viewModel.updateBudget(currentBudget.copy(budget = newBudget))
-            }
+            },
+            onDeleteReceipt = { receipt -> viewModel.deleteReceipt(receipt.receipt) },
+            onDeleteExpense = { expense -> viewModel.deleteExpense(expense) }
         )
     }
 }
@@ -411,7 +412,9 @@ fun BudgetPageUI(
     selectedYear: Year = Year.from(LocalDate.now()),
     onAddExpense: (String, Float) -> Unit,
     onMonthSelected: (Month, Year) -> Unit,
-    onBudgetChanged: (Float) -> Unit
+    onBudgetChanged: (Float) -> Unit,
+    onDeleteReceipt: (ReceiptWithProducts) -> Unit,
+    onDeleteExpense: (ExtraExpense) -> Unit
 ) {
     var showAddExpenseDialog by remember { mutableStateOf(false) }
     var showMonthPicker by remember { mutableStateOf(false) }
@@ -491,7 +494,9 @@ fun BudgetPageUI(
             onDismiss = { showViewReceiptsDialog = false },
             receipts = receipts,
             expenses = expenses,
-            selectedMonth = selectedMonth.toDanishString()
+            selectedMonth = selectedMonth.toDanishString(),
+            onDeleteReceipt = onDeleteReceipt,
+            onDeleteExpense = onDeleteExpense
         )
     }
     //endregion
@@ -775,8 +780,6 @@ private fun AddExpenseDialog(onDismiss: () -> Unit, onConfirm: (String, Float) -
     }
 }
 
-
-
 @Composable
 private fun DatePickerDialog(currentMonth: Month?, currentYear: Year?, onDismiss: () -> Unit, onMonthSelected: (Month, Year) -> Unit) {
     val years = listOf(Year.of(2025))
@@ -841,7 +844,14 @@ private fun DatePickerDialog(currentMonth: Month?, currentYear: Year?, onDismiss
 }
 
 @Composable
-private fun ViewExpensesDialog(onDismiss: () -> Unit, receipts: List<ReceiptWithProducts>, expenses: List<ExtraExpense>, selectedMonth: String) {
+private fun ViewExpensesDialog(
+    onDismiss: () -> Unit,
+    receipts: List<ReceiptWithProducts>,
+    expenses: List<ExtraExpense>,
+    selectedMonth: String,
+    onDeleteReceipt: (ReceiptWithProducts) -> Unit,
+    onDeleteExpense: (ExtraExpense) -> Unit
+) {
     Dialog(onDismissRequest = onDismiss) {
         Card(
             modifier = Modifier
@@ -867,20 +877,26 @@ private fun ViewExpensesDialog(onDismiss: () -> Unit, receipts: List<ReceiptWith
 
                 LazyColumn(
                     modifier = Modifier
-                        .fillMaxWidth(),
+                        .fillMaxWidth()
+                        .weight(1f),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                     contentPadding = PaddingValues(vertical = 16.dp)
                 ) {
                     items(receipts) { receipt ->
-                        ReceiptCard(receipt = receipt)
+                        ReceiptCard(
+                            receipt = receipt,
+                            onDeleteReceipt = onDeleteReceipt
+                        )
                     }
                     items(expenses) { expense ->
-                        ExpenseCard(expense = expense)
+                        ExpenseCard(
+                            expense = expense,
+                            onDeleteExpense = onDeleteExpense
+                        )
                     }
                 }
 
-                Spacer(modifier = Modifier.weight(1f))
-
+                //Bottom bar
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End
@@ -982,7 +998,9 @@ private fun ChangePriceDialog(originalBudget: Float, onDismiss: () -> Unit, onCo
 }
 
 @Composable
-private fun ReceiptDialog(onDismiss: () -> Unit, receipt: ReceiptWithProducts) {
+private fun ReceiptDialog(onDismiss: () -> Unit, receipt: ReceiptWithProducts, onDeleteReceipt: (ReceiptWithProducts) -> Unit) {
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
     Dialog(onDismissRequest = onDismiss) {
         Card(
             modifier = Modifier
@@ -1045,8 +1063,15 @@ private fun ReceiptDialog(onDismiss: () -> Unit, receipt: ReceiptWithProducts) {
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
+                    TextButton(onClick = { showDeleteDialog = true }) {
+                        Text(
+                            text = "Slet",
+                            color = Color.Gray
+                        )
+                    }
+
                     TextButton(onClick = onDismiss) {
                         Text(
                             text = "Luk",
@@ -1055,13 +1080,24 @@ private fun ReceiptDialog(onDismiss: () -> Unit, receipt: ReceiptWithProducts) {
                     }
                 }
             }
-
         }
+    }
+
+    if (showDeleteDialog) {
+        DeleteConfirmationDialog(
+            title = "Slet kvittering?",
+            body = "Er du sikker på du vil slette kvitteringen? Dette kan ikke fortrydes",
+            onDismiss = { showDeleteDialog = false },
+            onConfirm = {
+                onDeleteReceipt(receipt)
+                showDeleteDialog = false
+            },
+        )
     }
 }
 
 @Composable
-private fun ReceiptCard(modifier: Modifier = Modifier, receipt: ReceiptWithProducts) {
+private fun ReceiptCard(modifier: Modifier = Modifier, receipt: ReceiptWithProducts, onDeleteReceipt: (ReceiptWithProducts) -> Unit) {
     var openReceipt by remember { mutableStateOf(false) }
 
     Card(
@@ -1098,17 +1134,24 @@ private fun ReceiptCard(modifier: Modifier = Modifier, receipt: ReceiptWithProdu
     if (openReceipt) {
         ReceiptDialog(
             onDismiss = { openReceipt = false },
+            onDeleteReceipt =  { receipt ->
+                onDeleteReceipt(receipt)
+                openReceipt = false
+            },
             receipt = receipt
         )
     }
 }
 
 @Composable
-private fun ExpenseCard(modifier: Modifier = Modifier, expense: ExtraExpense) {
+private fun ExpenseCard(modifier: Modifier = Modifier, expense: ExtraExpense, onDeleteExpense: (ExtraExpense) -> Unit) {
+    var showDeleteExpenseDialog by remember { mutableStateOf(false) }
+
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp),
+            .padding(horizontal = 8.dp)
+            .clickable { showDeleteExpenseDialog = true },
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         colors = CardDefaults.cardColors(
@@ -1124,7 +1167,7 @@ private fun ExpenseCard(modifier: Modifier = Modifier, expense: ExtraExpense) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "${expense.name.trim()}: ${formatInputToDanishCurrency(expense.price.toString())}kr",
+                text = "${expense.name.trim()}: ${formatFloatToDanishCurrency(expense.price)}kr",
                 style = MaterialTheme.typography.bodyLarge
             )
             Text(
@@ -1133,6 +1176,21 @@ private fun ExpenseCard(modifier: Modifier = Modifier, expense: ExtraExpense) {
             )
         }
     }
+
+
+    //region DIALOGS
+    if (showDeleteExpenseDialog) {
+        DeleteConfirmationDialog(
+            title = "Slet udgift?",
+            body = "Er du sikker på du vil slette: \n ${expense.name}",
+            onDismiss = { showDeleteExpenseDialog = false },
+            onConfirm = {
+                onDeleteExpense(expense)
+                showDeleteExpenseDialog = false
+            }
+        )
+    }
+    //endregion
 }
 
 @Composable

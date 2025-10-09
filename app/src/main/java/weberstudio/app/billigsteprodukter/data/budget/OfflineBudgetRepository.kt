@@ -23,6 +23,10 @@ class OfflineBudgetRepository(private val dao: BudgetDao) : BudgetRepository {
         dao.insertExtraExpense(expense)
     }
 
+    override suspend fun deleteExtraExpense(expense: ExtraExpense) {
+        dao.deleteExtraExpense(expense)
+    }
+
     override suspend fun updateBudget(budget: Budget) {
         dao.updateBudget(budget)
     }

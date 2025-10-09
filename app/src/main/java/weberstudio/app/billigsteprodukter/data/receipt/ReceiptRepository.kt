@@ -23,7 +23,7 @@ interface ReceiptRepository {
      */
     suspend fun addReceiptProducts(receipt: Receipt, products: Set<Product>): Long
 
-    suspend fun deleteProduct(product: Product)
+    suspend fun deleteReceipt(receipt: Receipt)
 
     /**
      * Get receipts within a date range for budget tracking.
@@ -42,6 +42,7 @@ interface ReceiptRepository {
      */
     suspend fun updateProduct(product: Product)
 
+    suspend fun deleteProduct(product: Product)
     /**
      * Adds an extra product to the repo and to the current receipt if it's part of the same store as the lastReceipt.
      * @return false if stores don't match

@@ -94,7 +94,7 @@ fun ReceiptScanningContent(modifier: Modifier = Modifier, navController: NavCont
                         .fillMaxSize(),
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    LogoBarHandler(modifier = Modifier.fillMaxSize(), storeName = store.name)
+                    LogoBarHandler(modifier = Modifier.fillMaxSize(), storeName = store!!.name)
                 }
 
                 TotalAndFilterRow(

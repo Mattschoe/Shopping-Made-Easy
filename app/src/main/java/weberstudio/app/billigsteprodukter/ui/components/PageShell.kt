@@ -111,7 +111,7 @@ fun NavigationBar(navController: NavController, cameraViewModel: CameraViewModel
         val launchCamera = launchCamera(
             onImageCaptured = { uri, context ->
                 cameraViewModel.processImage(uri, context)
-                navController.navigate(PageNavigation.ReceiptScanning.route)
+                navController.navigate(PageNavigation.createReceiptRoute(0))
             }
         )
 
@@ -127,7 +127,7 @@ fun NavigationBar(navController: NavController, cameraViewModel: CameraViewModel
             selected = currentRoute == PageNavigation.Home.route,
             onClick = {
                 navController.navigate(PageNavigation.Home.route) {
-                    popUpTo(navController.graph.startDestinationId) { saveState = true }
+                    popUpTo(navController.graph.startDestinationId) { inclusive = false }
                     launchSingleTop = true
                     restoreState = true
                 }
@@ -146,7 +146,7 @@ fun NavigationBar(navController: NavController, cameraViewModel: CameraViewModel
             selected = currentRoute == PageNavigation.ShoppingList.route || currentRoute == PageNavigation.ShoppingListUndermenu.route,
             onClick = {
                 navController.navigate(PageNavigation.ShoppingList.route) {
-                    popUpTo(navController.graph.startDestinationId) { saveState = true }
+                    popUpTo(navController.graph.startDestinationId) { inclusive = false }
                     launchSingleTop = true
                     restoreState = true
                 }
@@ -165,7 +165,7 @@ fun NavigationBar(navController: NavController, cameraViewModel: CameraViewModel
             selected = currentRoute == PageNavigation.Database.route,
             onClick = {
                 navController.navigate(PageNavigation.Database.route) {
-                    popUpTo(navController.graph.startDestinationId) { saveState = true }
+                    popUpTo(navController.graph.startDestinationId) { inclusive = false }
                     launchSingleTop = true
                     restoreState = true
                 }
@@ -181,7 +181,7 @@ fun NavigationBar(navController: NavController, cameraViewModel: CameraViewModel
                     modifier = Modifier.size(36.dp),
                 )
             },
-            selected = currentRoute == PageNavigation.ReceiptScanning.route,
+            selected = currentRoute?.startsWith("receipt/") == true,
             onClick = { launchCamera() }
         )
     }

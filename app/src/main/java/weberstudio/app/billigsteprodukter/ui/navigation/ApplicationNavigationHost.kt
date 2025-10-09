@@ -50,7 +50,7 @@ import java.time.Year
 @Composable
 fun ApplicationNavigationHost(
     navController: NavHostController = rememberNavController(),
-    startPage: String = PageNavigation.ReceiptRoute.route
+    startPage: String = PageNavigation.Home.route
 ) {
     val context = LocalContext.current
     val cameraViewModel: CameraViewModel = viewModel(
@@ -208,40 +208,26 @@ fun ApplicationNavigationHost(
             )
         }
 
-        //Receipt navigation route
-        navigation(
-            route = "receiptRoute",
-            startDestination = PageNavigation.ReceiptHome.route
-        ) {
-            //Receipt Main page
-            composable(PageNavigation.ReceiptHome.route) { backStackEntry ->
-                val context = LocalContext.current
-                val budgetViewModel: BudgetViewModel = viewModel(backStackEntry) {
-                    BudgetViewModel(context.applicationContext as Application)
-                }
-                val activityViewModel: ActivityViewModel = viewModel(backStackEntry) {
-                    ActivityViewModel(context.applicationContext as Application)
-                }
-                PageShell(
-                    navController,
-                    title = "Hjem",
-                    cameraViewModel = cameraViewModel,
-                    pageContent = { padding -> MainPageContent(Modifier.padding(padding), navController, cameraViewModel, budgetViewModel, activityViewModel) }
-                )
-            }
-
-            //Receipt Content
-            composable(PageNavigation.ReceiptScanning.route) { backStackEntry ->
-                PageShell(
-                    navController,
-                    title = "Oversigt",
-                    cameraViewModel = cameraViewModel,
-                    pageContent = { padding ->
-                        val receiptViewModel: ReceiptScanningViewModel = viewModel(backStackEntry)
-                        ReceiptScanningContent(Modifier.padding(padding), navController, cameraViewModel, receiptViewModel)
+        //ReceiptScanning
+        composable(
+            PageNavigation.ReceiptScanning.route,
+            arguments = listOf(
+                navArgument("ID") { type = NavType.LongType }
+            )
+        ) { backStackEntry ->
+            val receiptID = backStackEntry.arguments?.getLong("ID") ?: 0
+            PageShell(
+                navController,
+                title = "Oversigt",
+                cameraViewModel = cameraViewModel,
+                pageContent = { padding ->
+                    val receiptViewModel: ReceiptScanningViewModel = viewModel(backStackEntry)
+                    if (receiptID != 0L) {
+                        receiptViewModel.changeLastReceipt(receiptID)
                     }
-                )
-            }
+                    ReceiptScanningContent(Modifier.padding(padding), navController, cameraViewModel, receiptViewModel)
+                }
+            )
         }
     }
 }

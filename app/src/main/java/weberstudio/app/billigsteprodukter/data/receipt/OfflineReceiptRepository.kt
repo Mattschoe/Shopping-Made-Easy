@@ -13,7 +13,7 @@ import java.time.YearMonth
 
 class OfflineReceiptRepository(private val dao: ReceiptDao) : ReceiptRepository {
     private val _lastReceipt = MutableStateFlow<List<Product>>(emptyList())
-    override val lastReceipt: StateFlow<List<Product>> = _lastReceipt
+     override val lastReceipt: StateFlow<List<Product>> = _lastReceipt
 
     override suspend fun addReceiptProducts(receipt: Receipt, products: Set<Product>): Long {
         val productsList = products.toList()

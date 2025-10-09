@@ -29,7 +29,6 @@ class ActivityLogger(private val activityRepo: ActivityRepository) {
             budgetMonth = budget.month,
             budgetYear = budget.year
         )
-
         activityRepo.insertActivity(activity)
     }
 

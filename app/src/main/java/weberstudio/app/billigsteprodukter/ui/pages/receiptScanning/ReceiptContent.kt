@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -52,8 +53,6 @@ fun ReceiptScanningContent(modifier: Modifier = Modifier, navController: NavCont
         }
     )
 
-    var store: Store? = null
-
     //What to show depending on the state of parsing
     when (parsingState) {
         ParsingState.InProgress -> { CircularProgressIndicator() }
@@ -70,14 +69,13 @@ fun ReceiptScanningContent(modifier: Modifier = Modifier, navController: NavCont
                 onDismissError = { } //Goes back to last screen if user presses "Cancel"
             )
         }
-        is ParsingState.Success -> { store = (parsingState as ParsingState.Success).parsedStore }
+        is ParsingState.Success -> { }
         else -> println(parsingState)
-
     }
     //endregion
 
-
-    val products by receiptViewModel.lastReceipt.collectAsState()
+    val products by receiptViewModel.currentReceipt.collectAsState()
+    val store by receiptViewModel.currentStore.collectAsState()
     var showAddProductDialog by rememberSaveable { mutableStateOf(false) }
 
     //UI
@@ -96,7 +94,7 @@ fun ReceiptScanningContent(modifier: Modifier = Modifier, navController: NavCont
                         .fillMaxSize(),
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    if (store != null) LogoBarHandler(modifier = Modifier.fillMaxSize(), storeName = store.name)
+                    LogoBarHandler(modifier = Modifier.fillMaxSize(), storeName = store.name)
                 }
 
                 TotalAndFilterRow(

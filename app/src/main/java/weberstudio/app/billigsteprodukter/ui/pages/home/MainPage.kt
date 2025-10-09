@@ -120,7 +120,7 @@ fun MainPageContent(modifier: Modifier = Modifier, navController: NavController,
                         activity = activity,
                         onClick = {
                             when(activity.activityType) {
-                                ActivityType.RECEIPT_SCANNED -> ""
+                                ActivityType.RECEIPT_SCANNED -> navController.navigate(PageNavigation.createReceiptRoute(activity.receiptID!!))
                                 ActivityType.BUDGET_CREATED -> navController.navigate(PageNavigation.createBudgetRoute(activity.budgetMonth!!, activity.budgetYear!!))
                                 ActivityType.SHOPPING_LIST_CREATED -> ""
                             }

@@ -713,10 +713,6 @@ private fun AddExpenseDialog(onDismiss: () -> Unit, onConfirm: (String, Float) -
                     label = { Text("Navn...") },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(24.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -736,10 +732,6 @@ private fun AddExpenseDialog(onDismiss: () -> Unit, onConfirm: (String, Float) -
                     },
                     label = { Text("Pris...") },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.onSecondaryContainer
-                    ),
                     shape = RoundedCornerShape(24.dp),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )

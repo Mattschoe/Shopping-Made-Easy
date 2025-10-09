@@ -114,10 +114,6 @@ fun AddProductToListDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(min = 44.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
                 )
                 Spacer(modifier = Modifier.height(12.dp))
 
@@ -288,10 +284,6 @@ fun AddShoppingListDialog(showDialog: Boolean, onDismiss: () -> Unit, onConfirm:
                     placeholder = { Text("Navn...") },
                     singleLine = true,
                     shape = RoundedCornerShape(24.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                    ),
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(min = 44.dp)
@@ -341,11 +333,14 @@ fun AddProductDialog(showDialog: Boolean, onDismiss: () -> Unit, onConfirm: (nam
     var productPriceText by rememberSaveable { mutableStateOf("") }
     var storeDropdownExpanded by remember { mutableStateOf(false) }
     var selectedStore by rememberSaveable { mutableStateOf<Store?>(standardStore) }
+    var isValid: Boolean = productName.trim().isNotEmpty() && productPriceText.trim().isNotEmpty()
+
 
     AlertDialog(
         onDismissRequest = onDismiss,
         shape = RoundedCornerShape(16.dp),
         title = { Text("Opret produkt") },
+        containerColor = MaterialTheme.colorScheme.secondaryContainer,
         text = {
             Column(
                 modifier = Modifier
@@ -436,16 +431,21 @@ fun AddProductDialog(showDialog: Boolean, onDismiss: () -> Unit, onConfirm: (nam
             }
         },
         confirmButton = {
-            TextButton(onClick = {
-                val price = productPriceText.toFloatOrNull() ?: return@TextButton
-                val store = selectedStore ?: return@TextButton
-                onConfirm(productName.trim(), price, store)
-            }) {
+            TextButton(
+                onClick = {
+                    val price = productPriceText.toFloatOrNull() ?: return@TextButton
+                    val store = selectedStore ?: return@TextButton
+                    onConfirm(productName.trim(), price, store)
+                },
+                enabled = isValid
+            ) {
                 Text("Tilføj")
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
+            TextButton(
+                onClick = onDismiss
+            ) {
                 Text("Annuller")
             }
         }

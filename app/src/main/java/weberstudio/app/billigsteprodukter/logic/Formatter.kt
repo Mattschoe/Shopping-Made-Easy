@@ -26,12 +26,13 @@ object Formatter {
     }
 
     /**
-     * Filters, Checks and formats user input into a valid number input.
-     * Often used in combination with [formatInputToDanishCurrency].
+     * Filters, checks and formats user input into a valid number input.
+     * Often used in combination with [formatInputToDanishCurrencyStandard].
      * Will return emptyString if number is not valid
      */
     fun filterInputToValidNumberInput(input: String): String {
-        val filtered = input.filter { it.isDigit() || it == ',' || it == '.' }
+        val normalized = input.replace('.', ',')
+        val filtered = normalized.filter { it.isDigit() || it == ',' }
 
         if (filtered.count { it == ',' } <= 1) {
             val parts = filtered.split(",")
@@ -46,12 +47,15 @@ object Formatter {
     }
 
     /**
-     * Formats raw numbers in strings from input fields to danish pretty looking strings that match danish standard
+     * Formats raw numbers in strings from input fields to danish pretty looking strings that match danish standard:
+     *
      * "1234" -> "1.234"
+     *
      * "12345" -> "12.345"
+     *
      * "1234567" -> "1.234.567"
      */
-    fun formatInputToDanishCurrency(input: String): String {
+    fun formatInputToDanishCurrencyStandard(input: String): String {
         if (input.isEmpty()) return ""
 
         val parts = input.split(",")
@@ -73,7 +77,7 @@ object Formatter {
     }
 
     /**
-     * Formats a float to danish currency. A lot like [formatInputToDanishCurrency], but expects a
+     * Formats a float to danish currency. A lot like [formatInputToDanishCurrencyStandard], but expects a
      * float standard (so '.' instead of ',') when formatting.
      * 1234.95f -> "1.234,95"
      * 2500.0f -> "2.500"
@@ -98,9 +102,9 @@ object Formatter {
     }
 
     /**
-     * Formats the output of [formatInputToDanishCurrency] back into a float
+     * Formats the output of [formatInputToDanishCurrencyStandard] back into a float
      */
-    fun danishCurrencyToFloat(danishCurrency: String): Float {
+    fun formatDanishCurrencyToFloat(danishCurrency: String): Float {
         if (danishCurrency.isEmpty()) return 0.0f
         return danishCurrency
             .replace(".", "")

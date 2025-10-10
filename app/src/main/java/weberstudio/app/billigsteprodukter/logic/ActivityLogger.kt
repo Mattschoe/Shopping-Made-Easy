@@ -6,9 +6,7 @@ import weberstudio.app.billigsteprodukter.data.Receipt
 import weberstudio.app.billigsteprodukter.data.RecentActivity
 import weberstudio.app.billigsteprodukter.data.ShoppingList
 import weberstudio.app.billigsteprodukter.data.recentactivity.ActivityRepository
-import weberstudio.app.billigsteprodukter.logic.Formatter.filterInputToValidNumberInput
 import weberstudio.app.billigsteprodukter.logic.Formatter.formatFloatToDanishCurrency
-import weberstudio.app.billigsteprodukter.logic.Formatter.formatInputToDanishCurrency
 import weberstudio.app.billigsteprodukter.logic.Formatter.toDanishString
 import java.time.format.DateTimeFormatter
 

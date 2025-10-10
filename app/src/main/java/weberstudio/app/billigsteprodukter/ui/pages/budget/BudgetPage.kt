@@ -65,8 +65,8 @@ import weberstudio.app.billigsteprodukter.R
 import weberstudio.app.billigsteprodukter.data.Budget
 import weberstudio.app.billigsteprodukter.data.ExtraExpense
 import weberstudio.app.billigsteprodukter.data.ReceiptWithProducts
-import weberstudio.app.billigsteprodukter.logic.Formatter.danishCurrencyToFloat
-import weberstudio.app.billigsteprodukter.logic.Formatter.formatInputToDanishCurrency
+import weberstudio.app.billigsteprodukter.logic.Formatter.formatDanishCurrencyToFloat
+import weberstudio.app.billigsteprodukter.logic.Formatter.formatInputToDanishCurrencyStandard
 import weberstudio.app.billigsteprodukter.logic.Formatter.toDanishString
 import weberstudio.app.billigsteprodukter.logic.Formatter.filterInputToValidNumberInput
 import weberstudio.app.billigsteprodukter.logic.Formatter.formatFloatToDanishCurrency
@@ -290,7 +290,7 @@ fun BudgetDialog(selectedMonth: Month, onDismiss: () -> Unit, onClick: (Budget) 
                         val validInput = filterInputToValidNumberInput(input.text)
 
                         if (!validInput.isEmpty()) {
-                            val formatted = formatInputToDanishCurrency(validInput)
+                            val formatted = formatInputToDanishCurrencyStandard(validInput)
                             totalBudget = TextFieldValue(
                                 text = formatted,
                                 selection = TextRange(formatted.length)
@@ -298,8 +298,8 @@ fun BudgetDialog(selectedMonth: Month, onDismiss: () -> Unit, onClick: (Budget) 
                         }
                     },
                     label = "I alt",
-                    totalBudget = danishCurrencyToFloat(totalBudget.text),
-                    currentAmount = danishCurrencyToFloat(totalBudget.text),
+                    totalBudget = formatDanishCurrencyToFloat(totalBudget.text),
+                    currentAmount = formatDanishCurrencyToFloat(totalBudget.text),
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
 
@@ -313,7 +313,7 @@ fun BudgetDialog(selectedMonth: Month, onDismiss: () -> Unit, onClick: (Budget) 
                             val budget = Budget(
                                 month = selectedMonth,
                                 year = currentYear,
-                                budget = danishCurrencyToFloat(totalBudget.text)
+                                budget = formatDanishCurrencyToFloat(totalBudget.text)
                             )
                             onClick(budget)
                         },
@@ -616,7 +616,7 @@ fun BudgetCircle(modifier: Modifier = Modifier, currentBudget: Float, totalSpent
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
-                text = "${formatInputToDanishCurrency(remaining.toInt().toString())}kr",
+                text = "${formatInputToDanishCurrencyStandard(remaining.toInt().toString())}kr",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = if (remaining < 0) Color.Red else MaterialTheme.colorScheme.primaryContainer
@@ -628,7 +628,7 @@ fun BudgetCircle(modifier: Modifier = Modifier, currentBudget: Float, totalSpent
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
-                text = "${formatInputToDanishCurrency(totalSpent.toInt().toString())}kr",
+                text = "${formatInputToDanishCurrencyStandard(totalSpent.toInt().toString())}kr",
                 fontSize = 16.sp,
                 color = MaterialTheme.colorScheme.error
             )
@@ -723,7 +723,7 @@ private fun AddExpenseDialog(onDismiss: () -> Unit, onConfirm: (String, Float) -
                         val validInput = filterInputToValidNumberInput(input.text)
 
                         if (!validInput.isEmpty()) {
-                            val formatted = formatInputToDanishCurrency(validInput)
+                            val formatted = formatInputToDanishCurrencyStandard(validInput)
                             price = TextFieldValue(
                                 text = formatted,
                                 selection = TextRange(formatted.length)
@@ -751,7 +751,7 @@ private fun AddExpenseDialog(onDismiss: () -> Unit, onConfirm: (String, Float) -
                     Spacer(modifier = Modifier.width(8.dp))
                     Button(
                         onClick = {
-                            val priceFloat = danishCurrencyToFloat(price.text)
+                            val priceFloat = formatDanishCurrencyToFloat(price.text)
                             if (name.isNotBlank() && priceFloat > 0) {
                                 onConfirm(name, priceFloat)
                             }
@@ -937,7 +937,7 @@ private fun ChangePriceDialog(originalBudget: Float, onDismiss: () -> Unit, onCo
                         val validInput = filterInputToValidNumberInput(input.text)
 
                         if (!validInput.isEmpty()) {
-                            val formatted = formatInputToDanishCurrency(validInput)
+                            val formatted = formatInputToDanishCurrencyStandard(validInput)
 
                             //Makes sure curser is always at the end of the number
                             newBudget = TextFieldValue(
@@ -973,7 +973,7 @@ private fun ChangePriceDialog(originalBudget: Float, onDismiss: () -> Unit, onCo
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     Button(
-                        onClick = { onConfirm(danishCurrencyToFloat(newBudget.text)) },
+                        onClick = { onConfirm(formatDanishCurrencyToFloat(newBudget.text)) },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primaryContainer
                         )

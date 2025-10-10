@@ -42,11 +42,12 @@ import weberstudio.app.billigsteprodukter.R
  * @param onThreeDotMenuClick what should happen when the three dots are pressed
  */
 @Composable
-fun ProductRow(productName: String, productPrice: String, onThreeDotMenuClick: () -> Unit) {
+fun ProductRow(productName: String, productPrice: String, onThreeDotMenuClick: () -> Unit, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp, vertical = 6.dp),
+            .padding(horizontal = 16.dp, vertical = 6.dp)
+            .clickable(onClick = onClick),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)

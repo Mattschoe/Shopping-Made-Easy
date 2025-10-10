@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
@@ -25,21 +25,19 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -48,17 +46,93 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import weberstudio.app.billigsteprodukter.R
 import weberstudio.app.billigsteprodukter.data.Product
+import weberstudio.app.billigsteprodukter.logic.Formatter.filterInputToValidNumberInput
+import weberstudio.app.billigsteprodukter.logic.Formatter.formatDanishCurrencyToFloat
+import weberstudio.app.billigsteprodukter.logic.Formatter.formatFloatToDanishCurrency
+import weberstudio.app.billigsteprodukter.logic.Formatter.formatInputToDanishCurrencyStandard
 import weberstudio.app.billigsteprodukter.logic.Store
+
+@Composable
+fun AddShoppingListDialog(showDialog: Boolean, onDismiss: () -> Unit, onConfirm: (name: String) -> Unit) {
+    if (!showDialog) return
+
+    //Local UI state
+    var shoppingListName by rememberSaveable { mutableStateOf("") }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = RoundedCornerShape(24.dp),
+            shadowElevation = 6.dp,
+            modifier = Modifier
+                .padding(16.dp),
+            color = MaterialTheme.colorScheme.secondaryContainer
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(12.dp)
+                    .widthIn(min = 280.dp, max = 380.dp)
+            ) {
+                Text(
+                    text = "Giv din indkøbsliste et navn!",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Medium),
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+
+                //Navn på produkt
+                OutlinedTextField(
+                    value = shoppingListName,
+                    onValueChange = { shoppingListName = it },
+                    placeholder = { Text("Navn...") },
+                    singleLine = true,
+                    shape = RoundedCornerShape(24.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 44.dp)
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+
+                //confirm/dismiss
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TextButton(
+                        onClick = onDismiss,
+                    ) {
+                        Text(
+                            text = "Annuller",
+                            color = Color.Gray
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(onClick = { onConfirm(shoppingListName) }) {
+                        Text(
+                            text = "Tilføj",
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+}
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -250,73 +324,6 @@ fun AddProductToListDialog(
     }
 }
 
-@Composable
-fun AddShoppingListDialog(showDialog: Boolean, onDismiss: () -> Unit, onConfirm: (name: String) -> Unit) {
-    if (!showDialog) return
-
-    //Local UI state
-    var shoppingListName by rememberSaveable { mutableStateOf("") }
-
-    Dialog(onDismissRequest = onDismiss) {
-        Surface(
-            shape = RoundedCornerShape(24.dp),
-            shadowElevation = 6.dp,
-            modifier = Modifier
-                .padding(16.dp),
-            color = MaterialTheme.colorScheme.secondaryContainer
-        ) {
-            Column(
-                modifier = Modifier
-                    .padding(12.dp)
-                    .widthIn(min = 280.dp, max = 380.dp)
-            ) {
-                Text(
-                    text = "Giv din indkøbsliste et navn!",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Medium),
-                    color = MaterialTheme.colorScheme.onSecondaryContainer
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-
-                //Navn på produkt
-                OutlinedTextField(
-                    value = shoppingListName,
-                    onValueChange = { shoppingListName = it },
-                    placeholder = { Text("Navn...") },
-                    singleLine = true,
-                    shape = RoundedCornerShape(24.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 44.dp)
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-
-                //confirm/dismiss
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    TextButton(
-                        onClick = onDismiss,
-                    ) {
-                        Text(
-                            text = "Annuller",
-                            color = Color.Gray
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Button(onClick = { onConfirm(shoppingListName) }) {
-                        Text(
-                            text = "Tilføj",
-                            color = MaterialTheme.colorScheme.onPrimary
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-}
 
 /**
  * Prompts the user for product info which can be used to create a product
@@ -507,4 +514,112 @@ fun DeleteConfirmationDialog(title: String, body: String, onDismiss: () -> Unit,
             }
         }
     }
+}
+
+
+/**
+ * Updates a product given user input, and returns it via [onConfirm]
+ */
+@Composable
+fun ModifyProductDialog(product: Product, onDismiss: () -> Unit, onConfirm: (Product) -> Unit) {
+    var newName by remember { mutableStateOf(product.name) }
+    var newPrice by remember { mutableStateOf(TextFieldValue(product.price.toString())) }
+    val isValid = newName.trim().isNotEmpty() && newPrice.text.trim().isNotEmpty()
+
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer
+            )
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(20.dp)
+            ) {
+                //Header
+                Text(
+                    text = "Opdater produkt",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                //Navn på produkt
+                OutlinedTextField(
+                    value = newName,
+                    onValueChange = { input ->
+                        newName = input
+                    },
+                    placeholder = { Text("Navn...") },
+                    singleLine = true,
+                    shape = RoundedCornerShape(24.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 44.dp),
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+
+                //Pris på produkt
+                OutlinedTextField(
+                    value = newPrice,
+                    onValueChange = { input ->
+                        val validInput = filterInputToValidNumberInput(input.text)
+
+                         if (validInput.isNotEmpty()) {
+                            val formatted = formatInputToDanishCurrencyStandard(validInput)
+
+                            newPrice = TextFieldValue(
+                                text = formatted,
+                                selection = TextRange(formatted.length)
+                            )
+                        }
+                    },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    placeholder = { Text("Pris...") },
+                    singleLine = true,
+                    shape = RoundedCornerShape(24.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 44.dp),
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+
+                //Done button
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    IconButton(
+                        onClick = {
+                            onConfirm(product.copy(name = newName, price = formatDanishCurrencyToFloat(newPrice.text)))
+                        },
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(RoundedCornerShape(24.dp)),
+                        colors = IconButtonDefaults.iconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary,
+                            disabledContainerColor = Color.Gray.copy(alpha = 0.5f),
+                            disabledContentColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f)
+                        ),
+                        enabled = isValid
+                    ) {
+                        Icon(
+                            imageVector = ImageVector.vectorResource(R.drawable.check_icon),
+                            contentDescription = "Færdig",
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+
+
 }

@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import weberstudio.app.billigsteprodukter.ReceiptApp
+import weberstudio.app.billigsteprodukter.data.Product
 import weberstudio.app.billigsteprodukter.data.receipt.OfflineReceiptRepository
 import weberstudio.app.billigsteprodukter.ui.ReceiptUIState
 
@@ -52,5 +53,11 @@ class ReceiptScanningViewModel(application: Application): AndroidViewModel(appli
 
     fun clearReceipt() {
         _uiState.value = ReceiptUIState.Empty
+    }
+
+    fun updateProduct(product: Product) {
+        viewModelScope.launch {
+            receiptRepo.updateProduct(product)
+        }
     }
 }

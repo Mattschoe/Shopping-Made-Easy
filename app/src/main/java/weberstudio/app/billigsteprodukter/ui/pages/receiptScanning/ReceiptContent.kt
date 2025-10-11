@@ -288,21 +288,45 @@ private fun ReceiptContent(
                             onDragStart = { startOffsetInCard ->
                                 isDragging = true
                                 draggedProduct = product
-                                dragTopLeftPx = cardTopLeftPx
                                 touchOffsetWithinCard = startOffsetInCard
+                                dragTopLeftPx = cardTopLeftPx + startOffsetInCard  // FIXED: Start at finger position
                                 draggedCardSize = cardSizePx
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             },
                             onDrag = { change, dragAmount ->
                                 change.consume()
                                 dragTopLeftPx += dragAmount
-                                val center = dragTopLeftPx + Offset(
+
+                                // Calculate card center for trash hover detection
+                                val overlayTopLeft = dragTopLeftPx - touchOffsetWithinCard
+                                val center = overlayTopLeft + Offset(
                                     draggedCardSize.width / 2f,
                                     draggedCardSize.height / 2f
                                 )
 
+                                // Check both expanded bounds and distance-based detection
                                 val expanded = trashRectBoundsPx?.let { it.inflate(24f) }
-                                val nowHover = expanded?.contains(center) == true
+                                var nowHover = expanded?.contains(center) == true
+
+                                // Also check distance-based detection (same as drop logic)
+                                if (!nowHover && trashRectBoundsPx != null) {
+                                    val trashCenter = Offset(
+                                        (trashRectBoundsPx!!.left + trashRectBoundsPx!!.right) / 2f,
+                                        (trashRectBoundsPx!!.top + trashRectBoundsPx!!.bottom) / 2f
+                                    )
+                                    val trashRadius = max(
+                                        trashRectBoundsPx!!.width,
+                                        trashRectBoundsPx!!.height
+                                    ) / 2f
+                                    val cardRadius = kotlin.math.hypot(
+                                        draggedCardSize.width.toFloat(),
+                                        draggedCardSize.height.toFloat()
+                                    ) / 2f
+                                    val gracePx = with(density) { 20.dp.toPx() }
+                                    val distance = (center - trashCenter).getDistance()
+                                    nowHover = distance <= (trashRadius + cardRadius + gracePx)
+                                }
+
                                 if (nowHover && !hoverOverTrash) {
                                     //Entering trash
                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -451,7 +475,7 @@ private fun ReceiptContent(
 
     //region FLOATING PRODUCTROW OVERLAY
     if (isDragging && draggedProduct != null) {
-        val overlayTopLeft = dragTopLeftPx - touchOffsetWithinCard
+        val overlayTopLeft = dragTopLeftPx - touchOffsetWithinCard  // FIXED: Calculate card position from finger position
         val overlayIntOffset = with(density) {
             IntOffset(overlayTopLeft.x.roundToInt(), overlayTopLeft.y.roundToInt())
         }

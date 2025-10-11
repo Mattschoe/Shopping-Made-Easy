@@ -50,18 +50,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import weberstudio.app.billigsteprodukter.R
 import weberstudio.app.billigsteprodukter.data.Product
-import weberstudio.app.billigsteprodukter.logic.Formatter.filterInputToValidNumberInput
-import weberstudio.app.billigsteprodukter.logic.Formatter.formatDanishCurrencyToFloat
 import weberstudio.app.billigsteprodukter.logic.Formatter.formatFloatToDanishCurrency
 import weberstudio.app.billigsteprodukter.logic.Formatter.formatInputToDanishCurrencyStandard
 import weberstudio.app.billigsteprodukter.logic.Store
@@ -523,8 +520,8 @@ fun DeleteConfirmationDialog(title: String, body: String, onDismiss: () -> Unit,
 @Composable
 fun ModifyProductDialog(product: Product, onDismiss: () -> Unit, onConfirm: (Product) -> Unit) {
     var newName by remember { mutableStateOf(product.name) }
-    var newPrice by remember { mutableStateOf(TextFieldValue(product.price.toString())) }
-    val isValid = newName.trim().isNotEmpty() && newPrice.text.trim().isNotEmpty()
+    var newPrice by remember { mutableStateOf("") }
+    val isValid = newName.trim().isNotEmpty() //
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -568,19 +565,17 @@ fun ModifyProductDialog(product: Product, onDismiss: () -> Unit, onConfirm: (Pro
                 OutlinedTextField(
                     value = newPrice,
                     onValueChange = { input ->
-                        val validInput = filterInputToValidNumberInput(input.text)
-
-                         if (validInput.isNotEmpty()) {
-                            val formatted = formatInputToDanishCurrencyStandard(validInput)
-
-                            newPrice = TextFieldValue(
-                                text = formatted,
-                                selection = TextRange(formatted.length)
-                            )
-                        }
+                        val formatted = input.replace(',', '.')
+                        newPrice = formatted
                     },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    placeholder = { Text("Pris...") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    placeholder = {
+                        Text(
+                            text = formatFloatToDanishCurrency(product.price),
+                            color = Color.Gray,
+                            fontStyle = FontStyle.Italic
+                        )
+                    },
                     singleLine = true,
                     shape = RoundedCornerShape(24.dp),
                     modifier = Modifier
@@ -596,7 +591,8 @@ fun ModifyProductDialog(product: Product, onDismiss: () -> Unit, onConfirm: (Pro
                 ) {
                     IconButton(
                         onClick = {
-                            onConfirm(product.copy(name = newName, price = formatDanishCurrencyToFloat(newPrice.text)))
+                            val price: Float? = newPrice.toFloatOrNull()
+                            onConfirm(product.copy(name = newName, price = if (price != null) price else product.price))
                         },
                         modifier = Modifier
                             .size(48.dp)
@@ -619,7 +615,24 @@ fun ModifyProductDialog(product: Product, onDismiss: () -> Unit, onConfirm: (Pro
             }
         }
     }
+}
 
+/**
+ * Maps a raw cursor position to the formatted string position
+ * @param raw: the exact string the user typed (may contain grouping dots)
+ * @param formatted: the output from [formatInputToDanishCurrencyStandard]
+ * @param rawCursor: the selection start in raw string
+ */
+fun mapCursorRawToFormatted(raw: String, formatted: String, rawCursor: Int): Int {
+    // Count how many digits are *before* rawCursor in the raw input
+    val digitsBefore = raw.substring(0, rawCursor.coerceIn(0, raw.length)).count { it.isDigit() }
+    if (digitsBefore == 0) return 0
 
-
+    // Find position in formatted where we've seen digitsBefore digits
+    var digitsSeen = 0
+    for (i in formatted.indices) {
+        if (formatted[i].isDigit()) digitsSeen++
+        if (digitsSeen >= digitsBefore) return (i + 1).coerceIn(0, formatted.length)
+    }
+    return formatted.length
 }

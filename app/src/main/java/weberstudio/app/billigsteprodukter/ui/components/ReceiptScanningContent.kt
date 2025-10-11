@@ -76,22 +76,6 @@ fun ProductRow(productName: String, productPrice: String, onThreeDotMenuClick: (
                     color = Color.Gray
                 )
             }
-            /*
-            //TODO: Det her dukker bare slet ikke op? Tror heller ikke der er funktionalitet for at ændre noget endnu
-            IconButton(
-                onClick = onThreeDotMenuClick,
-                modifier = Modifier.size(24.dp)
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.threedots_icon),
-                    modifier = Modifier
-                        .rotate(90f),
-                    contentDescription = "Indstillinger for $productName",
-                    tint = Color.Black
-                )
-            }
-
-             */
         }
     }
 }

@@ -85,14 +85,6 @@ class ReceiptViewModel(application: Application): AndroidViewModel(application) 
     }
 
     /**
-     * Clears the current receipt and shows empty state.
-     */
-    fun clearReceipt() {
-        _forceLoading.value = false
-        _selectedReceiptID.value = null
-    }
-
-    /**
      * Updates a product in the database.
      * The UI will automatically update via the Flow.
      */
@@ -114,10 +106,13 @@ class ReceiptViewModel(application: Application): AndroidViewModel(application) 
         }
     }
 
-    // ============================================
-    // CAMERA/SCANNING METHODS
-    // ============================================
+    fun deleteProduct(product: Product) {
+        viewModelScope.launch {
+            receiptRepo.deleteProduct(product)
+        }
+    }
 
+    //region CAMERA SCANNING METHODS
     /**
      * Processes an image captured from the camera.
      * Will parse the receipt and save it to the database.
@@ -188,4 +183,5 @@ class ReceiptViewModel(application: Application): AndroidViewModel(application) 
     fun clearParsingState() {
         _parsingState.value = ParsingState.Idle
     }
+    //endregion
 }

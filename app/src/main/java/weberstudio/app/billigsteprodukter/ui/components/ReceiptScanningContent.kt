@@ -39,10 +39,9 @@ import weberstudio.app.billigsteprodukter.R
 /**
  * @param productName the name of the product (Title)
  * @param productPrice the price of the product
- * @param onThreeDotMenuClick what should happen when the three dots are pressed
  */
 @Composable
-fun ProductRow(productName: String, productPrice: String, onThreeDotMenuClick: () -> Unit, onClick: () -> Unit) {
+fun ProductRow(productName: String, productPrice: String, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxSize()

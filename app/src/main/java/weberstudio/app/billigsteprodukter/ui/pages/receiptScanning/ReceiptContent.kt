@@ -1,16 +1,27 @@
 package weberstudio.app.billigsteprodukter.ui.pages.receiptScanning
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -18,11 +29,32 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.semantics.disabled
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
+import kotlinx.coroutines.launch
+import weberstudio.app.billigsteprodukter.R
 import weberstudio.app.billigsteprodukter.data.Product
 import weberstudio.app.billigsteprodukter.logic.CameraCoordinator
 import weberstudio.app.billigsteprodukter.logic.Formatter.formatFloatToDanishCurrency
@@ -35,12 +67,15 @@ import weberstudio.app.billigsteprodukter.ui.components.ErrorMessageLarge
 import weberstudio.app.billigsteprodukter.ui.components.LogoBarHandler
 import weberstudio.app.billigsteprodukter.ui.components.LogoBarSkeleton
 import weberstudio.app.billigsteprodukter.ui.components.ModifyProductDialog
+import weberstudio.app.billigsteprodukter.ui.components.ProductCard
 import weberstudio.app.billigsteprodukter.ui.components.ProductRow
 import weberstudio.app.billigsteprodukter.ui.components.ProductRowSkeleton
 import weberstudio.app.billigsteprodukter.ui.components.TotalAndFilterRow
 import weberstudio.app.billigsteprodukter.ui.components.TotalAndFilterRowSkeleton
 import weberstudio.app.billigsteprodukter.ui.components.launchCamera
 import weberstudio.app.billigsteprodukter.ui.navigation.PageNavigation
+import kotlin.math.max
+import kotlin.math.roundToInt
 
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -116,7 +151,8 @@ fun ReceiptScanningContent(
                 onAddProductClick = { showAddProductDialog = true },
                 modifyProduct = { newProduct ->
                     viewModel.updateProduct(newProduct)
-                }
+                },
+                onDeleteProduct = { product2Delete -> viewModel.deleteProduct(product2Delete) }
             )
         }
         is ReceiptUIState.Empty -> {
@@ -183,10 +219,23 @@ private fun ReceiptContent(
     products: List<Product>,
     store: Store?,
     onAddProductClick: () -> Unit,
-    modifyProduct: (Product) -> Unit
+    modifyProduct: (Product) -> Unit,
+    onDeleteProduct: (Product) -> Unit
 ) {
-    var product2Modify by remember { mutableStateOf<Product?>(null) }
+    //Drag functionality
+    val density = LocalDensity.current
+    val haptic = LocalHapticFeedback.current
+    val coroutineScope = rememberCoroutineScope()
+    var isDragging by remember { mutableStateOf(false) }
+    var draggedProduct by remember { mutableStateOf<Product?>(null) }
+    var dragTopLeftPx by remember { mutableStateOf(Offset.Zero) }
+    var touchOffsetWithinCard by remember { mutableStateOf(Offset.Zero) }
+    var draggedCardSize by remember { mutableStateOf(IntSize(0,0)) }
+    var trashRectBoundsPx by remember { mutableStateOf<Rect?>(null) }
+    var hoverOverTrash by remember { mutableStateOf(false) }
+    var isPerformingDeleteAnimation by remember { mutableStateOf(false) }
 
+    var product2Modify by remember { mutableStateOf<Product?>(null) }
     LazyColumn(modifier = modifier) {
         stickyHeader {
             Column(
@@ -220,16 +269,137 @@ private fun ReceiptContent(
             AddProductToReceiptButton(addProductToReceipt = onAddProductClick)
         }
 
-        items(products) { product ->
-            ProductRow(
-                productName = product.name,
-                productPrice = formatFloatToDanishCurrency(product.price) + "kr",
-                onThreeDotMenuClick = { /* TODO: Implement menu */ },
-                onClick = { product2Modify = product }
-            )
+        items(
+            items = products,
+            key = { product -> product.databaseID }
+        ) { product ->
+            var cardTopLeftPx by remember { mutableStateOf(Offset.Zero) }
+            var cardSizePx by remember { mutableStateOf(IntSize(0, 0)) }
+
+            Box(
+                modifier = Modifier
+                    .clickable(onClick = { product2Modify = product })
+                    .onGloballyPositioned { coords ->
+                        cardTopLeftPx = coords.positionInRoot()
+                        cardSizePx = coords.size
+                    }
+                    .pointerInput(product.databaseID) {
+                        detectDragGesturesAfterLongPress(
+                            onDragStart = { startOffsetInCard ->
+                                isDragging = true
+                                draggedProduct = product
+                                dragTopLeftPx = cardTopLeftPx
+                                touchOffsetWithinCard = startOffsetInCard
+                                draggedCardSize = cardSizePx
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            },
+                            onDrag = { change, dragAmount ->
+                                change.consume()
+                                dragTopLeftPx += dragAmount
+                                val center = dragTopLeftPx + Offset(
+                                    draggedCardSize.width / 2f,
+                                    draggedCardSize.height / 2f
+                                )
+
+                                val expanded = trashRectBoundsPx?.let { it.inflate(24f) }
+                                val nowHover = expanded?.contains(center) == true
+                                if (nowHover && !hoverOverTrash) {
+                                    //Entering trash
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                }
+                                hoverOverTrash = nowHover
+                            },
+                            onDragEnd = {
+                                val overlayTopLeft = dragTopLeftPx - touchOffsetWithinCard
+                                val center = overlayTopLeft + Offset(
+                                    draggedCardSize.width / 2f,
+                                    draggedCardSize.height / 2f
+                                )
+                                val expanded = trashRectBoundsPx?.let { it.inflate(24f) }
+                                var droppedInTrash = expanded?.contains(center) == true
+
+                                if (!droppedInTrash && trashRectBoundsPx != null) {
+                                    val trashCenter = Offset(
+                                        (trashRectBoundsPx!!.left + trashRectBoundsPx!!.right) / 2f,
+                                        (trashRectBoundsPx!!.top + trashRectBoundsPx!!.bottom) / 2f
+                                    )
+
+
+                                    val trashRadius = max(
+                                        trashRectBoundsPx!!.width,
+                                        trashRectBoundsPx!!.height
+                                    ) / 2f
+                                    val cardRadius = kotlin.math.hypot(
+                                        draggedCardSize.width.toFloat(),
+                                        draggedCardSize.height.toFloat()
+                                    ) / 2f
+                                    val gracePx = with(density) { 20.dp.toPx() }
+                                    val distance = (center - trashCenter).getDistance()
+                                    droppedInTrash =
+                                        distance <= (trashRadius + cardRadius + gracePx)
+                                }
+
+                                if (droppedInTrash && draggedProduct != null) {
+                                    val product2Delete = draggedProduct!!
+                                    isPerformingDeleteAnimation = true
+
+                                    coroutineScope.launch {
+                                        val animation = Animatable(1f)
+                                        animation.animateTo(
+                                            targetValue = 0f,
+                                            animationSpec = tween(durationMillis = 250)
+                                        )
+                                        //After animation we delete product and reset state
+                                        onDeleteProduct(product2Delete)
+                                        isPerformingDeleteAnimation = false
+                                        isDragging = false
+                                        draggedProduct = null
+                                        dragTopLeftPx = Offset.Zero
+                                        touchOffsetWithinCard = Offset.Zero
+                                        draggedCardSize = IntSize(0, 0)
+                                        hoverOverTrash = false
+                                    }
+                                } else {
+                                    //Not over trash, reset state
+                                    isDragging = false
+                                    draggedProduct = null
+                                    dragTopLeftPx = Offset.Zero
+                                    touchOffsetWithinCard = Offset.Zero
+                                    draggedCardSize = IntSize(0, 0)
+                                    hoverOverTrash = false
+                                }
+                            },
+                            onDragCancel = {
+                                isDragging = false
+                                draggedProduct = null
+                                dragTopLeftPx = Offset.Zero
+                                touchOffsetWithinCard = Offset.Zero
+                                draggedCardSize = IntSize(0, 0)
+                                hoverOverTrash = false
+                            }
+                        )
+                    }
+                    .zIndex(if (isDragging && draggedProduct?.databaseID == product.databaseID) 0f else 0f) //Makes sure overlay doesnt get clicks when overlay active
+            ) {
+                if (isDragging && draggedProduct?.databaseID == product.databaseID) {
+                    //Placeholder spacer when dragging
+                    Spacer(
+                        modifier = Modifier
+                            .height(with(density) { cardSizePx.height.toDp() })
+                            .fillMaxWidth()
+                    )
+                } else {
+                    ProductRow(
+                        productName = product.name,
+                        productPrice = formatFloatToDanishCurrency(product.price) + "kr",
+                        onClick = { product2Modify = product }
+                    )
+                }
+            }
         }
     }
 
+    //region DIALOGS
     product2Modify?.let { product ->
         ModifyProductDialog(
             product = product,
@@ -240,4 +410,117 @@ private fun ReceiptContent(
             }
         )
     }
+    //endregion
+
+    //region TRASHCAN UI
+    if (isDragging) {
+        Box(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(bottom = 24.dp),
+            contentAlignment = Alignment.BottomCenter
+        ) {
+            Box(
+                modifier = Modifier
+                    .onGloballyPositioned { coords ->
+                        val topLeft = coords.positionInRoot()
+                        val size = coords.size
+                        trashRectBoundsPx =
+                            Rect(topLeft, Size(size.width.toFloat(), size.height.toFloat()))
+                    }
+                    .size(96.dp)
+                    .zIndex(0.9f)
+            ) {
+                val targetScale = if (hoverOverTrash) 1.12f else 1f
+                val scaleAnimation by animateFloatAsState(targetScale)
+                Icon(
+                    imageVector = ImageVector.vectorResource(R.drawable.trashcan_icon),
+                    contentDescription = "Slet produkt",
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .fillMaxSize()
+                        .graphicsLayer {
+                            scaleX = scaleAnimation
+                            scaleY = scaleAnimation
+                        }
+                )
+            }
+        }
+    }
+    //endregion
+
+    //region FLOATING PRODUCTROW OVERLAY
+    if (isDragging && draggedProduct != null) {
+        val overlayTopLeft = dragTopLeftPx - touchOffsetWithinCard
+        val overlayIntOffset = with(density) {
+            IntOffset(overlayTopLeft.x.roundToInt(), overlayTopLeft.y.roundToInt())
+        }
+
+        //Blocks interaction beneath while dragging
+        Box(
+            modifier = modifier
+                .fillMaxSize(0.5f)
+                .semantics { disabled() }
+                .pointerInput(Unit) { /* Intercepts pointers when draggin */ }
+                .zIndex(1f)
+        ) {
+            val overlayScale = remember { mutableStateOf(1f) }
+            if (!isPerformingDeleteAnimation) {
+                Box(
+                    modifier = Modifier
+                        .offset { overlayIntOffset}
+                        .size(
+                            with(density) {
+                                val w = if (draggedCardSize.width > 0) draggedCardSize.width.toDp() else 160.dp
+                                val h = if (draggedCardSize.height > 0) draggedCardSize.height.toDp() else 120.dp
+                                androidx.compose.ui.unit.DpSize(w, h)
+                            }
+                        )
+                        .graphicsLayer {
+                            scaleX = overlayScale.value
+                            scaleY = overlayScale.value
+                        }
+                ) {
+                    ProductRow(
+                        productName = draggedProduct!!.name,
+                        productPrice = formatFloatToDanishCurrency(draggedProduct!!.price),
+                        onClick = { /* NO-OP When dragging */ }
+                    )
+                }
+            } else {
+                //Deletion animation
+                val scaleAnim = remember { Animatable(1f) }
+                val alphaAnim = remember { Animatable(1f) }
+                LaunchedEffect(draggedProduct?.databaseID) {
+                    scaleAnim.animateTo(0f, animationSpec = tween(250))
+                    alphaAnim.animateTo(0f, animationSpec = tween(250))
+                }
+                Box(
+                    modifier = Modifier
+                        .offset { overlayIntOffset }
+                        .size(
+                            with(density) {
+                                val w = if (draggedCardSize.width > 0) draggedCardSize.width.toDp() else 160.dp
+                                val h = if (draggedCardSize.height > 0) draggedCardSize.height.toDp() else 120.dp
+                                androidx.compose.ui.unit.DpSize(w, h)
+                            }
+                        )
+                        .graphicsLayer {
+                            scaleX = scaleAnim.value
+                            scaleY = scaleAnim.value
+                            alpha = alphaAnim.value
+                            shadowElevation = 8.dp.toPx()
+                        }
+                ) {
+                    ProductCard(
+                        name = draggedProduct!!.name,
+                        price = draggedProduct!!.price,
+                        isFavorite = draggedProduct!!.isFavorite,
+                        onFavoriteClick = { }
+                    )
+                }
+            }
+        }
+    }
+    //endregion
 }

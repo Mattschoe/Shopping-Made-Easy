@@ -21,21 +21,19 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import androidx.navigation.navigation
-import weberstudio.app.billigsteprodukter.logic.ActivityLogger
 import weberstudio.app.billigsteprodukter.logic.ActivityViewModel
-import weberstudio.app.billigsteprodukter.logic.CameraViewModel
+import weberstudio.app.billigsteprodukter.logic.CameraCoordinator
 import weberstudio.app.billigsteprodukter.ui.components.AddFAB
 import weberstudio.app.billigsteprodukter.ui.components.AddProductToListDialog
 import weberstudio.app.billigsteprodukter.ui.components.AddShoppingListDialog
 import weberstudio.app.billigsteprodukter.ui.components.PageShell
+import weberstudio.app.billigsteprodukter.ui.pages.budget.BudgetPage
+import weberstudio.app.billigsteprodukter.ui.pages.budget.BudgetViewModel
 import weberstudio.app.billigsteprodukter.ui.pages.database.DataBaseViewModel
 import weberstudio.app.billigsteprodukter.ui.pages.database.DatabaseContent
 import weberstudio.app.billigsteprodukter.ui.pages.home.MainPageContent
-import weberstudio.app.billigsteprodukter.ui.pages.budget.BudgetPage
-import weberstudio.app.billigsteprodukter.ui.pages.budget.BudgetViewModel
 import weberstudio.app.billigsteprodukter.ui.pages.receiptScanning.ReceiptScanningContent
-import weberstudio.app.billigsteprodukter.ui.pages.receiptScanning.ReceiptScanningViewModel
+import weberstudio.app.billigsteprodukter.ui.pages.receiptScanning.ReceiptViewModel
 import weberstudio.app.billigsteprodukter.ui.pages.settings.SettingsPageContent
 import weberstudio.app.billigsteprodukter.ui.pages.shoppingList.ShoppingListUndermenuContent
 import weberstudio.app.billigsteprodukter.ui.pages.shoppingList.ShoppingListUndermenuViewModel
@@ -53,18 +51,12 @@ fun ApplicationNavigationHost(
     navController: NavHostController = rememberNavController(),
     startPage: String = PageNavigation.Home.route
 ) {
-    val context = LocalContext.current
-    val cameraViewModel: CameraViewModel = viewModel(
-        viewModelStoreOwner = context as ComponentActivity
-    )
-
     NavHost(
         navController = navController,
         startDestination = startPage,
-        modifier = Modifier
-            .fillMaxSize()
+        modifier = Modifier.fillMaxSize()
     ) {
-        //Main Screen
+        // Main Screen
         composable(PageNavigation.Home.route) { backStackEntry ->
             val context = LocalContext.current
             val budgetViewModel: BudgetViewModel = viewModel(backStackEntry) {
@@ -76,22 +68,28 @@ fun ApplicationNavigationHost(
             PageShell(
                 navController,
                 title = "Forside",
-                cameraViewModel = cameraViewModel,
-                pageContent =  { padding -> MainPageContent(Modifier.padding(padding), navController, cameraViewModel, budgetViewModel, activityViewModel) }
+                pageContent = { padding ->
+                    MainPageContent(
+                        modifier = Modifier.padding(padding),
+                        navController = navController,
+                        budgetViewModel = budgetViewModel,
+                        activityViewModel = activityViewModel
+                    )
+                }
             )
         }
 
-        //Shopping List Main menu
+        // Shopping List Main menu
         composable(PageNavigation.ShoppingList.route) { backStackEntry ->
             val context = LocalContext.current
             val viewModel: ShoppingListsViewModel = viewModel(backStackEntry) {
                 ShoppingListsViewModel(context.applicationContext as Application)
             }
             var showAddShoppingList by remember { mutableStateOf(false) }
+
             PageShell(
                 navController,
                 title = "Indkøbslister",
-                cameraViewModel = cameraViewModel,
                 pageContent = { padding ->
                     ShoppingListsPage(
                         modifier = Modifier.padding(padding),
@@ -104,46 +102,44 @@ fun ApplicationNavigationHost(
 
             AddShoppingListDialog(
                 showDialog = showAddShoppingList,
-                onDismiss =  { showAddShoppingList = false },
-                onConfirm =  { name ->
+                onDismiss = { showAddShoppingList = false },
+                onConfirm = { name ->
                     viewModel.addShoppingList(name)
                     showAddShoppingList = false
                 }
             )
         }
 
-        //Shopping List Under menu
+        // Shopping List Under menu
         composable(
             PageNavigation.ShoppingListUndermenu.route,
-            arguments = listOf(navArgument("listID") { type = NavType.StringType})
+            arguments = listOf(navArgument("listID") { type = NavType.StringType })
         ) { backStackEntry ->
             val context = LocalContext.current
             val viewModel: ShoppingListUndermenuViewModel = viewModel(backStackEntry) {
                 ShoppingListUndermenuViewModel(context.applicationContext as Application)
             }
             val listID = backStackEntry.arguments?.getString("listID")
-            viewModel.selectShoppingList(listID!!) //If no listID found we want it to break here TODO(Add error handling here)
+            viewModel.selectShoppingList(listID!!)
             var showAddDialog by rememberSaveable { mutableStateOf(false) }
-
 
             PageShell(
                 navController,
                 title = "Indkøbsliste",
-                cameraViewModel = cameraViewModel,
                 pageContent = { padding ->
                     ShoppingListUndermenuContent(
                         modifier = Modifier.padding(padding),
                         viewModel = viewModel
                     )
                 },
-                floatingActionButton = { AddFAB(onClick = { showAddDialog = true}) }
+                floatingActionButton = { AddFAB(onClick = { showAddDialog = true }) }
             )
 
             val searchResults by viewModel.searchResults.collectAsState()
             AddProductToListDialog(
                 showDialog = showAddDialog,
-                onDismiss =  { showAddDialog = false },
-                onConfirm =  { name, store ->
+                onDismiss = { showAddDialog = false },
+                onConfirm = { name, store ->
                     viewModel.addCustomProductToList(name, store)
                     showAddDialog = false
                 },
@@ -156,18 +152,19 @@ fun ApplicationNavigationHost(
             )
         }
 
-        //Database
+        // Database
         composable(PageNavigation.Database.route) { backStackEntry ->
             val databaseViewModel: DataBaseViewModel = viewModel(backStackEntry)
             PageShell(
                 navController,
                 title = "Oversigt",
-                cameraViewModel = cameraViewModel,
-                pageContent =  { padding -> DatabaseContent(Modifier.padding(padding), databaseViewModel) }
+                pageContent = { padding ->
+                    DatabaseContent(Modifier.padding(padding), databaseViewModel)
+                }
             )
         }
 
-        //Budget
+        // Budget
         composable(
             PageNavigation.Budget.route,
             arguments = listOf(
@@ -194,45 +191,52 @@ fun ApplicationNavigationHost(
             PageShell(
                 navController,
                 title = "Budget",
-                cameraViewModel = cameraViewModel,
-                pageContent = { padding -> BudgetPage(Modifier.padding(padding), budgetViewModel, month, year) }
+                pageContent = { padding ->
+                    BudgetPage(Modifier.padding(padding), budgetViewModel, month, year)
+                }
             )
         }
 
-        //Settings
+        // Settings
         composable(PageNavigation.Settings.route) {
             PageShell(
                 navController,
                 title = "Indstillinger",
-                cameraViewModel = cameraViewModel,
-                pageContent = { padding -> SettingsPageContent(Modifier.padding(padding)) }
+                pageContent = { padding ->
+                    SettingsPageContent(Modifier.padding(padding))
+                }
             )
         }
 
-        //ReceiptScanning
+        // Receipt Scanning
         composable(
             PageNavigation.ReceiptScanning.route,
-            arguments = listOf(
-                navArgument("ID") { type = NavType.LongType }
-            )
+            arguments = listOf(navArgument("ID") { type = NavType.LongType })
         ) { backStackEntry ->
+            val context = LocalContext.current
             val receiptID = backStackEntry.arguments?.getLong("ID") ?: 0
+            val receiptViewModel: ReceiptViewModel = viewModel(backStackEntry)
+            val cameraCoordinator: CameraCoordinator = viewModel(
+                viewModelStoreOwner = context as ComponentActivity
+            )
+
+            LaunchedEffect(receiptID) {
+                if (receiptID > 0) {
+                    receiptViewModel.loadReceipt(receiptID)
+                } else {
+                    receiptViewModel.showLoadingState()
+                }
+            }
+
             PageShell(
                 navController,
                 title = "Oversigt",
-                cameraViewModel = cameraViewModel,
                 pageContent = { padding ->
-                    val receiptViewModel: ReceiptScanningViewModel = viewModel(backStackEntry)
-                    LaunchedEffect(receiptID) {
-                        receiptViewModel.clearReceipt() //Make sure we dont show last scan before loadingState
-                        if (receiptID == 0L) receiptViewModel.showLoadingState()
-                        else receiptViewModel.loadReceipt(receiptID)
-                    }
-
                     ReceiptScanningContent(
-                        Modifier.padding(padding),
-                        navController, cameraViewModel,
-                        receiptViewModel
+                        modifier = Modifier.padding(padding),
+                        navController = navController,
+                        viewModel = receiptViewModel,
+                        cameraCoordinator = cameraCoordinator
                     )
                 }
             )

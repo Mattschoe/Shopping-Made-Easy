@@ -1,8 +1,7 @@
 package weberstudio.app.billigsteprodukter.ui.components
 
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
@@ -17,11 +16,10 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -29,9 +27,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
-import kotlinx.coroutines.launch
 import weberstudio.app.billigsteprodukter.R
-import weberstudio.app.billigsteprodukter.logic.CameraViewModel
+import weberstudio.app.billigsteprodukter.logic.CameraCoordinator
 import weberstudio.app.billigsteprodukter.ui.navigation.PageNavigation
 import weberstudio.app.billigsteprodukter.ui.pages.home.MainPageContent
 
@@ -45,12 +42,12 @@ import weberstudio.app.billigsteprodukter.ui.pages.home.MainPageContent
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PageShell(navController: NavHostController,
-              title: String,
-              modifier: Modifier = Modifier,
-              cameraViewModel: CameraViewModel,
-              pageContent: @Composable (PaddingValues) -> Unit,
-              floatingActionButton: (@Composable () -> Unit)? = null,
+fun PageShell(
+    navController: NavHostController,
+    title: String,
+    modifier: Modifier = Modifier,
+    pageContent: @Composable (PaddingValues) -> Unit,
+    floatingActionButton: (@Composable () -> Unit)? = null,
 ) {
     Scaffold(
         modifier = modifier,
@@ -90,7 +87,7 @@ fun PageShell(navController: NavHostController,
                 )
             }
         },
-        bottomBar = { NavigationBar(navController, cameraViewModel) },
+        bottomBar = { NavigationBar(navController) },
         floatingActionButton = {
             if (floatingActionButton != null) floatingActionButton()
         },
@@ -100,7 +97,12 @@ fun PageShell(navController: NavHostController,
 }
 
 @Composable
-fun NavigationBar(navController: NavController, cameraViewModel: CameraViewModel) {
+fun NavigationBar(navController: NavController) {
+    val context = LocalContext.current
+    val cameraCoordinator: CameraCoordinator = viewModel(
+        viewModelStoreOwner = context as ComponentActivity
+    )
+
     NavigationBar(
         windowInsets = NavigationBarDefaults.windowInsets,
         containerColor = MaterialTheme.colorScheme.surface,
@@ -108,9 +110,12 @@ fun NavigationBar(navController: NavController, cameraViewModel: CameraViewModel
     ) {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route
+
         val launchCamera = launchCamera(
-            onImageCaptured = { uri, context ->
-                cameraViewModel.processImage(uri, context)
+            onImageCaptured = { uri, ctx ->
+                // Store the captured image in the coordinator
+                cameraCoordinator.onImageCaptured(uri, ctx)
+                // Navigate to receipt screen - it will pick up the image
                 navController.navigate(PageNavigation.createReceiptRoute(0))
             }
         )

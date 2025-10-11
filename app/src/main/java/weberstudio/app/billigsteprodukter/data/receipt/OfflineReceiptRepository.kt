@@ -1,8 +1,6 @@
 package weberstudio.app.billigsteprodukter.data.receipt
 
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import weberstudio.app.billigsteprodukter.data.Product
 import weberstudio.app.billigsteprodukter.data.Receipt
 import weberstudio.app.billigsteprodukter.data.ReceiptWithProducts
@@ -12,15 +10,10 @@ import java.time.Year
 import java.time.YearMonth
 
 class OfflineReceiptRepository(private val dao: ReceiptDao) : ReceiptRepository {
-    private val _lastReceipt = MutableStateFlow<List<Product>>(emptyList())
-     override val lastReceipt: StateFlow<List<Product>> = _lastReceipt
 
     override suspend fun addReceiptProducts(receipt: Receipt, products: Set<Product>): Long {
         val productsList = products.toList()
-
-        val receiptID = dao.insertReceiptWithProducts(receipt, productsList)
-        updateStreams(productsList)
-        return receiptID
+        return dao.insertReceiptWithProducts(receipt, productsList)
     }
 
     override suspend fun deleteReceipt(receipt: Receipt) {
@@ -31,23 +24,27 @@ class OfflineReceiptRepository(private val dao: ReceiptDao) : ReceiptRepository 
         return dao.getReceiptWithProducts(receiptID)
     }
 
-    override suspend fun updateProduct(product: Product) {
-        dao.updateProduct(product)
+    override suspend fun getReceiptsForMonth(month: Month, year: Year): Flow<List<ReceiptWithProducts>> {
+        val startDate = YearMonth.of(year.value, month).atDay(1).toEpochDay()
+        val endDate = YearMonth.of(year.value, month).atEndOfMonth().toEpochDay()
+        return dao.getReceiptsBetweenDates(startDate, endDate)
     }
 
-    override suspend fun addProductToCurrentReceipt(product: Product): Boolean {
-        val currentLastReceipt = _lastReceipt.value
+    override suspend fun recomputeTotalForReceiptsInStore(store: Store) {
+        return dao.recomputeTotalForReceiptsInStore(store)
+    }
 
-        if (currentLastReceipt.isEmpty()) return false
-        if (product.store != currentLastReceipt.first().store) return false
-
-        //Adds to current receipt
-        val lastReceiptID = currentLastReceipt.first().receiptID
-        val productWithReceiptID = product.copy(receiptID = lastReceiptID) //Makes sure the product added has the reference to the receipt it's being added to
-
+    /**
+     * Adds a product to a specific receipt.
+     * The UI will automatically update via Room's Flow observation.
+     */
+    override suspend fun addProductToReceipt(receiptID: Long, product: Product) {
+        val productWithReceiptID = product.copy(receiptID = receiptID)
         dao.insertProducts(listOf(productWithReceiptID))
-        updateStreams(currentLastReceipt + productWithReceiptID)
-        return true
+    }
+
+    override suspend fun updateProduct(product: Product) {
+        dao.updateProduct(product)
     }
 
     override suspend fun addProduct(product: Product): Long {
@@ -56,20 +53,27 @@ class OfflineReceiptRepository(private val dao: ReceiptDao) : ReceiptRepository 
 
     override suspend fun removeProduct(product: Product) {
         dao.deleteProduct(product)
-
-        //If the removed product is part of the receipt we remove it from the lastReceipt
-        val updatedLastReceipt = _lastReceipt.value.filter {
-            it.businessID != product.businessID
-        }
-        updateStreams(updatedLastReceipt)
     }
 
-    override fun getProductsByStore(store: Store): Flow<List<Product>> {
-        return dao.getProductsByStore(store)
+    override suspend fun deleteProduct(product: Product) {
+        dao.deleteProduct(product)
     }
 
     override suspend fun setProductFavorite(store: Store, name: String, isFavorite: Boolean) {
         return dao.setProductFavorite(store, name, isFavorite)
+    }
+
+    /**
+     * Observes all products for a specific receipt.
+     * Automatically emits new values when products are added/modified/removed.
+     * This is the key method that makes the UI auto-update!
+     */
+    override fun getProductsForReceipt(receiptID: Long): Flow<List<Product>> {
+        return dao.getProductsForReceipt(receiptID)
+    }
+
+    override fun getProductsByStore(store: Store): Flow<List<Product>> {
+        return dao.getProductsByStore(store)
     }
 
     override fun getFavoriteProducts(): Flow<List<Product>> {
@@ -82,26 +86,5 @@ class OfflineReceiptRepository(private val dao: ReceiptDao) : ReceiptRepository 
 
     override fun searchProductsByStoreContaining(store: Store, query: String): Flow<List<Product>> {
         return dao.searchProductsByStoreContaining(store, query)
-    }
-
-    override suspend fun getReceiptsForMonth(month: Month, year: Year): Flow<List<ReceiptWithProducts>> {
-        val startDate = YearMonth.of(year.value, month).atDay(1).toEpochDay()
-        val endDate = YearMonth.of(year.value, month).atEndOfMonth().toEpochDay()
-        return dao.getReceiptsBetweenDates(startDate, endDate)
-    }
-
-    override suspend fun deleteProduct(product: Product) {
-        dao.deleteProduct(product)
-    }
-
-    override suspend fun recomputeTotalForReceiptsInStore(store: Store) {
-        return dao.recomputeTotalForReceiptsInStore(store)
-    }
-
-    /**
-     * Updates and refreshes the streams so the UI is informed of changes. Method should be called on any Insertion/Update/Deletion of [_lastReceipt]
-     */
-    private suspend fun updateStreams(productsList: List<Product>) {
-        _lastReceipt.emit(productsList)
     }
 }

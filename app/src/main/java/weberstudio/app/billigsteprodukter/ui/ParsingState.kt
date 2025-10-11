@@ -7,10 +7,10 @@ import weberstudio.app.billigsteprodukter.logic.Store
  * Displays the state of the image parsing
  */
 sealed class ParsingState {
-    object NotActivated : ParsingState()
-    object Idle : ParsingState()
-    object InProgress : ParsingState()
-    data class Success(val parsedStore: Store) : ParsingState()
+    data object NotActivated : ParsingState()
+    data object Idle : ParsingState()
+    data object InProgress : ParsingState()
+    data class Success(val store: Store, val receiptID: Long) : ParsingState()
     data class Error(val message: String) : ParsingState()
 }
 

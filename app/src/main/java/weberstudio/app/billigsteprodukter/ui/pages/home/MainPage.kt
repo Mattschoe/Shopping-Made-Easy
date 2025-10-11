@@ -40,7 +40,6 @@ import weberstudio.app.billigsteprodukter.data.ExtraExpense
 import weberstudio.app.billigsteprodukter.data.ReceiptWithProducts
 import weberstudio.app.billigsteprodukter.data.RecentActivity
 import weberstudio.app.billigsteprodukter.data.getIcon
-import weberstudio.app.billigsteprodukter.logic.CameraViewModel
 import weberstudio.app.billigsteprodukter.logic.ActivityViewModel
 import weberstudio.app.billigsteprodukter.logic.Formatter.toDanishString
 import weberstudio.app.billigsteprodukter.ui.navigation.PageNavigation
@@ -54,7 +53,7 @@ import java.time.Month
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun MainPageContent(modifier: Modifier = Modifier, navController: NavController, cameraViewModel: CameraViewModel, budgetViewModel: BudgetViewModel, activityViewModel: ActivityViewModel) {
+fun MainPageContent(modifier: Modifier = Modifier, navController: NavController, budgetViewModel: BudgetViewModel, activityViewModel: ActivityViewModel) {
     val currentBudget by budgetViewModel.currentBudget.collectAsState()
     val currentReceipts by budgetViewModel.currentReceipts.collectAsState()
     val currentExpenses by budgetViewModel.currentExtraExpenses.collectAsState()

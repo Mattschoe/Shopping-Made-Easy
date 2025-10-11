@@ -9,81 +9,93 @@ import java.time.Month
 import java.time.Year
 
 interface ReceiptRepository {
-    //region STREAMS
     /**
-     * Stream of the last receipt received.
-     */
-    val lastReceipt: Flow<List<Product>>
-    //endregion
-
-    //region RECEIPT OPERATIONS
-    /**
-     * Adds the products from a parsed receipt into the database. Creates a new receipt and associates all products with it.
-     * @param receiptTotal the total price read from the receipt
+     * Adds a receipt with its products to the database.
+     * @return The ID of the newly created receipt
      */
     suspend fun addReceiptProducts(receipt: Receipt, products: Set<Product>): Long
 
+    /**
+     * Deletes a receipt and all its associated products.
+     */
     suspend fun deleteReceipt(receipt: Receipt)
 
     /**
-     * Get receipts within a date range for budget tracking.
+     * Gets a receipt with all its products (one-time read).
+     * For observing changes, use getProductsForReceipt() instead.
+     */
+    suspend fun getReceiptWithProducts(receiptID: Long): ReceiptWithProducts?
+
+    /**
+     * Gets all receipts for a specific month.
+     * @return Flow that emits whenever receipts change
      */
     suspend fun getReceiptsForMonth(month: Month, year: Year): Flow<List<ReceiptWithProducts>>
 
     /**
-     * Get a specific receipt with all its products.
+     * Recomputes the total for all receipts in a store.
+     * Useful after bulk price updates.
      */
-    suspend fun getReceiptWithProducts(receiptID: Long): ReceiptWithProducts?
-    //endregion
-
-    //region PRODUCT OPERATION
-    /**
-     * Updates one product, useful if user has corrected a product's price or name.
-     */
-    suspend fun updateProduct(product: Product)
-
-    suspend fun deleteProduct(product: Product)
-    /**
-     * Adds an extra product to the repo and to the current receipt if it's part of the same store as the lastReceipt.
-     * @return false if stores don't match
-     */
-    suspend fun addProductToCurrentReceipt(product: Product): Boolean
+    suspend fun recomputeTotalForReceiptsInStore(store: Store)
 
     /**
-     * Adds a product to the database
+     * Adds a product to a specific receipt.
+     * UI will automatically update via Flow observation.
+     */
+    suspend fun addProductToReceipt(receiptID: Long, product: Product)
+
+    /**
+     * Adds a standalone product (not tied to a receipt).
+     * @return The ID of the newly created product
      */
     suspend fun addProduct(product: Product): Long
 
     /**
-     * Remove one product from the database.
+     * Updates an existing product.
+     * UI will automatically update via Flow observation.
+     */
+    suspend fun updateProduct(product: Product)
+
+    /**
+     * Removes a product from the database.
      */
     suspend fun removeProduct(product: Product)
 
     /**
-     * Returns all products from the specified store.
+     * Deletes a product from the database.
+     * (Alias for removeProduct - consider removing one)
      */
-    fun getProductsByStore(store: Store): Flow<List<Product>>
+    suspend fun deleteProduct(product: Product)
 
     /**
-     * Set a product's favorite status using its business ID.
+     * Marks a product as favorite/unfavorite by store and name.
      */
     suspend fun setProductFavorite(store: Store, name: String, isFavorite: Boolean)
 
     /**
-     * Get all favorite products.
+     * Observes all products for a specific receipt.
+     * Automatically emits when products are added/modified/removed.
+     * This is the key method for auto-updating UI!
+     */
+    fun getProductsForReceipt(receiptID: Long): Flow<List<Product>>
+
+    /**
+     * Observes all products from a specific store.
+     */
+    fun getProductsByStore(store: Store): Flow<List<Product>>
+
+    /**
+     * Observes all favorite products.
      */
     fun getFavoriteProducts(): Flow<List<Product>>
 
     /**
-     * Searches for products in the whole database, based on the query given as argument
+     * Searches for products containing the query string.
      */
     fun searchProductsContaining(query: String): Flow<List<Product>>
 
-    suspend fun recomputeTotalForReceiptsInStore(store: Store)
-
     /**
-     * Searches for products with the query, in the store given as argument.
+     * Searches for products in a specific store containing the query string.
      */
     fun searchProductsByStoreContaining(store: Store, query: String): Flow<List<Product>>
-    //endregion
 }

@@ -5,6 +5,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -70,6 +71,7 @@ import kotlinx.coroutines.launch
 import weberstudio.app.billigsteprodukter.R
 import weberstudio.app.billigsteprodukter.data.Product
 import weberstudio.app.billigsteprodukter.logic.Store
+import weberstudio.app.billigsteprodukter.ui.components.ModifyProductDialog
 import weberstudio.app.billigsteprodukter.ui.components.ProductCard
 import weberstudio.app.billigsteprodukter.ui.components.ProductCardSkeleton
 import weberstudio.app.billigsteprodukter.ui.components.SearchBar
@@ -88,7 +90,6 @@ fun DatabaseContent(
     val filteredAndRankedProducts by viewModel.filteredProductsFlow.collectAsState()
     val currentStore by viewModel.currentStore.collectAsState()
     val allStoresEnabled by viewModel.allStoresSearchEnabled.collectAsState()
-    val isLoading by viewModel.isCurrentStoreLoading.collectAsState()
 
     //Drag functionality
     val density = LocalDensity.current
@@ -177,6 +178,7 @@ fun DatabaseContent(
         //endregion
 
         //region PRODUCT GRID
+        var product2Modify by remember { mutableStateOf<Product?>(null) }
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
             contentPadding = PaddingValues(16.dp),
@@ -196,6 +198,7 @@ fun DatabaseContent(
 
                 Box(
                     modifier = Modifier
+                        .clickable(onClick = { product2Modify = product })
                         .onGloballyPositioned { coords ->
                             cardTopLeftPx = coords.positionInRoot()
                             cardSizePx = coords.size
@@ -313,6 +316,20 @@ fun DatabaseContent(
             }
         }
         //endregion
+
+        //region DIALOGS
+        product2Modify?.let { product ->
+            ModifyProductDialog(
+                product = product,
+                onDismiss = { product2Modify = null },
+                onConfirm = { newProduct ->
+                    viewModel.updateProduct(newProduct)
+                    product2Modify = null
+                }
+            )
+        }
+        //endregion
+
     }
 
     //region TRASHCAN UI

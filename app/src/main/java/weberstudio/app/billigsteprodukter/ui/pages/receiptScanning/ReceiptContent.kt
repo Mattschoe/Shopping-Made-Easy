@@ -5,6 +5,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Arrangement
@@ -37,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -70,7 +72,7 @@ import weberstudio.app.billigsteprodukter.ui.components.ModifyProductDialog
 import weberstudio.app.billigsteprodukter.ui.components.ProductCard
 import weberstudio.app.billigsteprodukter.ui.components.ProductRow
 import weberstudio.app.billigsteprodukter.ui.components.ProductRowSkeleton
-import weberstudio.app.billigsteprodukter.ui.components.TotalAndFilterRow
+import weberstudio.app.billigsteprodukter.ui.components.ReceiptTotalCard
 import weberstudio.app.billigsteprodukter.ui.components.TotalAndFilterRowSkeleton
 import weberstudio.app.billigsteprodukter.ui.components.launchCamera
 import weberstudio.app.billigsteprodukter.ui.navigation.PageNavigation
@@ -252,21 +254,27 @@ private fun ReceiptContent(
                         LogoBarHandler(modifier = Modifier.fillMaxSize(), storeName = store.name)
                     }
                 }
-
-                TotalAndFilterRow(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 56.dp),
-                    totalPrice = formatFloatToDanishCurrency(
-                        products.sumOf { it.price.toDouble() }.toFloat()
-                    ),
-                    filterMenuOnClick = { /* TODO: Implement filter */ }
-                )
+                Spacer(Modifier.height(4.dp))
+                AddProductToReceiptButton(addProductToReceipt = onAddProductClick)
             }
         }
 
+        //Total
         item {
-            AddProductToReceiptButton(addProductToReceipt = onAddProductClick)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp)
+            ) {
+                Row (
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    ReceiptTotalCard(
+                        totalPrice = formatFloatToDanishCurrency(products.sumOf { it.price.toDouble() }.toFloat())
+                    )
+                }
+            }
         }
 
         items(

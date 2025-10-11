@@ -87,7 +87,7 @@ fun ProductRow(productName: String, productPrice: String, onClick: () -> Unit) {
 fun ReceiptTotalCard(modifier: Modifier = Modifier, totalPrice: String) {
     Card(
         modifier = modifier,
-        shape = RoundedCornerShape(24.dp),
+        shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
@@ -125,7 +125,6 @@ fun AddProductToReceiptButton(modifier: Modifier = Modifier, addProductToReceipt
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 6.dp)
             .clickable(onClick = addProductToReceipt),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondary),

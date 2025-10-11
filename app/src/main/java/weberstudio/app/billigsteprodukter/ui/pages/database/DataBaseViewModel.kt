@@ -51,14 +51,6 @@ class DataBaseViewModel(application: Application): AndroidViewModel(application)
     val currentStore = _currentSelectedStore.asStateFlow()
     val allStoresSearchEnabled = _searchAllStores.asStateFlow()
 
-    val isCurrentStoreLoading: StateFlow<Boolean> = _loadingStores.map { loadingStores ->
-        _currentSelectedStore.value in loadingStores
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5_000),
-        initialValue = false
-    )
-
     //Preloads stores on init
     init {
         viewModelScope.launch {
@@ -221,6 +213,23 @@ class DataBaseViewModel(application: Application): AndroidViewModel(application)
 
             //Updates receipt total. A bit scuffed since we just update ever receipt from the store, but this is because a product can be linked to multiple receipts.
             receiptRepo.recomputeTotalForReceiptsInStore(product.store)
+        }
+    }
+
+    fun updateProduct(product: Product) {
+        viewModelScope.launch {
+            receiptRepo.updateProduct(product)
+
+            //Update cache with the modified product
+            _storeProductsCache.update { cache ->
+                cache[product.store]?.let { products ->
+                    val updatedProducts = products.map {
+                        if (it.databaseID == product.databaseID) product
+                        else it
+                    }
+                    cache + (product.store to updatedProducts)
+                } ?: cache
+            }
         }
     }
 

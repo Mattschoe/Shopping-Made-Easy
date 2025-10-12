@@ -58,7 +58,8 @@ class ReceiptViewModel(application: Application): AndroidViewModel(application) 
                 if (products.isNotEmpty()) {
                     ReceiptUIState.Success(
                         products = products,
-                        store = products.first().store
+                        store = products.first().store,
+                        receiptTotal = receiptRepo.getReceiptWithProducts(receiptID)?.receipt?.total ?: 0.0f
                     )
                 } else {
                     ReceiptUIState.Empty

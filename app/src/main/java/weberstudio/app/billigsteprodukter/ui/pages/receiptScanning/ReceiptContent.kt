@@ -150,6 +150,7 @@ fun ReceiptScanningContent(
                 modifier = modifier,
                 products = currentState.products,
                 store = currentState.store,
+                receiptTotal = currentState.receiptTotal,
                 onAddProductClick = { showAddProductDialog = true },
                 modifyProduct = { newProduct ->
                     viewModel.updateProduct(newProduct)
@@ -220,6 +221,7 @@ private fun ReceiptContent(
     modifier: Modifier = Modifier,
     products: List<Product>,
     store: Store?,
+    receiptTotal: Float,
     onAddProductClick: () -> Unit,
     modifyProduct: (Product) -> Unit,
     onDeleteProduct: (Product) -> Unit
@@ -271,7 +273,7 @@ private fun ReceiptContent(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     ReceiptTotalCard(
-                        totalPrice = formatFloatToDanishCurrency(products.sumOf { it.price.toDouble() }.toFloat())
+                        totalPrice = formatFloatToDanishCurrency(receiptTotal)
                     )
                 }
             }

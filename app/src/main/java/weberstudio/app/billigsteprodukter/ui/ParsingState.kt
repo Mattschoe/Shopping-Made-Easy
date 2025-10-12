@@ -18,7 +18,8 @@ sealed class ReceiptUIState {
     object Loading : ReceiptUIState()
     data class Success(
         val products: List<Product>,
-        val store: Store
+        val store: Store,
+        val receiptTotal: Float
     ) : ReceiptUIState()
     object Empty : ReceiptUIState()
 }

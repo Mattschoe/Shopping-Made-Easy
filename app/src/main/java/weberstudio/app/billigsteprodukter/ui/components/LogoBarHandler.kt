@@ -2,6 +2,8 @@ package weberstudio.app.billigsteprodukter.ui.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
@@ -22,9 +24,10 @@ fun LogoBarHandler(modifier: Modifier = Modifier, storeName: String) {
         is StoreLookupResult.Success -> {
             //If store was found
             Image(
-                painter = painterResource(result.storeImage.logoRes),
-                contentDescription = "logoet for $storeName",
                 modifier = modifier
+                    .heightIn(0.dp, 150.dp),
+                painter = painterResource(result.storeImage.logoRes),
+                contentDescription = "logoet for $storeName"
             )
         }
         is StoreLookupResult.Error -> {

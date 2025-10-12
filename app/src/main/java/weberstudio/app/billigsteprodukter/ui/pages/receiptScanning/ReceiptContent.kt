@@ -251,7 +251,7 @@ private fun ReceiptContent(
                     horizontalArrangement = Arrangement.Center
                 ) {
                     if (store != null) {
-                        LogoBarHandler(modifier = Modifier.fillMaxSize(), storeName = store.name)
+                        LogoBarHandler(modifier = Modifier.fillMaxWidth(), storeName = store.name)
                     }
                 }
                 Spacer(Modifier.height(4.dp))

@@ -64,7 +64,7 @@ interface ReceiptDao {
 
     @Query("""
         UPDATE receipts
-        SET total = COALESCE((SELECT SUM(price) FROM products WHERE store = :store), 0)
+        SET total = COALESCE((SELECT SUM(price) FROM products WHERE products.receiptID = receipts.receiptID), 0)
         WHERE store = :store""")
     suspend fun recomputeTotalForReceiptsInStore(store: Store)
 

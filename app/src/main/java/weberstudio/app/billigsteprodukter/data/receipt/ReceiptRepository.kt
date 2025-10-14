@@ -57,11 +57,6 @@ interface ReceiptRepository {
     suspend fun updateProduct(product: Product)
 
     /**
-     * Removes a product from the database.
-     */
-    suspend fun removeProduct(product: Product)
-
-    /**
      * Deletes a product from the database.
      * (Alias for removeProduct - consider removing one)
      */

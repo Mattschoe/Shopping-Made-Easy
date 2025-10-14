@@ -41,22 +41,21 @@ class OfflineReceiptRepository(private val dao: ReceiptDao) : ReceiptRepository 
     override suspend fun addProductToReceipt(receiptID: Long, product: Product) {
         val productWithReceiptID = product.copy(receiptID = receiptID)
         dao.insertProducts(listOf(productWithReceiptID))
+        recomputeTotalForReceiptsInStore(product.store)
     }
 
     override suspend fun updateProduct(product: Product) {
         dao.updateProduct(product)
+        recomputeTotalForReceiptsInStore(product.store)
     }
 
     override suspend fun addProduct(product: Product): Long {
         return dao.insertProduct(product)
     }
 
-    override suspend fun removeProduct(product: Product) {
-        dao.deleteProduct(product)
-    }
-
     override suspend fun deleteProduct(product: Product) {
         dao.deleteProduct(product)
+        recomputeTotalForReceiptsInStore(product.store)
     }
 
     override suspend fun setProductFavorite(store: Store, name: String, isFavorite: Boolean) {

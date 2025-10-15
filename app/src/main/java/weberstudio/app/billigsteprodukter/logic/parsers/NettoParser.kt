@@ -179,7 +179,7 @@ object NettoParser : StoreParser {
         val productsTotal = filteredSet.sumOf { product -> product.price.toDouble() }
         if (!productsTotal.isIshEqualTo(total.toDouble())) scanValidation = scanValidation.withTotalError(true)
 
-        return Triple(filteredSet, scanValidation, productsTotal.toFloat())
+        return Triple(filteredSet, scanValidation, total)
     }
 
     /**

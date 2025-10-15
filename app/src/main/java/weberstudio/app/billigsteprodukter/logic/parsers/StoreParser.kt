@@ -152,13 +152,9 @@ interface StoreParser {
 
     //region SUPPORT DATA CLASS/FUNCTIONS
     fun normalizeText(text: String): String {
-        //TODO: Det her skal standardiseres igennem hele codebasen og ændres til Compose best practice
         return text
-            .replace(Regex("[^A-Za-z0-9 ,.]"), "") //Limits to a-z, digits and whitespaces
+            .replace(Regex("[^A-Za-zÆØÅæøå0-9 ,.]"), "") //Limits to a-z, digits and whitespaces
             .uppercase()
-            .replace("Æ", "AE")
-            .replace("Ø", "OE")
-            .replace("Å", "AA")
             .replace(",", ".") //Ændrer "12,50" til "12.50" så vi kan parse korrekt senere
             .trim()
     }

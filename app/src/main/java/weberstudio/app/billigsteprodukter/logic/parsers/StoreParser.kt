@@ -28,7 +28,8 @@ interface StoreParser {
 
     /**
      * Given a list of lines, it finds the one line above the *quantityLine* who is just “above” it.
-     * @param referenceLine the line that controls which way is up and down on the Y-axis. Often provided from the storebrand)
+     * @param referenceLine the line that controls which way is up and down on the Y-axis. **ITS VERY
+     * IMPORTANT** that the referenceLine is ABOVE the quantityLine, and NOT above!
      */
     fun getLineAboveUsingReference(allLines: List<ParsedLine>, quantityLine: ParsedLine, referenceLine: ParsedLine): ParsedLine? {
         // 1) Compute the "upward" unit vector (from quantityLine → referenceLine)
@@ -50,7 +51,7 @@ interface StoreParser {
                 val dist = hypot(toLineX, toLineY)
                 Triple(line, dot, dist)
             }
-            .filter { (_, dot, _) -> dot < 0f }  // Only lines "below" in projected direction
+            .filter { (_, dot, _) -> dot > 0f }  // Only lines "below" in projected direction
             .minByOrNull { (_, _, dist) -> dist }
             ?.first
     }

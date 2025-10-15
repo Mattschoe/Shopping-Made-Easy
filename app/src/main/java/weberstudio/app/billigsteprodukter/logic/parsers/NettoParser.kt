@@ -41,8 +41,8 @@ object NettoParser : StoreParser {
                 val lineB = parsedLines[j]
 
                 //Tries to get a controlLine
-                if (controlLine == null && (fuzzyMatcher.match(lineA.text, listOf("NETTO"), 0.85f, 0.15f) || isReceiptTotalWord(lineA.text))) controlLine = lineA
-                if (controlLine == null && (fuzzyMatcher.match(lineB.text, listOf("NETTO"), 0.85f, 0.15f) || isReceiptTotalWord(lineB.text))) controlLine = lineB
+                if (controlLine == null && (fuzzyMatcher.match(lineB.text, listOf("NETTO"), 0.85f, 0.15f))) controlLine = lineA
+                if (controlLine == null && (fuzzyMatcher.match(lineB.text, listOf("NETTO"), 0.85f, 0.15f))) controlLine = lineB
 
                 if (doesLinesCollide(lineA, lineB)) {
                     //Enten parser produkterne, eller gemmer parsningen til efter vi har fundet kontrollinjen.

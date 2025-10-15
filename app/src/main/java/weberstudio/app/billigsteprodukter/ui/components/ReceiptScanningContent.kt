@@ -1,5 +1,6 @@
 package weberstudio.app.billigsteprodukter.ui.components
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -29,7 +30,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -84,7 +87,8 @@ fun ProductRow(productName: String, productPrice: String, onClick: () -> Unit) {
  * The card showing the Total on the receipt
  */
 @Composable
-fun ReceiptTotalCard(modifier: Modifier = Modifier, totalPrice: String) {
+fun ReceiptTotalCard(modifier: Modifier = Modifier, totalPrice: String, totalError: Boolean = false) {
+    Log.d("DEBUG", "totalError in ReceiptTotalCard: $totalError")
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(12.dp),
@@ -116,6 +120,14 @@ fun ReceiptTotalCard(modifier: Modifier = Modifier, totalPrice: String) {
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
+            if (totalError) {
+                Spacer(modifier = Modifier.weight(1f))
+                Icon(
+                    imageVector = ImageVector.vectorResource(R.drawable.exclamation_icon),
+                    contentDescription = "Fejl i aflæsning af total fra kvittering",
+                    tint = Color.Yellow
+                )
+            }
         }
     }
 }

@@ -12,6 +12,8 @@ import weberstudio.app.billigsteprodukter.logic.exceptions.ParsingException
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ParsedImageText
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ParsedLine
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ParsedProduct
+import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ScanValidation
+import kotlin.math.abs
 import kotlin.math.hypot
 import kotlin.math.sqrt
 
@@ -64,7 +66,7 @@ object CoopParserQuantityBelow : StoreParser {
         //endregion
 
         val (filteredProducts, receiptTotal) = parsedProductsToFilteredProductList(parsedProducts)
-        return ParsedImageText(Store.Coop365, filteredProducts, receiptTotal)
+        return ParsedImageText(Store.Coop365, filteredProducts, receiptTotal, ScanValidation())
     }
 
     /**
@@ -140,7 +142,7 @@ object CoopParserQuantityBelow : StoreParser {
         //Hvis der er mere end to produkter (så ét produkt og ét stopord), så gemmer vi alle dem som har den samme pris som stop ordene (Så hvis "Total" fucker f.eks.)
         val stopWordPrices = if (products.size > 2) {
             products
-                .filter { isStopWord(it.name) }
+                .filter { isTotalWord(it.name) }
                 .map { it.price }
                 .toSet()
         } else {
@@ -149,11 +151,18 @@ object CoopParserQuantityBelow : StoreParser {
 
         //Returner kun produkter som ikke er stop ordet, eller som har den samme pris som stop ordet (så hvis "Total" fucker f.eks.)
         val filteredSet = products.filter { product ->
-            !isStopWord(product.name) &&
+            !isTotalWord(product.name) &&
             product.price !in stopWordPrices &&
             !fuzzyMatcher.match(product.name, listOf("RABAT"), 0.8f, 0.2f) }.toHashSet()
 
         if (filteredSet.isEmpty()) throw ParsingException("Filtered set of products is empty!. Please try again")
+
+        //Checker om total er det vi regner med, ellers så marker vi at vi tror der er gået noget galt
+        val productsTotal = filteredSet.sumOf { product -> product.price.toDouble() }
+        val epsilon = 0.0001f
+        if (abs(productsTotal - stopWordPrices.first()) > epsilon)  {
+            //Sætter error
+        }
 
         return Pair(filteredSet, stopWordPrices.first())
     }
@@ -193,10 +202,10 @@ object CoopParserQuantityBelow : StoreParser {
     }
 
     /**
-     * Checks and see if word given as argument is a stop word using fuzzy search
+     * Checks and see if word given as argument is a total word using fuzzy search
      */
-    private fun isStopWord(input: String): Boolean {
-        val stopWords = listOf("AT BETALE", "VISA", "BETALINGSKORT", "RABAT I ALT", "MOMS UDGØR", "BYTTEPENGE")
+    private fun isTotalWord(input: String): Boolean {
+        val stopWords = listOf("AT BETALE", "VISA", "BETALINGSKORT",)
 
         return stopWords.any { stopWord ->
             val jaroSimilarity = fuzzyMatcherJaro.apply(input, stopWord) ?: 0.0
@@ -280,7 +289,8 @@ object CoopParserQuantityAbove : StoreParser {
         //endregion
 
         val (filteredProducts, receiptTotal) = parsedProductsToFilteredProductList(parsedProducts)
-        return ParsedImageText(Store.Coop365, filteredProducts, receiptTotal)
+
+        return ParsedImageText(Store.Coop365, filteredProducts, receiptTotal, ScanValidation())
     }
 
     /**
@@ -373,6 +383,7 @@ object CoopParserQuantityAbove : StoreParser {
             Log.d("ERROR", "Filtered set of products is empty!. Please try again")
             throw ParsingException("Filtered set of products is empty!. Please try again")
         }
+
 
         return Pair(filteredSet, stopWordPrices.first())
     }
@@ -468,6 +479,7 @@ object CoopParserQuantityAbove : StoreParser {
             }
             ?.first
     }
+
     /**
      * Returns the next **QUANTITY** above the one given as reference, will avoid product lines
      * @param referenceLine a reference to the line where the one directly above it will be returned

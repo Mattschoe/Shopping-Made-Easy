@@ -2,6 +2,8 @@ package weberstudio.app.billigsteprodukter.ui
 
 import weberstudio.app.billigsteprodukter.data.Product
 import weberstudio.app.billigsteprodukter.logic.Store
+import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser
+import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ScanValidation
 
 /**
  * Displays the state of the image parsing
@@ -19,7 +21,8 @@ sealed class ReceiptUIState {
     data class Success(
         val products: List<Product>,
         val store: Store,
-        val receiptTotal: Float
+        val receiptTotal: Float,
+        val errors: ScanValidation? = null
     ) : ReceiptUIState()
     object Empty : ReceiptUIState()
 }

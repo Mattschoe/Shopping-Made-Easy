@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ScanValidation
 
 /*
 * This ViewModel does NOT contain business logic - it's just a temporary data holder.
@@ -13,6 +14,9 @@ import kotlinx.coroutines.flow.asStateFlow
 class CameraCoordinator : ViewModel() {
     private val _pendingImageCapture = MutableStateFlow<PendingCapture?>(null)
     val pendingImageCapture: StateFlow<PendingCapture?> = _pendingImageCapture.asStateFlow()
+
+    private val _pendingScanValidation = MutableStateFlow<PendingScanValidation?>(null)
+    val pendingScanValidation: StateFlow<PendingScanValidation?> = _pendingScanValidation
 
     /**
      * Called when an image is captured from the camera.
@@ -30,8 +34,20 @@ class CameraCoordinator : ViewModel() {
         _pendingImageCapture.value = null
     }
 
+    fun setScanValidation(receiptID: Long, validation: ScanValidation) {
+        _pendingScanValidation.value = PendingScanValidation(receiptID, validation)
+    }
+
+    fun clearScanValidation() {
+        _pendingScanValidation.value = null
+    }
+
     data class PendingCapture(
         val uri: Uri,
         val context: Context
+    )
+    data class PendingScanValidation(
+        val receiptID: Long,
+        val validation: ScanValidation
     )
 }

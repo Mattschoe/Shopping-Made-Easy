@@ -19,11 +19,14 @@ import weberstudio.app.billigsteprodukter.ReceiptApp
 import weberstudio.app.billigsteprodukter.data.Product
 import weberstudio.app.billigsteprodukter.data.Receipt
 import weberstudio.app.billigsteprodukter.data.receipt.OfflineReceiptRepository
+import weberstudio.app.billigsteprodukter.logic.CameraCoordinator
 import weberstudio.app.billigsteprodukter.logic.ImagePreprocessor
 import weberstudio.app.billigsteprodukter.logic.Store
 import weberstudio.app.billigsteprodukter.logic.exceptions.ParsingException
 import weberstudio.app.billigsteprodukter.logic.parsers.ParserFactory
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser
+import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ScanError
+import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ScanValidation
 import weberstudio.app.billigsteprodukter.ui.ParsingState
 import weberstudio.app.billigsteprodukter.ui.ReceiptUIState
 import java.time.LocalDate
@@ -32,13 +35,16 @@ class ReceiptViewModel(application: Application): AndroidViewModel(application) 
     private val app = application as ReceiptApp
     private val receiptRepo: OfflineReceiptRepository = app.receiptRepository
 
-    // Receipt display state
+    //Receipt display state
     private val _selectedReceiptID = MutableStateFlow<Long?>(null)
     private val _forceLoading = MutableStateFlow(false)
 
-    // Camera/parsing state
+    //Camera/parsing state
     private val _parsingState = mutableStateOf<ParsingState>(ParsingState.NotActivated)
     val parsingState: State<ParsingState> = _parsingState
+
+    //Errors
+    private val _errors = MutableStateFlow<ScanValidation?>(null)
 
     /**
      * The currently displayed receipt with all its products.
@@ -47,10 +53,11 @@ class ReceiptViewModel(application: Application): AndroidViewModel(application) 
     @OptIn(ExperimentalCoroutinesApi::class)
     val uiState: StateFlow<ReceiptUIState> = combine(
         _selectedReceiptID,
-        _forceLoading
-    ) { receiptID, forceLoading ->
-        Pair(receiptID, forceLoading)
-    }.flatMapLatest { (receiptID, forceLoading) ->
+        _forceLoading,
+        _errors
+    ) { receiptID, forceLoading, errors ->
+        Triple(receiptID, forceLoading, errors)
+    }.flatMapLatest { (receiptID, forceLoading, errors) ->
         when {
             forceLoading -> flowOf(ReceiptUIState.Loading)
             receiptID == null -> flowOf(ReceiptUIState.Empty)
@@ -59,8 +66,9 @@ class ReceiptViewModel(application: Application): AndroidViewModel(application) 
                     ReceiptUIState.Success(
                         products = receiptWithProducts.products,
                         store = receiptWithProducts.receipt.store,
-                        receiptTotal = receiptWithProducts.receipt.total
-                    )
+                        receiptTotal = receiptWithProducts.receipt.total,
+                        errors = errors
+                    ).also { Log.d("DEBUG", "Created Success state with errors: ${it.errors}") }
                 } else {
                     ReceiptUIState.Empty
                 }
@@ -129,7 +137,7 @@ class ReceiptViewModel(application: Application): AndroidViewModel(application) 
      * Processes an image captured from the camera.
      * Will parse the receipt and save it to the database.
      */
-    fun processImage(imageURI: Uri, context: Context) {
+    fun processImage(imageURI: Uri, context: Context, cameraCoordinator: CameraCoordinator) {
         viewModelScope.launch {
             _parsingState.value = ParsingState.InProgress
 
@@ -139,7 +147,7 @@ class ReceiptViewModel(application: Application): AndroidViewModel(application) 
 
                 try {
                     val imageText = textRecognizer.process(image).await()
-                    processImageInfo(imageText)
+                    processImageInfo(imageText, cameraCoordinator)
                     textRecognizer.close()
                 } catch (e: Exception) {
                     _parsingState.value = ParsingState.Error("MLKit Text recognition failed! $e")
@@ -152,7 +160,7 @@ class ReceiptViewModel(application: Application): AndroidViewModel(application) 
         }
     }
 
-    private fun processImageInfo(imageText: Text) {
+    private fun processImageInfo(imageText: Text, cameraCoordinator: CameraCoordinator) {
         if (imageText.textBlocks.isEmpty()) {
             _parsingState.value = ParsingState.Error("Ingen tekst fundet i billedet!")
             return
@@ -168,7 +176,6 @@ class ReceiptViewModel(application: Application): AndroidViewModel(application) 
 
                 try {
                     val parsedText = parser.parse(imageText)
-
                     val receipt = Receipt(
                         store = store,
                         date = LocalDate.now(),
@@ -177,6 +184,7 @@ class ReceiptViewModel(application: Application): AndroidViewModel(application) 
 
                     viewModelScope.launch {
                         val receiptID = receiptRepo.addReceiptProducts(receipt, parsedText.products)
+                        cameraCoordinator.setScanValidation(receiptID, parsedText.scanErrors)
                         app.activityLogger.logReceiptScan(receipt.copy(receiptID = receiptID))
                         _parsingState.value = ParsingState.Success(store, receiptID)
                     }
@@ -187,6 +195,10 @@ class ReceiptViewModel(application: Application): AndroidViewModel(application) 
                 _parsingState.value = ParsingState.Error("Ingen butik fundet!")
             }
         }
+    }
+
+    fun applyScanValidation(validation: ScanValidation) {
+        _errors.value = validation
     }
 
     /**

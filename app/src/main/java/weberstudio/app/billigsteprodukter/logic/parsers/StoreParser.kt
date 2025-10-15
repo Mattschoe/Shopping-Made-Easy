@@ -7,7 +7,6 @@ import com.google.mlkit.vision.text.Text
 import weberstudio.app.billigsteprodukter.data.Product
 import weberstudio.app.billigsteprodukter.logic.Store
 import weberstudio.app.billigsteprodukter.logic.exceptions.ParsingException
-import kotlin.jvm.Throws
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.hypot
@@ -170,7 +169,26 @@ interface StoreParser {
         val corners: Array<Point>
     )
     data class ParsedProduct(val name: String, var price: Float)
-    data class ParsedImageText(val store: Store, val products: HashSet<Product>, val total: Float)
+    data class ParsedImageText(val store: Store, val products: HashSet<Product>, val total: Float, val scanErrors: ScanValidation)
+    data class ScanValidation(
+        val productErrors: Map<Product, ScanError> = emptyMap(),
+        val totalError: Boolean = false
+    ) {
+        fun withProductError(product: Product, error: ScanError) = copy(
+            productErrors = productErrors + (product to error)
+        )
+
+        fun withTotalError(hasError: Boolean) = copy(
+            totalError = hasError
+        )
+    }
+
+    enum class ScanError {
+        PRODUCT_WITHOUT_PRICE,
+        WRONG_NAME,
+        RECEIPT_TOTAL_ERROR;
+    }
+
     //endregion
 
     //region MATH SUPPORT FUNCTIONS

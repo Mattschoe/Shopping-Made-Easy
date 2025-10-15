@@ -12,6 +12,7 @@ import weberstudio.app.billigsteprodukter.logic.exceptions.ParsingException
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ParsedImageText
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ParsedLine
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ParsedProduct
+import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ScanValidation
 import kotlin.math.hypot
 import kotlin.math.sqrt
 
@@ -70,7 +71,7 @@ object SuperBrugsenParser: StoreParser {
         //endregion
 
         val (filteredProducts, receiptTotal) = parsedProductsToFilteredProductList(parsedProducts)
-        return ParsedImageText(Store.SuperBrugsen, filteredProducts, receiptTotal)
+        return ParsedImageText(Store.SuperBrugsen, filteredProducts, receiptTotal, ScanValidation())
     }
 
     /**

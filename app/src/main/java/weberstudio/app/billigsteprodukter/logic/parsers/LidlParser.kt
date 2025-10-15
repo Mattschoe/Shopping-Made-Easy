@@ -12,6 +12,7 @@ import weberstudio.app.billigsteprodukter.logic.exceptions.ParsingException
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ParsedLine
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ParsedProduct
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ParsedImageText
+import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ScanValidation
 import kotlin.math.sqrt
 import kotlin.text.Regex
 
@@ -64,7 +65,7 @@ object LidlParser: StoreParser {
         //endregion
 
         val (filteredProducts, receiptTotal) = parsedProductsToFilteredProductList(parsedProducts)
-        return ParsedImageText(Store.Lidl, filteredProducts, receiptTotal)
+        return ParsedImageText(Store.Lidl, filteredProducts, receiptTotal, ScanValidation())
     }
 
     /**

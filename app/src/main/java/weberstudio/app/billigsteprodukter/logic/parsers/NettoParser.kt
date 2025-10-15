@@ -12,6 +12,9 @@ import weberstudio.app.billigsteprodukter.logic.exceptions.ParsingException
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ParsedImageText
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ParsedLine
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ParsedProduct
+import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ScanError
+import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ScanValidation
+import kotlin.math.abs
 import kotlin.math.sqrt
 
 object NettoParser : StoreParser {
@@ -26,6 +29,7 @@ object NettoParser : StoreParser {
         val parsedLines = processImageText(receipt)
         val parsedProducts = ArrayList<ParsedProduct>()
         val parseAfterControlLineFound = ArrayList<Pair<ParsedLine, ParsedLine>>() //Line combos vi parser senere efter at have fundet controllinjen
+        val scanLogicErrors = HashMap<ParsedProduct, ScanError?>() //Errors fundet under ParsedProduct processen
 
         //region PARSES LINES INTO PRODUCTS
         var controlLine: ParsedLine? = null
@@ -37,25 +41,39 @@ object NettoParser : StoreParser {
                 val lineB = parsedLines[j]
 
                 //Tries to get a controlLine
-                if (controlLine == null && (fuzzyMatcher.match(lineA.text, listOf("NETTO"), 0.85f, 0.15f) || isStopWord(lineA.text))) controlLine = lineA
-                if (controlLine == null && (fuzzyMatcher.match(lineB.text, listOf("NETTO"), 0.85f, 0.15f) || isStopWord(lineB.text))) controlLine = lineB
+                if (controlLine == null && (fuzzyMatcher.match(lineA.text, listOf("NETTO"), 0.85f, 0.15f) || isReceiptTotalWord(lineA.text))) controlLine = lineA
+                if (controlLine == null && (fuzzyMatcher.match(lineB.text, listOf("NETTO"), 0.85f, 0.15f) || isReceiptTotalWord(lineB.text))) controlLine = lineB
 
                 if (doesLinesCollide(lineA, lineB)) {
                     //Enten parser produkterne, eller gemmer parsningen til efter vi har fundet kontrollinjen.
                     if (controlLine == null) parseAfterControlLineFound.add(Pair(lineA, lineB))
-                    else parsedProducts.add(parseLinesToProduct(lineA, lineB, controlLine, includeRABAT, parsedLines, parsedProducts))
+                    else {
+                        val (product, error) = parseLinesToProduct(lineA, lineB, controlLine, includeRABAT, parsedLines, parsedProducts)
+                        parsedProducts.add(product)
+                        scanLogicErrors.put(product, error)
+                    }
                 }
             }
         }
         if (controlLine == null) throw ParsingException("No control line found!")
 
         //Parser de linjecomboer vi missede fordi kontrollinjen endnu ik var fundet
-        parseAfterControlLineFound.forEach { pair -> parsedProducts.add(parseLinesToProduct(pair.first, pair.second, controlLine, includeRABAT, parsedLines, parsedProducts)) }
+        parseAfterControlLineFound.forEach { pair ->
+            val (product, error) = parseLinesToProduct(pair.first, pair.second, controlLine, includeRABAT, parsedLines, parsedProducts)
+            parsedProducts.add(product)
+            scanLogicErrors.put(product, error)
+        }
         //endregion
 
 
-        val (filteredProducts, receiptTotal) = parsedProductsToFilteredProductList(parsedProducts)
-        return ParsedImageText(Store.Netto, filteredProducts, receiptTotal)
+        val (filteredProducts, scanValidation, receiptTotal) = parsedProductsToFilteredProductList(parsedProducts, scanLogicErrors)
+        return ParsedImageText(
+            Store.Netto,
+            filteredProducts,
+            receiptTotal,
+            scanValidation
+                .withTotalError(true)
+        )
     }
 
     /**
@@ -67,8 +85,14 @@ object NettoParser : StoreParser {
      * @param parsedLines the lines parsed so far. Used to find the line above a quantity line
      * @param parsedProducts the products parsed so far. Used if *includeRABAT* is true to deduct the discount
      */
-    private fun parseLinesToProduct(lineA: ParsedLine, lineB: ParsedLine, controlLine: ParsedLine, includeRABAT: Boolean, parsedLines: List<ParsedLine>, parsedProducts: List<ParsedProduct>): ParsedProduct {
-        //Snupper navn og pris
+    private fun parseLinesToProduct(
+        lineA: ParsedLine,
+        lineB: ParsedLine,
+        controlLine: ParsedLine,
+        includeRABAT: Boolean,
+        parsedLines: List<ParsedLine>,
+        parsedProducts: List<ParsedProduct>,
+    ): Pair<ParsedProduct, ScanError?> {
         val productName = lineA.text
         val productPrice: Float
 
@@ -76,9 +100,7 @@ object NettoParser : StoreParser {
         try {
             productPrice = lineB.text.toFloat()
         } catch (_: NumberFormatException) {
-            //TODO: Det her skal give et ("!") ude på UI'en for useren
-            Log.d("ERROR", "Couldn't convert ${lineB.text} to Float!")
-            return ParsedProduct(productName, 0.0f)
+            return Pair(ParsedProduct(productName, 0.0f), ScanError.PRODUCT_WITHOUT_PRICE)
         }
 
         //region QUANTITY LINE
@@ -87,14 +109,12 @@ object NettoParser : StoreParser {
             //Finder den linje som er lige over "RABAT" og snupper navnet fra den
             val parentLine = getLineAboveUsingReference(parsedLines, lineA, controlLine) //OBS: BLACK MAGIC FUCKERY
             if (parentLine == null) {
-                //TODO: Det her skal give et ("!") ude på UI'en for useren
-                Log.d("ERROR", "Couldn't access the previous product from product $productName!");
-                return ParsedProduct(productName, productPrice) //Returnerer bare quantity line så vi kan se hvor fejlen er sket
+                return Pair(ParsedProduct(productName, productPrice), ScanError.WRONG_NAME)
             } else {
                 try {
                     //If we successfully got the actual product we save that instead of the original "2 x 25,5", and divide the price of the product by the amount
                     val productPrice = normalizeText(lineB.text).toFloat()/normalizeText(lineA.text[0].toString()).toFloat()
-                    return ParsedProduct(parentLine.text, productPrice)
+                    return Pair(ParsedProduct(parentLine.text, productPrice), null)
                 } catch (_: NumberFormatException) {
                     Log.d("ERROR", "Error dividing the product price with the amount!")
                 }
@@ -109,18 +129,27 @@ object NettoParser : StoreParser {
         }
         //endregion
 
-        return ParsedProduct(productName, productPrice)
+
+        return Pair(ParsedProduct(productName, productPrice), null)
     }
 
     /**
-     * Filters the products parsed and returns a filtered set and the total price read on receipt
+     * Filters the products parsed.
+     * @return the filtered map of products with the errors in parsing, and the total price read on receipt
      */
-    private fun parsedProductsToFilteredProductList(parsedProducts: List<ParsedProduct>): Pair<HashSet<Product>, Float>  {
-        val products: HashSet<Product> = HashSet<Product>()
+    private fun parsedProductsToFilteredProductList(
+        parsedProducts: List<ParsedProduct>,
+        parsedProductErrors: Map<ParsedProduct, ScanError?>
+    ): Triple<HashSet<Product>, ScanValidation,  Float>  {
+        var scanValidation = ScanValidation()
+        val products = HashSet<Product>()
 
         //Omdanner de parsedProducts om til Products
         for (parsedProduct in parsedProducts) {
-            products.add(Product(name = parsedProduct.name, price = parsedProduct.price, store = Store.Netto))
+            val product = Product(name = parsedProduct.name, price = parsedProduct.price, store = Store.Netto)
+            val error: ScanError? = parsedProductErrors[parsedProduct]
+            products.add(product)
+            error?.let { error -> scanValidation = scanValidation.withProductError(product, error) }
         }
 
         if (products.isEmpty()) {
@@ -131,7 +160,7 @@ object NettoParser : StoreParser {
         //Hvis der er mere end to produkter (så ét produkt og ét stopord), så gemmer vi alle dem som har den samme pris som stop ordene (Så hvis "Total" fucker f.eks.)
         val stopWordPrices = if (products.size > 2) {
             products
-                .filter { isStopWord(it.name) }
+                .filter { isReceiptTotalWord(it.name) }
                 .map { it.price }
                 .toSet()
         } else {
@@ -139,11 +168,22 @@ object NettoParser : StoreParser {
         }
 
         //Returner kun produkter som ikke er stop ordet, eller som har den samme pris som stop ordet (så hvis "Total" fucker f.eks.)
-        val filteredSet = products.filter { product -> !isStopWord(product.name) && product.price !in stopWordPrices && !fuzzyMatcher.match(product.name, listOf("RABAT"), 0.8f, 0.2f) }.toHashSet()
+        val filteredSet = products.filter { product ->
+            !isReceiptTotalWord(product.name) &&
+            product.price !in stopWordPrices &&
+            !fuzzyMatcher.match(product.name, listOf("RABAT"), 0.8f, 0.2f)
+        }.toHashSet()
 
         if (filteredSet.isEmpty()) throw ParsingException("Final list couldn't be read. Please try again")
 
-        return Pair(filteredSet, stopWordPrices.first())
+        //Checker om total er det vi regner med, ellers så marker vi at vi tror der er gået noget galt
+        val productsTotal = filteredSet.sumOf { product -> product.price.toDouble() }
+        val epsilon = 0.0001f
+        if (abs(productsTotal - stopWordPrices.first()) > epsilon)  {
+            scanValidation = scanValidation.withTotalError(true)
+        }
+
+        return Triple(filteredSet, scanValidation, stopWordPrices.first())
     }
 
     /**
@@ -183,8 +223,8 @@ object NettoParser : StoreParser {
     /**
      * Checks and see if word given as argument is a stop word using fuzzy search
      */
-    private fun isStopWord(input: String): Boolean {
-        val stopWords = listOf("TOTAL", "BETALINGSKORT", "MOMS UDGØR")
+    private fun isReceiptTotalWord(input: String): Boolean {
+        val stopWords = listOf("TOTAL", "BETALINGSKORT")
 
         return stopWords.any { stopWord ->
             val jaroSimilarity = fuzzyMatcherJaro.apply(input, stopWord) ?: 0.0

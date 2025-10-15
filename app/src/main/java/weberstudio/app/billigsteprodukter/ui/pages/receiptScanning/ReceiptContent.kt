@@ -1,5 +1,6 @@
 package weberstudio.app.billigsteprodukter.ui.pages.receiptScanning
 
+import android.util.Log
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -59,6 +60,8 @@ import weberstudio.app.billigsteprodukter.data.Product
 import weberstudio.app.billigsteprodukter.logic.CameraCoordinator
 import weberstudio.app.billigsteprodukter.logic.Formatter.formatFloatToDanishCurrency
 import weberstudio.app.billigsteprodukter.logic.Store
+import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser
+import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ScanValidation
 import weberstudio.app.billigsteprodukter.ui.ParsingState
 import weberstudio.app.billigsteprodukter.ui.ReceiptUIState
 import weberstudio.app.billigsteprodukter.ui.components.AddProductDialog
@@ -95,19 +98,36 @@ fun ReceiptScanningContent(
 
     // Check if there's a pending camera capture to process
     val pendingCapture by cameraCoordinator.pendingImageCapture.collectAsState()
+    val pendingScanValidation by cameraCoordinator.pendingScanValidation.collectAsState()
 
     LaunchedEffect(pendingCapture) {
         pendingCapture?.let { capture ->
-            viewModel.processImage(capture.uri, capture.context)
+            viewModel.processImage(capture.uri, capture.context, cameraCoordinator)
             cameraCoordinator.clearPendingCapture()
+        }
+    }
+
+    LaunchedEffect(uiState, pendingScanValidation) {
+        //Only apply validation when we're showing a Success state
+        if (uiState is ReceiptUIState.Success) {
+            pendingScanValidation?.let { pending ->
+                val currentReceiptID = (uiState as ReceiptUIState.Success).products.firstOrNull()?.receiptID
+
+                if (currentReceiptID == pending.receiptID) {
+                    viewModel.applyScanValidation(pending.validation)
+                    cameraCoordinator.clearScanValidation()
+                }
+            }
         }
     }
 
     val launchCamera = launchCamera(
         onImageCaptured = { uri, context ->
-            viewModel.processImage(uri, context)
+            viewModel.processImage(uri, context, cameraCoordinator)
         }
     )
+
+
 
     //region PARSING STATE HANDLING
     LaunchedEffect(parsingState) {
@@ -147,11 +167,13 @@ fun ReceiptScanningContent(
             LoadingSkeleton(modifier)
         }
         is ReceiptUIState.Success -> {
+            Log.d("DEBUG", "Pre ReceiptContent: ${currentState.errors}")
             ReceiptContent(
                 modifier = modifier,
                 products = currentState.products,
                 store = currentState.store,
                 receiptTotal = currentState.receiptTotal,
+                errors = currentState.errors,
                 onAddProductClick = { showAddProductDialog = true },
                 onModifyTotal = { showModifyTotalDialog = true},
                 modifyProduct = { newProduct ->
@@ -234,11 +256,13 @@ private fun ReceiptContent(
     products: List<Product>,
     store: Store?,
     receiptTotal: Float,
+    errors: ScanValidation?,
     onAddProductClick: () -> Unit,
     onModifyTotal: () -> Unit,
     modifyProduct: (Product) -> Unit,
     onDeleteProduct: (Product) -> Unit
 ) {
+    Log.d("DEBUG", "ReceiptContent: $errors")
     //Drag functionality
     val density = LocalDensity.current
     val haptic = LocalHapticFeedback.current
@@ -287,7 +311,8 @@ private fun ReceiptContent(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     ReceiptTotalCard(
-                        totalPrice = formatFloatToDanishCurrency(receiptTotal)
+                        totalPrice = formatFloatToDanishCurrency(receiptTotal),
+                        totalError = errors?.totalError == true
                     )
                 }
             }

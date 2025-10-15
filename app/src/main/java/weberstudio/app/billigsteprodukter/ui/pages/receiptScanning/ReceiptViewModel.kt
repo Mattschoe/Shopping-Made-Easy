@@ -54,12 +54,12 @@ class ReceiptViewModel(application: Application): AndroidViewModel(application) 
         when {
             forceLoading -> flowOf(ReceiptUIState.Loading)
             receiptID == null -> flowOf(ReceiptUIState.Empty)
-            else -> receiptRepo.getProductsForReceipt(receiptID).map { products ->
-                if (products.isNotEmpty()) {
+            else -> receiptRepo.getReceiptWithProducts(receiptID).map { receiptWithProducts ->
+                if (receiptWithProducts?.products?.isNotEmpty() == true) {
                     ReceiptUIState.Success(
-                        products = products,
-                        store = products.first().store,
-                        receiptTotal = receiptRepo.getReceiptWithProducts(receiptID)?.receipt?.total ?: 0.0f
+                        products = receiptWithProducts.products,
+                        store = receiptWithProducts.receipt.store,
+                        receiptTotal = receiptWithProducts.receipt.total
                     )
                 } else {
                     ReceiptUIState.Empty
@@ -92,6 +92,17 @@ class ReceiptViewModel(application: Application): AndroidViewModel(application) 
     fun updateProduct(product: Product) {
         viewModelScope.launch {
             receiptRepo.updateProduct(product)
+        }
+    }
+
+    /**
+     * Updates the total for a receipt. A receipt HAS to be selected for this to run
+     */
+    fun updateTotalForSelectedReceipt(newTotal: Float) {
+        _selectedReceiptID.value?.let { ID ->
+            viewModelScope.launch {
+                receiptRepo.updateReceiptTotal(newTotal, ID)
+            }
         }
     }
 

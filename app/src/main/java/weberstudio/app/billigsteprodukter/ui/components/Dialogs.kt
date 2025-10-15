@@ -457,6 +457,103 @@ fun AddProductDialog(showDialog: Boolean, onDismiss: () -> Unit, onConfirm: (nam
 }
 
 @Composable
+fun ModifyTotalDialog(showDialog: Boolean, originalTotal: Float, onDismiss: () -> Unit, onConfirm: (Float) -> Unit) {
+    if (!showDialog) return
+
+    var newTotal by remember { mutableStateOf("") }
+    val isValid = newTotal.toFloatOrNull() != null
+
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer
+            )
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(20.dp)
+            ) {
+                //Header
+                Text(
+                    text = "Opdater totalpris",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                //Pris på produkt
+                OutlinedTextField(
+                    value = newTotal,
+                    onValueChange = { input ->
+                        val formatted = input.replace(',', '.')
+                        newTotal = formatted
+                    },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    placeholder = {
+                        Text(
+                            text = formatFloatToDanishCurrency(originalTotal),
+                            color = Color.Gray,
+                            fontStyle = FontStyle.Italic
+                        )
+                    },
+                    singleLine = true,
+                    shape = RoundedCornerShape(24.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 44.dp),
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+
+                //Warning
+                Text(
+                    text = "Advarsel! Sletter eller ændres prisen på et produkt fra kvitteringen vil dette opdatere prisen på kvitteringen igen",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color.Gray,
+                    fontStyle = FontStyle.Italic,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                //Done button
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    IconButton(
+                        onClick = {
+                            val total = newTotal.toFloat()
+                            onConfirm(total)
+                        },
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(RoundedCornerShape(24.dp)),
+                        colors = IconButtonDefaults.iconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary,
+                            disabledContainerColor = Color.Gray.copy(alpha = 0.5f),
+                            disabledContentColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f)
+                        ),
+                        enabled = isValid
+                    ) {
+                        Icon(
+                            imageVector = ImageVector.vectorResource(R.drawable.check_icon),
+                            contentDescription = "Færdig",
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+}
+
+@Composable
 fun DeleteConfirmationDialog(title: String, body: String, onDismiss: () -> Unit, onConfirm: () -> Unit) {
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -521,7 +618,7 @@ fun DeleteConfirmationDialog(title: String, body: String, onDismiss: () -> Unit,
 fun ModifyProductDialog(product: Product, onDismiss: () -> Unit, onConfirm: (Product) -> Unit) {
     var newName by remember { mutableStateOf(product.name) }
     var newPrice by remember { mutableStateOf("") }
-    val isValid = newName.trim().isNotEmpty() //
+    val isValid = newName.trim().isNotEmpty()
 
     Dialog(onDismissRequest = onDismiss) {
         Card(

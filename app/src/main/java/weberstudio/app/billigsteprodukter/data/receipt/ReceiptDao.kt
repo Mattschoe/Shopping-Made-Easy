@@ -37,6 +37,13 @@ interface ReceiptDao {
     @Update
     suspend fun updateProduct(product: Product)
 
+    @Query("""
+        UPDATE receipts
+        SET total = :newTotal
+        WHERE receiptID = :receiptID
+    """)
+    suspend fun updateReceiptTotal(newTotal: Float, receiptID: Long)
+
     @Query("UPDATE products SET isFavorite = :isFavorite WHERE store = :store AND name = :name")
     suspend fun setProductFavorite(store: Store, name: String, isFavorite: Boolean)
     //endregion
@@ -56,7 +63,7 @@ interface ReceiptDao {
     //region RECEIPT QUERIES
     @Transaction
     @Query("SELECT * FROM receipts WHERE receiptID = :receiptID")
-    suspend fun getReceiptWithProducts(receiptID: Long): ReceiptWithProducts?
+    fun getReceiptWithProducts(receiptID: Long): Flow<ReceiptWithProducts?>
 
     @Transaction
     @Query("SELECT * FROM receipts WHERE date BETWEEN :startDate AND :endDate ORDER BY date")
@@ -67,6 +74,13 @@ interface ReceiptDao {
         SET total = COALESCE((SELECT SUM(price) FROM products WHERE products.receiptID = receipts.receiptID), 0)
         WHERE store = :store""")
     suspend fun recomputeTotalForReceiptsInStore(store: Store)
+
+    @Query("""
+        UPDATE receipts
+        SET total = COALESCE((SELECT SUM(price) FROM products WHERE products.receiptID = receipts.receiptID), 0)
+        WHERE receiptID = :receiptID
+    """)
+    suspend fun recomputeTotalForReceipt(receiptID: Long)
 
     @Transaction
     @Query("SELECT * FROM receipts ORDER BY date DESC")

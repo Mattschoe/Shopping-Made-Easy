@@ -20,7 +20,7 @@ class OfflineReceiptRepository(private val dao: ReceiptDao) : ReceiptRepository 
         dao.deleteReceipt(receipt)
     }
 
-    override suspend fun getReceiptWithProducts(receiptID: Long): ReceiptWithProducts? {
+    override suspend fun getReceiptWithProducts(receiptID: Long): Flow<ReceiptWithProducts?> {
         return dao.getReceiptWithProducts(receiptID)
     }
 
@@ -32,6 +32,10 @@ class OfflineReceiptRepository(private val dao: ReceiptDao) : ReceiptRepository 
 
     override suspend fun recomputeTotalForReceiptsInStore(store: Store) {
         return dao.recomputeTotalForReceiptsInStore(store)
+    }
+
+    override suspend fun recomputeTotalForReceipt(receiptID: Long) {
+        return dao.recomputeTotalForReceipt(receiptID)
     }
 
     /**
@@ -47,6 +51,10 @@ class OfflineReceiptRepository(private val dao: ReceiptDao) : ReceiptRepository 
     override suspend fun updateProduct(product: Product) {
         dao.updateProduct(product)
         recomputeTotalForReceiptsInStore(product.store)
+    }
+
+    override suspend fun updateReceiptTotal(newTotal: Float, receiptID: Long) {
+        dao.updateReceiptTotal(newTotal, receiptID)
     }
 
     override suspend fun addProduct(product: Product): Long {

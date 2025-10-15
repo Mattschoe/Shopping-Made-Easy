@@ -5,7 +5,6 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Arrangement
@@ -38,7 +37,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -69,6 +67,7 @@ import weberstudio.app.billigsteprodukter.ui.components.ErrorMessageLarge
 import weberstudio.app.billigsteprodukter.ui.components.LogoBarHandler
 import weberstudio.app.billigsteprodukter.ui.components.LogoBarSkeleton
 import weberstudio.app.billigsteprodukter.ui.components.ModifyProductDialog
+import weberstudio.app.billigsteprodukter.ui.components.ModifyTotalDialog
 import weberstudio.app.billigsteprodukter.ui.components.ProductCard
 import weberstudio.app.billigsteprodukter.ui.components.ProductRow
 import weberstudio.app.billigsteprodukter.ui.components.ProductRowSkeleton
@@ -90,7 +89,9 @@ fun ReceiptScanningContent(
 ) {
     val parsingState by viewModel.parsingState
     val uiState by viewModel.uiState.collectAsState()
+
     var showAddProductDialog by rememberSaveable { mutableStateOf(false) }
+    var showModifyTotalDialog by rememberSaveable { mutableStateOf(false) }
 
     // Check if there's a pending camera capture to process
     val pendingCapture by cameraCoordinator.pendingImageCapture.collectAsState()
@@ -152,6 +153,7 @@ fun ReceiptScanningContent(
                 store = currentState.store,
                 receiptTotal = currentState.receiptTotal,
                 onAddProductClick = { showAddProductDialog = true },
+                onModifyTotal = { showModifyTotalDialog = true},
                 modifyProduct = { newProduct ->
                     viewModel.updateProduct(newProduct)
                 },
@@ -178,6 +180,16 @@ fun ReceiptScanningContent(
                 showAddProductDialog = false
             },
             standardStore = store
+        )
+
+        ModifyTotalDialog(
+            showDialog = showModifyTotalDialog,
+            originalTotal = (uiState as ReceiptUIState.Success).receiptTotal,
+            onDismiss = { showModifyTotalDialog = false},
+            onConfirm =  { newTotal ->
+                viewModel.updateTotalForSelectedReceipt(newTotal)
+                showModifyTotalDialog = false
+            }
         )
     }
     //endregion
@@ -223,6 +235,7 @@ private fun ReceiptContent(
     store: Store?,
     receiptTotal: Float,
     onAddProductClick: () -> Unit,
+    onModifyTotal: () -> Unit,
     modifyProduct: (Product) -> Unit,
     onDeleteProduct: (Product) -> Unit
 ) {
@@ -267,6 +280,7 @@ private fun ReceiptContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp)
+                    .clickable(onClick = onModifyTotal)
             ) {
                 Row (
                     horizontalArrangement = Arrangement.SpaceBetween,

@@ -24,7 +24,7 @@ interface ReceiptRepository {
      * Gets a receipt with all its products (one-time read).
      * For observing changes, use getProductsForReceipt() instead.
      */
-    suspend fun getReceiptWithProducts(receiptID: Long): ReceiptWithProducts?
+    suspend fun getReceiptWithProducts(receiptID: Long): Flow<ReceiptWithProducts?>
 
     /**
      * Gets all receipts for a specific month.
@@ -37,6 +37,17 @@ interface ReceiptRepository {
      * Useful after bulk price updates.
      */
     suspend fun recomputeTotalForReceiptsInStore(store: Store)
+
+    /**
+     * Recomputes the total for the single receipt given as argument
+     *
+     * ITS IMPORTANT TO USE THIS METHOD WITH CARE. Remember that products can be represented
+     * in MULTIPLE receipts and it is therefore **NOT** advised to call this method when updating
+     * products in any way. Instead use [recomputeTotalForReceiptsInStore] for this.
+     * This method SHOULD ONLY be used, when a SINGULAR receipt is modified, so f.ex: when
+     * changing the total price of a receipt.
+     */
+    suspend fun recomputeTotalForReceipt(receiptID: Long)
 
     /**
      * Adds a product to a specific receipt.
@@ -55,6 +66,8 @@ interface ReceiptRepository {
      * UI will automatically update via Flow observation.
      */
     suspend fun updateProduct(product: Product)
+
+    suspend fun updateReceiptTotal(newTotal: Float, receiptID: Long)
 
     /**
      * Deletes a product from the database.

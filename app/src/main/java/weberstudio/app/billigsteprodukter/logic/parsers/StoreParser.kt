@@ -161,6 +161,25 @@ interface StoreParser {
             .replace(",", ".") //Ændrer "12,50" til "12.50" så vi kan parse korrekt senere
             .trim()
     }
+
+    /**
+     * Checks if the two floats given are *ish* equal to eachother
+     * @param epsilon the difference between the two floats. Shouldn't be given as standard unless
+     * for a special reason
+     */
+    fun Float.isIshEqualTo(other: Float, epsilon: Float = 0.0001f): Boolean {
+        return abs(this.toDouble() - other.toDouble()) > epsilon
+    }
+
+    /**
+     * Checks if the two floats given are *ish* equal to eachother
+     * @param epsilon the difference between the two floats. Shouldn't be given as standard unless
+     * for a special reason
+     */
+    fun Double.isIshEqualTo(other: Double, epsilon: Double = 0.0001): Boolean {
+        return abs(this - other) > epsilon
+    }
+
     data class ParsedLine(
         val text: String,
         val angle: Float,

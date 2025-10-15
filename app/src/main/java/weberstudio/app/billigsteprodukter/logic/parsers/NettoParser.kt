@@ -116,7 +116,7 @@ object NettoParser : StoreParser {
                     val productPrice = normalizeText(lineB.text).toFloat()/normalizeText(lineA.text[0].toString()).toFloat()
                     return Pair(ParsedProduct(parentLine.text, productPrice), null)
                 } catch (_: NumberFormatException) {
-                    Log.d("ERROR", "Error dividing the product price with the amount!")
+                    Log.d("RECEIPT_SCANNING_ERROR", "Error dividing the product price with the amount!")
                 }
             }
         }
@@ -158,32 +158,28 @@ object NettoParser : StoreParser {
 
         //region Filtering and returning
         //Hvis der er mere end to produkter (så ét produkt og ét stopord), så gemmer vi alle dem som har den samme pris som stop ordene (Så hvis "Total" fucker f.eks.)
-        val stopWordPrices = if (products.size > 2) {
+        val total: Float = if (products.size > 2) {
             products
                 .filter { isReceiptTotalWord(it.name) }
-                .map { it.price }
-                .toSet()
+                .maxOf { it.price }
         } else {
-            emptySet()
+            0.0f
         }
 
         //Returner kun produkter som ikke er stop ordet, eller som har den samme pris som stop ordet (så hvis "Total" fucker f.eks.)
         val filteredSet = products.filter { product ->
             !isReceiptTotalWord(product.name) &&
-            product.price !in stopWordPrices &&
-            !fuzzyMatcher.match(product.name, listOf("RABAT"), 0.8f, 0.2f)
+            !isIgnoreWord(product.name) &&
+            product.price.isIshEqualTo(total)
         }.toHashSet()
 
         if (filteredSet.isEmpty()) throw ParsingException("Final list couldn't be read. Please try again")
 
         //Checker om total er det vi regner med, ellers så marker vi at vi tror der er gået noget galt
         val productsTotal = filteredSet.sumOf { product -> product.price.toDouble() }
-        val epsilon = 0.0001f
-        if (abs(productsTotal - stopWordPrices.first()) > epsilon)  {
-            scanValidation = scanValidation.withTotalError(true)
-        }
+        if (!productsTotal.isIshEqualTo(total.toDouble())) scanValidation = scanValidation.withTotalError(true)
 
-        return Triple(filteredSet, scanValidation, stopWordPrices.first())
+        return Triple(filteredSet, scanValidation, productsTotal.toFloat())
     }
 
     /**
@@ -233,6 +229,28 @@ object NettoParser : StoreParser {
             } //Higher = Fewer false positive
 
             val levenSimilarity = fuzzyMatcherLeven.apply(input, stopWord)
+            if (levenSimilarity <= 2) {
+                return true
+            } //LMAO good luck adjusting lel
+
+            false
+        }
+    }
+
+    /**
+     * Checks and see if word given as argument is a word that should be ignored when trying to
+     * parse into products
+     */
+    private fun isIgnoreWord(input: String): Boolean {
+        val ignoreWords = listOf("MOMS", "UDGØR", "PANT", "RABAT")
+
+        return ignoreWords.any { ignoreWord ->
+            val jaroSimilarity = fuzzyMatcherJaro.apply(input, ignoreWord) ?: 0.0
+            if (jaroSimilarity >= 0.80) {
+                return true
+            } //Higher = Fewer false positive
+
+            val levenSimilarity = fuzzyMatcherLeven.apply(input, ignoreWord)
             if (levenSimilarity <= 2) {
                 return true
             } //LMAO good luck adjusting lel

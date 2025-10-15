@@ -457,7 +457,7 @@ fun AddProductDialog(showDialog: Boolean, onDismiss: () -> Unit, onConfirm: (nam
 }
 
 @Composable
-fun ModifyTotalDialog(showDialog: Boolean, originalTotal: Float, onDismiss: () -> Unit, onConfirm: (Float) -> Unit) {
+fun ModifyTotalDialog(showDialog: Boolean, originalTotal: Float, hasTotalError: Boolean = false, onDismiss: () -> Unit, onConfirm: (Float) -> Unit) {
     if (!showDialog) return
 
     var newTotal by remember { mutableStateOf("") }
@@ -509,15 +509,26 @@ fun ModifyTotalDialog(showDialog: Boolean, originalTotal: Float, onDismiss: () -
                 )
                 Spacer(modifier = Modifier.height(12.dp))
 
-                //Warning
-                Text(
-                    text = "Advarsel! Sletter eller ændres prisen på et produkt fra kvitteringen vil dette opdatere prisen på kvitteringen igen",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color.Gray,
-                    fontStyle = FontStyle.Italic,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
+                //Displayer error, hvis den er der, ellers bare en warning
+                if (hasTotalError) {
+                    Text(
+                        text = "Vi mistænker scanneren ikke har aflæst totalprisen korrekt, dobbeltcheck venligst fra total fra kvitteringen",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                } else {
+                    //Warning
+                    Text(
+                        text = "Advarsel! Sletter eller ændres prisen på et produkt fra kvitteringen vil dette opdatere prisen på kvitteringen igen",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color.Gray,
+                        fontStyle = FontStyle.Italic,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                }
 
                 //Done button
                 Row(

@@ -207,6 +207,7 @@ fun ReceiptScanningContent(
         ModifyTotalDialog(
             showDialog = showModifyTotalDialog,
             originalTotal = (uiState as ReceiptUIState.Success).receiptTotal,
+            hasTotalError = (uiState as ReceiptUIState.Success).errors?.totalError == true,
             onDismiss = { showModifyTotalDialog = false},
             onConfirm =  { newTotal ->
                 viewModel.updateTotalForSelectedReceipt(newTotal)

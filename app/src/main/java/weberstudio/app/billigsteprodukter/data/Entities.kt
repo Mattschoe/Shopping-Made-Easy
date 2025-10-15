@@ -10,6 +10,7 @@ import androidx.room.PrimaryKey
 import androidx.room.Relation
 import kotlinx.parcelize.Parcelize
 import weberstudio.app.billigsteprodukter.R
+import weberstudio.app.billigsteprodukter.logic.Formatter.isIshEqualTo
 import weberstudio.app.billigsteprodukter.logic.Store
 import java.time.LocalDate
 import java.time.Month
@@ -43,6 +44,10 @@ data class Product(
     ) {
     val businessID: ProductID //Business logic ID
         get() = ProductID(store, name)
+}
+
+fun Product.isEqualTo(other: Product): Boolean {
+    return this.store == other.store && this.name == other.name && this.price.isIshEqualTo(other.price)
 }
 
 /**

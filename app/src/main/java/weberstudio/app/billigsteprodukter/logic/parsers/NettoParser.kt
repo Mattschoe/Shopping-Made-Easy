@@ -6,6 +6,7 @@ import com.google.mlkit.vision.text.Text
 import org.apache.commons.text.similarity.JaroWinklerSimilarity
 import org.apache.commons.text.similarity.LevenshteinDistance
 import weberstudio.app.billigsteprodukter.data.Product
+import weberstudio.app.billigsteprodukter.logic.Formatter.isIshEqualTo
 import weberstudio.app.billigsteprodukter.logic.Store
 import weberstudio.app.billigsteprodukter.logic.components.FuzzyMatcher
 import weberstudio.app.billigsteprodukter.logic.exceptions.ParsingException
@@ -14,7 +15,6 @@ import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ParsedLine
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ParsedProduct
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ScanError
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ScanValidation
-import kotlin.math.abs
 import kotlin.math.sqrt
 
 object NettoParser : StoreParser {
@@ -108,7 +108,8 @@ object NettoParser : StoreParser {
         if (isQuantityLine(productName)) {
             //Finder den linje som er lige over "RABAT" og snupper navnet fra den
             val parentLine = getLineAboveUsingReference(parsedLines, lineA, controlLine) //OBS: BLACK MAGIC FUCKERY
-            if (parentLine == null) {
+            val wrongName: Boolean = parsedProducts.any { products -> products.name == parentLine?.text } //We might have already parsed a product with this name, if we have something is wrong
+            if (parentLine == null || wrongName) {
                 return Pair(ParsedProduct(productName, productPrice), ScanError.WRONG_NAME)
             } else {
                 try {
@@ -170,7 +171,7 @@ object NettoParser : StoreParser {
         val filteredSet = products.filter { product ->
             !isReceiptTotalWord(product.name) &&
             !isIgnoreWord(product.name) &&
-            product.price.isIshEqualTo(total)
+            !product.price.isIshEqualTo(total)
         }.toHashSet()
 
         if (filteredSet.isEmpty()) throw ParsingException("Final list couldn't be read. Please try again")

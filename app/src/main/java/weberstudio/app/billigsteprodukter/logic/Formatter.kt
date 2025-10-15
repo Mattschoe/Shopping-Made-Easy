@@ -2,6 +2,7 @@ package weberstudio.app.billigsteprodukter.logic
 
 import java.time.Month
 import java.util.Locale
+import kotlin.math.abs
 
 /**
  * This object has the single focus of formatting and standardizing text UI for the user.
@@ -100,5 +101,15 @@ object Formatter {
             .replace(".", "")
             .replace(",", ".")
             .toFloat()
+    }
+
+    /**
+     * Checks if the two floats given are *ish* equal to eachother
+     * @param epsilon the difference between the two floats. Shouldn't be given as standard unless
+     * for a special reason
+     */
+    fun Float.isIshEqualTo(other: Float, epsilon: Float = 0.0001f): Boolean {
+        if (this.isNaN() || other.isNaN()) return false
+        return abs(this - other) <= epsilon
     }
 }

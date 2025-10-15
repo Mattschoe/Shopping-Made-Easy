@@ -57,10 +57,12 @@ import androidx.navigation.NavController
 import kotlinx.coroutines.launch
 import weberstudio.app.billigsteprodukter.R
 import weberstudio.app.billigsteprodukter.data.Product
+import weberstudio.app.billigsteprodukter.data.isEqualTo
 import weberstudio.app.billigsteprodukter.logic.CameraCoordinator
 import weberstudio.app.billigsteprodukter.logic.Formatter.formatFloatToDanishCurrency
 import weberstudio.app.billigsteprodukter.logic.Store
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser
+import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ScanError
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ScanValidation
 import weberstudio.app.billigsteprodukter.ui.ParsingState
 import weberstudio.app.billigsteprodukter.ui.ReceiptUIState
@@ -279,6 +281,7 @@ private fun ReceiptContent(
 
     var product2Modify by remember { mutableStateOf<Product?>(null) }
     var hasFixedTotalError by remember { mutableStateOf(false) }
+
     LazyColumn(modifier = modifier) {
         stickyHeader {
             Column(
@@ -331,6 +334,7 @@ private fun ReceiptContent(
             var cardSizePx by remember { mutableStateOf(IntSize(0, 0)) }
 
             Box(
+                //region DRAG INTERACTIONS
                 modifier = Modifier
                     .clickable(onClick = { product2Modify = product })
                     .onGloballyPositioned { coords ->
@@ -458,7 +462,9 @@ private fun ReceiptContent(
                         )
                     }
                     .zIndex(if (isDragging && draggedProduct?.databaseID == product.databaseID) 0f else 0f) //Makes sure overlay doesnt get clicks when overlay active
-            ) {
+            )
+            //endregion
+            {
                 if (isDragging && draggedProduct?.databaseID == product.databaseID) {
                     //Placeholder spacer when dragging
                     Spacer(
@@ -467,9 +473,14 @@ private fun ReceiptContent(
                             .fillMaxWidth()
                     )
                 } else {
+                    val productError = errors?.productErrors?.entries?.firstOrNull {
+                        it.key.isEqualTo(product)
+                    }?.value
+
                     ProductRow(
                         productName = product.name,
                         productPrice = formatFloatToDanishCurrency(product.price) + "kr",
+                        error = productError,
                         onClick = { product2Modify = product }
                     )
                 }

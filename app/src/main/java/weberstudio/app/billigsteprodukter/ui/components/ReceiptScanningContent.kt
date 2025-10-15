@@ -26,6 +26,10 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
@@ -37,6 +41,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import weberstudio.app.billigsteprodukter.R
+import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser
+import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ScanError
 
 
 /**
@@ -44,12 +50,16 @@ import weberstudio.app.billigsteprodukter.R
  * @param productPrice the price of the product
  */
 @Composable
-fun ProductRow(productName: String, productPrice: String, onClick: () -> Unit) {
+fun ProductRow(productName: String, productPrice: String, error: ScanError? = null, onClick: () -> Unit) {
+    var fixedError by remember { mutableStateOf(false) }
     Card(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp, vertical = 6.dp)
-            .clickable(onClick = onClick),
+            .clickable(onClick = {
+                onClick()
+                fixedError = true
+            }),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
@@ -58,7 +68,7 @@ fun ProductRow(productName: String, productPrice: String, onClick: () -> Unit) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 12.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(
                 modifier = Modifier
@@ -78,6 +88,16 @@ fun ProductRow(productName: String, productPrice: String, onClick: () -> Unit) {
                     color = Color.Gray
                 )
             }
+            if (!fixedError) {
+                error?.let { error ->
+                    Log.d("DEBUG", "$productName, with error: ${error.name}")
+                    Icon(
+                        imageVector = ImageVector.vectorResource(R.drawable.exclamation_icon),
+                        contentDescription = "Fejl i aflæsning af total fra kvittering",
+                        tint = Color.Yellow,
+                    )
+                }
+            }
         }
     }
 }
@@ -88,7 +108,6 @@ fun ProductRow(productName: String, productPrice: String, onClick: () -> Unit) {
  */
 @Composable
 fun ReceiptTotalCard(modifier: Modifier = Modifier, totalPrice: String, totalError: Boolean = false) {
-    Log.d("DEBUG", "totalError in ReceiptTotalCard: $totalError")
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(12.dp),

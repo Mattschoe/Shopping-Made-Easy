@@ -151,13 +151,7 @@ interface StoreParser {
     }
 
     //region SUPPORT DATA CLASS/FUNCTIONS
-    fun normalizeText(text: String): String {
-        return text
-            .replace(Regex("[^A-Za-zÆØÅæøå0-9 ,.]"), "") //Limits to a-z, digits and whitespaces
-            .uppercase()
-            .replace(",", ".") //Ændrer "12,50" til "12.50" så vi kan parse korrekt senere
-            .trim()
-    }
+
 
     /**
      * Checks if the two floats given are *ish* equal to eachother

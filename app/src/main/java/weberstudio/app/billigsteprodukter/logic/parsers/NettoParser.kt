@@ -7,6 +7,7 @@ import org.apache.commons.text.similarity.JaroWinklerSimilarity
 import org.apache.commons.text.similarity.LevenshteinDistance
 import weberstudio.app.billigsteprodukter.data.Product
 import weberstudio.app.billigsteprodukter.logic.Formatter.isIshEqualTo
+import weberstudio.app.billigsteprodukter.logic.Formatter.normalizeText
 import weberstudio.app.billigsteprodukter.logic.Store
 import weberstudio.app.billigsteprodukter.logic.components.FuzzyMatcher
 import weberstudio.app.billigsteprodukter.logic.exceptions.ParsingException

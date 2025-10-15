@@ -62,6 +62,7 @@ import weberstudio.app.billigsteprodukter.R
 import weberstudio.app.billigsteprodukter.data.Product
 import weberstudio.app.billigsteprodukter.logic.Formatter.formatFloatToDanishCurrency
 import weberstudio.app.billigsteprodukter.logic.Formatter.formatInputToDanishCurrencyStandard
+import weberstudio.app.billigsteprodukter.logic.Formatter.normalizeText
 import weberstudio.app.billigsteprodukter.logic.Store
 
 @Composable
@@ -702,7 +703,7 @@ fun ModifyProductDialog(product: Product, onDismiss: () -> Unit, onConfirm: (Pro
                     IconButton(
                         onClick = {
                             val price: Float? = newPrice.toFloatOrNull()
-                            onConfirm(product.copy(name = newName, price = if (price != null) price else product.price))
+                            onConfirm(product.copy(name = normalizeText(newName), price = if (price != null) price else product.price))
                         },
                         modifier = Modifier
                             .size(48.dp)

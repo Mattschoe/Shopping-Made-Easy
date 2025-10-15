@@ -167,7 +167,6 @@ fun ReceiptScanningContent(
             LoadingSkeleton(modifier)
         }
         is ReceiptUIState.Success -> {
-            Log.d("DEBUG", "Pre ReceiptContent: ${currentState.errors}")
             ReceiptContent(
                 modifier = modifier,
                 products = currentState.products,
@@ -208,11 +207,13 @@ fun ReceiptScanningContent(
             showDialog = showModifyTotalDialog,
             originalTotal = (uiState as ReceiptUIState.Success).receiptTotal,
             hasTotalError = (uiState as ReceiptUIState.Success).errors?.totalError == true,
-            onDismiss = { showModifyTotalDialog = false},
+            onDismiss = {
+                showModifyTotalDialog = false
+            },
             onConfirm =  { newTotal ->
                 viewModel.updateTotalForSelectedReceipt(newTotal)
                 showModifyTotalDialog = false
-            }
+            },
         )
     }
     //endregion
@@ -263,7 +264,6 @@ private fun ReceiptContent(
     modifyProduct: (Product) -> Unit,
     onDeleteProduct: (Product) -> Unit
 ) {
-    Log.d("DEBUG", "ReceiptContent: $errors")
     //Drag functionality
     val density = LocalDensity.current
     val haptic = LocalHapticFeedback.current
@@ -278,6 +278,7 @@ private fun ReceiptContent(
     var isPerformingDeleteAnimation by remember { mutableStateOf(false) }
 
     var product2Modify by remember { mutableStateOf<Product?>(null) }
+    var hasFixedTotalError by remember { mutableStateOf(false) }
     LazyColumn(modifier = modifier) {
         stickyHeader {
             Column(
@@ -305,7 +306,10 @@ private fun ReceiptContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp)
-                    .clickable(onClick = onModifyTotal)
+                    .clickable(onClick = {
+                        onModifyTotal()
+                        hasFixedTotalError = true
+                    })
             ) {
                 Row (
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -313,7 +317,7 @@ private fun ReceiptContent(
                 ) {
                     ReceiptTotalCard(
                         totalPrice = formatFloatToDanishCurrency(receiptTotal),
-                        totalError = errors?.totalError == true
+                        totalError = errors?.totalError == true && !hasFixedTotalError
                     )
                 }
             }

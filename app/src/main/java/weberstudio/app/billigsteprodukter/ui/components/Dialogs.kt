@@ -1,5 +1,6 @@
 package weberstudio.app.billigsteprodukter.ui.components
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -459,6 +460,7 @@ fun AddProductDialog(showDialog: Boolean, onDismiss: () -> Unit, onConfirm: (nam
 @Composable
 fun ModifyTotalDialog(showDialog: Boolean, originalTotal: Float, hasTotalError: Boolean = false, onDismiss: () -> Unit, onConfirm: (Float) -> Unit) {
     if (!showDialog) return
+
 
     var newTotal by remember { mutableStateOf("") }
     val isValid = newTotal.toFloatOrNull() != null

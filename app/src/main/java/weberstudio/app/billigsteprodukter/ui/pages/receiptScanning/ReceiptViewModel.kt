@@ -68,7 +68,7 @@ class ReceiptViewModel(application: Application): AndroidViewModel(application) 
                         store = receiptWithProducts.receipt.store,
                         receiptTotal = receiptWithProducts.receipt.total,
                         errors = errors
-                    ).also { Log.d("DEBUG", "Created Success state with errors: ${it.errors}") }
+                    )
                 } else {
                     ReceiptUIState.Empty
                 }
@@ -156,7 +156,6 @@ class ReceiptViewModel(application: Application): AndroidViewModel(application) 
             } catch(e: Exception) {
                 _parsingState.value = ParsingState.Error("Error loading image!: ${e.message}")
             }
-            Log.d("ReceiptViewModel", "Finished parsing with state: ${_parsingState.value}")
         }
     }
 

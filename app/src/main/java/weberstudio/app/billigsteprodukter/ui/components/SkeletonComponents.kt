@@ -3,6 +3,7 @@ package weberstudio.app.billigsteprodukter.ui.components
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -92,24 +93,52 @@ fun ProductRowSkeleton() {
 }
 
 /**
- * Skeleton loader matching TotalAndFilterRow design
+ * Skeleton for the round "Add product" button
  */
 @Composable
-fun TotalAndFilterRowSkeleton(modifier: Modifier = Modifier) {
+fun AddProductToReceiptSkeleton(modifier: Modifier = Modifier) {
     val brush = shimmerBrush()
 
-    Row(
+    Card(
         modifier = modifier
-            .height(IntrinsicSize.Min),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondary),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        //Total card skeleton
-        Card(
-            modifier = Modifier.weight(1f),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(12.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            // circular placeholder for the icon
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .background(brush)
+            )
+        }
+    }
+}
+
+/**
+ * Skeleton for the receipt total card
+ */
+@Composable
+fun ReceiptTotalSkeleton(modifier: Modifier = Modifier) {
+    val brush = shimmerBrush()
+
+    Card(
+        modifier = modifier,
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
         ) {
             Row(
                 modifier = Modifier
@@ -118,25 +147,27 @@ fun TotalAndFilterRowSkeleton(modifier: Modifier = Modifier) {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center,
             ) {
+                // "Total:" label skeleton
                 Box(
                     modifier = Modifier
-                        .width(120.dp)
-                        .height(18.dp)
+                        .width(80.dp)
+                        .height(20.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(brush)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                // price skeleton
+                Box(
+                    modifier = Modifier
+                        .width(64.dp)
+                        .height(20.dp)
                         .clip(RoundedCornerShape(4.dp))
                         .background(brush)
                 )
             }
+
+
         }
-
-        Spacer(modifier = Modifier.width(8.dp))
-
-        //Filter icon skeleton
-        Box(
-            modifier = Modifier
-                .size(56.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(brush)
-        )
     }
 }
 

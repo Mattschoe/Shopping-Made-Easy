@@ -1,6 +1,5 @@
 package weberstudio.app.billigsteprodukter.ui.pages.receiptScanning
 
-import android.util.Log
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -16,7 +15,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -61,13 +59,12 @@ import weberstudio.app.billigsteprodukter.data.isEqualTo
 import weberstudio.app.billigsteprodukter.logic.CameraCoordinator
 import weberstudio.app.billigsteprodukter.logic.Formatter.formatFloatToDanishCurrency
 import weberstudio.app.billigsteprodukter.logic.Store
-import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser
-import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ScanError
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ScanValidation
 import weberstudio.app.billigsteprodukter.ui.ParsingState
 import weberstudio.app.billigsteprodukter.ui.ReceiptUIState
 import weberstudio.app.billigsteprodukter.ui.components.AddProductDialog
 import weberstudio.app.billigsteprodukter.ui.components.AddProductToReceiptButton
+import weberstudio.app.billigsteprodukter.ui.components.AddProductToReceiptSkeleton
 import weberstudio.app.billigsteprodukter.ui.components.ErrorMessageLarge
 import weberstudio.app.billigsteprodukter.ui.components.LogoBarHandler
 import weberstudio.app.billigsteprodukter.ui.components.LogoBarSkeleton
@@ -77,7 +74,7 @@ import weberstudio.app.billigsteprodukter.ui.components.ProductCard
 import weberstudio.app.billigsteprodukter.ui.components.ProductRow
 import weberstudio.app.billigsteprodukter.ui.components.ProductRowSkeleton
 import weberstudio.app.billigsteprodukter.ui.components.ReceiptTotalCard
-import weberstudio.app.billigsteprodukter.ui.components.TotalAndFilterRowSkeleton
+import weberstudio.app.billigsteprodukter.ui.components.ReceiptTotalSkeleton
 import weberstudio.app.billigsteprodukter.ui.components.launchCamera
 import weberstudio.app.billigsteprodukter.ui.navigation.PageNavigation
 import kotlin.math.max
@@ -238,12 +235,23 @@ private fun LoadingSkeleton(modifier: Modifier = Modifier) {
                 ) {
                     LogoBarSkeleton(modifier = Modifier.fillMaxWidth())
                 }
-
-                TotalAndFilterRowSkeleton(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 56.dp)
-                )
+                Spacer(Modifier.height(4.dp))
+                AddProductToReceiptSkeleton()
+            }
+        }
+        //Total
+        item {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp)
+            ) {
+                Row (
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    ReceiptTotalSkeleton()
+                }
             }
         }
 

@@ -1,5 +1,6 @@
 package weberstudio.app.billigsteprodukter.ui.pages.budget
 
+import android.util.Log
 import androidx.compose.animation.core.EaseOutCubic
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -558,7 +559,15 @@ private fun BudgetHeader(selectedMonth: String, onMonthClick: () -> Unit, onAddC
 }
 
 @Composable
-fun BudgetCircle(modifier: Modifier = Modifier, currentBudget: Float, totalSpent: Float, remaining: Float, spentPercentage: Float, onPriceChanged: ((Float) -> Unit)? = null) {
+fun BudgetCircle(
+    modifier: Modifier = Modifier,
+    currentBudget: Float,
+    totalSpent: Float,
+    remaining: Float,
+    spentPercentage: Float,
+    onPriceChanged: ((Float) -> Unit)? = null
+) {
+    val isOverBudget = spentPercentage >= 1.0f
     val animatedProgress by animateFloatAsState(
         targetValue = spentPercentage,
         animationSpec = tween(durationMillis = 1000, easing = EaseOutCubic),
@@ -616,7 +625,7 @@ fun BudgetCircle(modifier: Modifier = Modifier, currentBudget: Float, totalSpent
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
-                text = "${formatInputToDanishCurrencyStandard(remaining.toInt().toString())}kr",
+                text = (if (isOverBudget) "-" else "") + "${formatInputToDanishCurrencyStandard(remaining.toInt().toString())}kr",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = if (remaining < 0) Color.Red else MaterialTheme.colorScheme.primaryContainer

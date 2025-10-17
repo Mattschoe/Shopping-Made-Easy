@@ -68,13 +68,7 @@ object NettoParser : StoreParser {
 
 
         val (filteredProducts, scanValidation, receiptTotal) = parsedProductsToFilteredProductList(parsedProducts, scanLogicErrors)
-        return ParsedImageText(
-            Store.Netto,
-            filteredProducts,
-            receiptTotal,
-            scanValidation
-                .withTotalError(true)
-        )
+        return ParsedImageText(Store.Netto, filteredProducts, receiptTotal, scanValidation)
     }
 
     /**
@@ -118,7 +112,7 @@ object NettoParser : StoreParser {
                     val productPrice = normalizeText(lineB.text).toFloat()/normalizeText(lineA.text[0].toString()).toFloat()
                     return Pair(ParsedProduct(parentLine.text, productPrice), null)
                 } catch (_: NumberFormatException) {
-                    Log.d("RECEIPT_SCANNING_ERROR", "Error dividing the product price with the amount!")
+                    return Pair(ParsedProduct(productName, 0.0f), ScanError.PRODUCT_WITHOUT_PRICE)
                 }
             }
         }
@@ -175,7 +169,7 @@ object NettoParser : StoreParser {
             !product.price.isIshEqualTo(total)
         }.toHashSet()
 
-        if (filteredSet.isEmpty()) throw ParsingException("Final list couldn't be read. Please try again")
+        if (filteredSet.isEmpty()) throw ParsingException("Filtered set of products is empty!. Please try again")
 
         //Checker om total er det vi regner med, ellers så marker vi at vi tror der er gået noget galt
         val productsTotal = filteredSet.sumOf { product -> product.price.toDouble() }

@@ -6,6 +6,7 @@ import com.google.mlkit.vision.text.Text
 import org.apache.commons.text.similarity.JaroWinklerSimilarity
 import org.apache.commons.text.similarity.LevenshteinDistance
 import weberstudio.app.billigsteprodukter.data.Product
+import weberstudio.app.billigsteprodukter.logic.Formatter.isIshEqualTo
 import weberstudio.app.billigsteprodukter.logic.Formatter.normalizeText
 import weberstudio.app.billigsteprodukter.logic.Store
 import weberstudio.app.billigsteprodukter.logic.components.FuzzyMatcher
@@ -13,6 +14,7 @@ import weberstudio.app.billigsteprodukter.logic.exceptions.ParsingException
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ParsedImageText
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ParsedLine
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ParsedProduct
+import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ScanError
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ScanValidation
 import kotlin.math.hypot
 import kotlin.math.sqrt
@@ -30,6 +32,7 @@ object SuperBrugsenParser: StoreParser {
         var controlLine: ParsedLine? = null //A line thats "Above" all products. Often coming from StoreLogo text
         val parsedProducts = ArrayList<ParsedProduct>()
         val isMarked = HashMap<ParsedLine, Boolean>()
+        val scanLogicErrors = HashMap<ParsedProduct, ScanError?>()
 
         //region FINDS CONTROLLINE
         for (line in parsedLines) {
@@ -64,15 +67,17 @@ object SuperBrugsenParser: StoreParser {
                 val lineB = parsedLines[j]
 
                 if (doesLinesCollide(lineA, lineB)) {
-                    parsedProducts.add(parseLinesToProduct(lineA, lineB, controlLine, includeRABAT, parsedLines, parsedProducts, isMarked))
+                    val (product, error) = parseLinesToProduct(lineA, lineB, controlLine, includeRABAT, parsedLines, parsedProducts, isMarked)
+                    parsedProducts.add(product)
+                    scanLogicErrors.put(product, error)
                     break
                 }
             }
         }
         //endregion
 
-        val (filteredProducts, receiptTotal) = parsedProductsToFilteredProductList(parsedProducts)
-        return ParsedImageText(Store.SuperBrugsen, filteredProducts, receiptTotal, ScanValidation())
+        val (filteredProducts, scanValidation, receiptTotal) = parsedProductsToFilteredProductList(parsedProducts, scanLogicErrors)
+        return ParsedImageText(Store.SuperBrugsen, filteredProducts, receiptTotal, scanValidation)
     }
 
     /**
@@ -84,7 +89,15 @@ object SuperBrugsenParser: StoreParser {
      * @param parsedLines the lines parsed so far. Used to find the line above a quantity line
      * @param parsedProducts the products parsed so far. Used if *includeRABAT* is true to deduct the discount
      */
-    private fun parseLinesToProduct(lineA: ParsedLine, lineB: ParsedLine, controlLine: ParsedLine, includeRABAT: Boolean, parsedLines: List<ParsedLine>, parsedProducts: List<ParsedProduct>, isMarked: Map<ParsedLine, Boolean>): ParsedProduct {
+    private fun parseLinesToProduct(
+        lineA: ParsedLine,
+        lineB: ParsedLine,
+        controlLine: ParsedLine,
+        includeRABAT: Boolean,
+        parsedLines: List<ParsedLine>,
+        parsedProducts: List<ParsedProduct>,
+        isMarked: Map<ParsedLine, Boolean>
+    ): Pair<ParsedProduct, ScanError?> {
         //Snupper navn og pris
         val productName = lineA.text
         val productPrice: Float
@@ -92,27 +105,22 @@ object SuperBrugsenParser: StoreParser {
         //Prøver at converte prisen til Float
         try { productPrice = lineB.text.toFloat() }
         catch (_: NumberFormatException) {
-            //TODO: Det her skal give et ("!") ude på UI'en for useren
-            Log.d("ERROR", "Couldn't convert ${lineB.text} to Float!")
-            return ParsedProduct(productName, 0.0f)
+            return Pair(ParsedProduct(productName, 0.0f), ScanError.PRODUCT_WITHOUT_PRICE)
         }
 
         //region QUANTITY LINE
         //Hvis linjen over er en quantity line, så prøver vi at beregne prisen ud fra quantity line
         if (isMarked.contains(lineA) ||isMarked.contains(lineB)) {
             val quantityLine = getQuantityLineAboveUsingReference(parsedLines, lineA, controlLine)
-            if (quantityLine == null) { //TODO: Det her skal give et ("!") ude på UI'en for useren
-                Log.d("ERROR", "Couldn't access the previous product from product $productName!");
-                return ParsedProduct(productName, productPrice) //Returnerer bare quantity line så vi kan se hvor fejlen er sket
+            if (quantityLine == null) {
+                return Pair(ParsedProduct(productName, productPrice), ScanError.WRONG_NAME)
             } else {
                 try {
                     //Hvis det lykkedes at snuppe quantity linjen, så beregner vi enhedsprisen ud fra det.
                     val productPrice = productPrice/normalizeText(quantityLine.text[0].toString()).toFloat()
-                    return ParsedProduct(lineA.text, productPrice)
+                    return Pair(ParsedProduct(lineA.text, productPrice), null)
                 } catch (_: NumberFormatException) {
-                    //TODO: Det her skal give et ("!") ude på UI'en for useren
-                    Log.d("ERROR", "Error dividing the product price with the amount!")
-                    return ParsedProduct(productName, 0.0f) //Returner produktet med pris på 0,0 så vi useren kan se der er noget galt
+                    return Pair(ParsedProduct(productName, 0.0f), ScanError.PRODUCT_WITHOUT_PRICE)
                 }
             }
         }
@@ -125,18 +133,25 @@ object SuperBrugsenParser: StoreParser {
         }
         //endregion
 
-        return ParsedProduct(productName, productPrice)
+        return Pair(ParsedProduct(productName, productPrice), null)
     }
 
     /**
      * Filters the products parsed and returns a filtered set which is cleaned up and ready to be given to the database
      */
-    private fun parsedProductsToFilteredProductList(parsedProducts: List<ParsedProduct>): Pair<HashSet<Product>, Float> {
+    private fun parsedProductsToFilteredProductList(
+        parsedProducts: List<ParsedProduct>,
+        parsedProductErrors: Map<ParsedProduct, ScanError?>
+    ): Triple<HashSet<Product>, ScanValidation, Float> {
+        var scanValidation = ScanValidation()
         val products: HashSet<Product> = HashSet<Product>()
 
         //Omdanner de parsedProducts om til Products
         for (parsedProduct in parsedProducts) {
-            products.add(Product(name = parsedProduct.name, price = parsedProduct.price, store = Store.Coop365))
+            val product = Product(name = parsedProduct.name, price = parsedProduct.price, store = Store.Coop365)
+            val error: ScanError? = parsedProductErrors[parsedProduct]
+            products.add(product)
+            error?.let { error -> scanValidation = scanValidation.withProductError(product, error) }
         }
 
         if (products.isEmpty()) {
@@ -146,28 +161,33 @@ object SuperBrugsenParser: StoreParser {
 
         //region Filtering and returning
         //Hvis der er mere end to produkter (så ét produkt og ét stopord), så gemmer vi alle dem som har den samme pris som stop ordene (Så hvis "Total" fucker f.eks.)
-        val stopWordPrices = if (products.size > 2) {
+        val total = if (products.size > 2) {
             products
-                .filter { isStopWord(it.name) }
-                .map { it.price }
-                .toSet()
+                .filter { isReceiptTotalWord(it.name) }
+                .maxOf { it.price }
         } else {
-            emptySet()
+            0.0f
         }
 
         //Returner kun produkter som ikke er stop ordet, eller som har den samme pris som stop ordet (så hvis "Total" fucker f.eks.)
         val filteredSet = products.filter { product ->
-            !isStopWord(product.name) &&
-            product.price !in stopWordPrices &&
+            !isReceiptTotalWord(product.name) &&
+            !isIgnoreWord(product.name) &&
             !isQuantityLine(product.name) &&
-            !fuzzyMatcher.match(product.name, listOf("RABAT"), 0.8f, 0.2f) }.toHashSet()
+            !product.price.isIshEqualTo(total)
+        }.toHashSet()
 
         if (filteredSet.isEmpty()) {
             Log.d("ERROR", "Filtered set of products is empty!. Please try again")
             throw ParsingException("Filtered set of products is empty!. Please try again")
         }
 
-        return Pair(filteredSet, stopWordPrices.first())
+        //Checker om total er det vi regner med, ellers så marker vi at vi tror der er gået noget galt
+        val productsTotal = filteredSet.sumOf { product -> product.price.toDouble() }
+        if (!productsTotal.isIshEqualTo(total.toDouble())) scanValidation = scanValidation.withTotalError(true)
+
+
+        return Triple(filteredSet, scanValidation, total)
     }
 
     /**
@@ -207,8 +227,8 @@ object SuperBrugsenParser: StoreParser {
     /**
      * Checks and see if word given as argument is a stop word using fuzzy search
      */
-    private fun isStopWord(input: String): Boolean {
-        val stopWords = listOf("AT BETALE", "VISA", "BETALINGSKORT", "MOMS IALT", "BYTTEPENGE")
+    private fun isReceiptTotalWord(input: String): Boolean {
+        val stopWords = listOf("AT BETALE", "VISA", "BETALINGSKORT")
 
         return stopWords.any { stopWord ->
             val jaroSimilarity = fuzzyMatcherJaro.apply(input, stopWord) ?: 0.0
@@ -224,6 +244,29 @@ object SuperBrugsenParser: StoreParser {
             false
         }
     }
+
+    /**
+     * Checks and see if word given as argument is a word that should be ignored when trying to
+     * parse into products
+     */
+    private fun isIgnoreWord(input: String): Boolean {
+        val ignoreWords = listOf("MOMS", "MOMS IALT", "BYTTEPENGE", "PANT", "RABAT", "HERAF")
+
+        return ignoreWords.any { ignoreWord ->
+            val jaroSimilarity = fuzzyMatcherJaro.apply(input, ignoreWord) ?: 0.0
+            if (jaroSimilarity >= 0.80) {
+                return true
+            } //Higher = Fewer false positive
+
+            val levenSimilarity = fuzzyMatcherLeven.apply(input, ignoreWord)
+            if (levenSimilarity <= 2) {
+                return true
+            } //LMAO good luck adjusting lel
+
+            false
+        }
+    }
+
 
     override fun toString(): String {
         return "SuperBrugsen"

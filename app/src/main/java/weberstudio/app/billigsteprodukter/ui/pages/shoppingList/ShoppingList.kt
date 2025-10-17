@@ -337,7 +337,7 @@ fun ShoppingListUndermenuContent(modifier: Modifier, viewModel: ShoppingListUnde
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             filteredList.forEach { (store, productsWithStatus) ->
-                val expanded = isStoreExpanded[store.ID] == true
+                val expanded = isStoreExpanded[store.ID] ?: true //Starter stores expanded (Don't follow IntelliSense here, it's lying) (goddamn CLANKER)
                 val (total, checkedOff) = storeTotals[store] ?: Pair(0, 0)
 
                 item(key = store.ID) {

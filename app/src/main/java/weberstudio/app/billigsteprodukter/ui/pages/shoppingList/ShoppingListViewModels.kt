@@ -171,6 +171,7 @@ class ShoppingListUndermenuViewModel(application: Application): AndroidViewModel
      */
     fun toggleStore(store: Store) {
         _isStoreExpanded.update { currentMap ->
+            Log.d("DEBUG", currentMap.toString())
             currentMap + (store.ID to (currentMap[store.ID] != true))
         }
     }
@@ -199,7 +200,6 @@ class ShoppingListUndermenuViewModel(application: Application): AndroidViewModel
         }
     }
 
-    private var nextNegativeID = -1L
     /**
      * Adds a product only scoped to this list and will not be saved beyond this shoppingList
      */

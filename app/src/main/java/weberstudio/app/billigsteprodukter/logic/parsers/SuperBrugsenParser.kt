@@ -16,6 +16,7 @@ import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ParsedLine
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ParsedProduct
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ScanError
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ScanValidation
+import kotlin.math.abs
 import kotlin.math.hypot
 import kotlin.math.sqrt
 
@@ -37,7 +38,9 @@ object SuperBrugsenParser: StoreParser {
         //region FINDS CONTROLLINE
         for (line in parsedLines) {
             //Tries to get a controlLine
-            if (controlLine == null && (fuzzyMatcher.match(line.text, listOf("SUPER BRUGSEN", "BRUGSEN"), 0.85f, 0.15f))) controlLine = line
+            if (controlLine == null && (fuzzyMatcher.match(line.text, listOf("SUPER BRUGSEN", "BRUGSEN"), 0.85f, 0.15f))) {
+                controlLine = line
+            }
         }
         if (controlLine == null) {
             Log.d("ERROR", "Couldn't find any control line!")
@@ -100,13 +103,7 @@ object SuperBrugsenParser: StoreParser {
     ): Pair<ParsedProduct, ScanError?> {
         //Snupper navn og pris
         val productName = lineA.text
-        val productPrice: Float
-
-        //Prøver at converte prisen til Float
-        try { productPrice = lineB.text.toFloat() }
-        catch (_: NumberFormatException) {
-            return Pair(ParsedProduct(productName, 0.0f), ScanError.PRODUCT_WITHOUT_PRICE)
-        }
+        val productPrice = lineB.text.toFloatOrNull() ?: 0.0f
 
         //region QUANTITY LINE
         //Hvis linjen over er en quantity line, så prøver vi at beregne prisen ud fra quantity line
@@ -133,6 +130,9 @@ object SuperBrugsenParser: StoreParser {
         }
         //endregion
 
+        if (productPrice.isIshEqualTo(0.0f)) {
+            return Pair(ParsedProduct(productName, productPrice), ScanError.PRODUCT_WITHOUT_PRICE)
+        }
         return Pair(ParsedProduct(productName, productPrice), null)
     }
 
@@ -185,7 +185,6 @@ object SuperBrugsenParser: StoreParser {
         //Checker om total er det vi regner med, ellers så marker vi at vi tror der er gået noget galt
         val productsTotal = filteredSet.sumOf { product -> product.price.toDouble() }
         if (!productsTotal.isIshEqualTo(total.toDouble())) scanValidation = scanValidation.withTotalError(true)
-
 
         return Triple(filteredSet, scanValidation, total)
     }
@@ -278,30 +277,33 @@ object SuperBrugsenParser: StoreParser {
      * @param controlLineAbove the control line that shows what's "above" in the image (Often taking from storeLogo text)
      */
     fun getProductLineBelowUsingReference(allLines: List<ParsedLine>, referenceLine: ParsedLine, controlLineAbove: ParsedLine): ParsedLine? {
-        // 1) Compute the "upward" unit vector
-        val vUpX = (controlLineAbove.corners[3].x - referenceLine.corners[3].x).toFloat()
-        val vUpY = (controlLineAbove.corners[3].y - referenceLine.corners[3].y).toFloat()
+        //Compute the "upward" unit vector
+        val vUpX = (controlLineAbove.center.x - referenceLine.center.x).toFloat()
+        val vUpY = (controlLineAbove.center.y - referenceLine.center.y).toFloat()
         val vLen = hypot(vUpX, vUpY)
         if (vLen == 0f) return null
         val upX = vUpX / vLen
         val upY = vUpY / vLen
 
-        // 2) Project, filter, sort by true‐distance, then pick first matching isQuantityLine
+        val perpX = -upY
+        val perpY = upX
+        val perpendicularTolerance = 5000f
+
+        //Project, filter, sort by true‐distance, then pick first matching isQuantityLine
         return allLines
             .asSequence()
             .filter { it != referenceLine }
             .map { line ->
                 val toLineX = line.center.x - referenceLine.center.x
                 val toLineY = line.center.y - referenceLine.center.y
-                val dot  = toLineX * upX + toLineY * upY   // projection
-                val dist = hypot(toLineX, toLineY)        // Euclidean distance
-                Triple(line, dot, dist)
+                val dot = toLineX * upX + toLineY * upY
+                val perpDist = abs(toLineX * perpX + toLineY * perpY)
+                Triple(line, dot, perpDist)
             }
-            .filter { (_, dot, _) -> dot < 0f }           // only “above”
-            .sortedBy { (_, _, dist) -> dist }           // nearest first
-            .firstOrNull { (line, _, _) -> //Makes sure its not a quantity line
-                !isQuantityLine(line.text)
-            }
+            .filter { (_, _, perpDist) -> perpDist < perpendicularTolerance }  //First: within lane
+            .filter { (_, dot, _) -> dot < 0f }  //Then: below
+            .sortedBy { (_, dot, _) -> -dot }
+            .firstOrNull { (line, _, _) -> !isQuantityLine(line.text) }
             ?.first
     }
     /**

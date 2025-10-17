@@ -29,7 +29,7 @@ interface StoreParser {
     /**
      * Given a list of lines, it finds the one line above the *quantityLine* who is just “above” it.
      * @param referenceLine the line that controls which way is up and down on the Y-axis. **ITS VERY
-     * IMPORTANT** that the referenceLine is ABOVE the quantityLine, and NOT above!
+     * IMPORTANT** that the referenceLine is ABOVE the quantityLine, and NOT below!
      */
     fun getLineAboveUsingReference(allLines: List<ParsedLine>, quantityLine: ParsedLine, referenceLine: ParsedLine): ParsedLine? {
         // 1) Compute the "upward" unit vector (from quantityLine → referenceLine)
@@ -159,7 +159,8 @@ interface StoreParser {
      * for a special reason
      */
     fun Double.isIshEqualTo(other: Double, epsilon: Double = 0.0001): Boolean {
-        return abs(this - other) > epsilon
+        if (this.isNaN() || other.isNaN()) return false
+        return abs(this - other) <= epsilon
     }
 
     data class ParsedLine(

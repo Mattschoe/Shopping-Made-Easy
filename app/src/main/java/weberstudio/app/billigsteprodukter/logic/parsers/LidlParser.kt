@@ -23,7 +23,6 @@ object LidlParser: StoreParser {
     //region FIELDS
     private val fuzzyMatcherJaro = JaroWinklerSimilarity()
     private val fuzzyMatcherLeven = LevenshteinDistance()
-    private val fuzzyMatcher = FuzzyMatcher()
     //endregion
 
     override fun parse(receipt: Text): ParsedImageText {

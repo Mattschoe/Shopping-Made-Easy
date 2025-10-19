@@ -15,7 +15,7 @@ object ParserFactory {
                 for (word in lineWords) {
                     if (fuzzyMatcher.match(word, listOf("NETTO"), 0.85f, 0.3f)) return NettoParser
                     else if (fuzzyMatcher.match(word, listOf("REMA"), 0.85f, 0.3f)) return RemaParser
-                    else if (fuzzyMatcher.match(word, listOf("365", "365 DISCOUNT"), 0.85f, 0.3f)) return CoopParserQuantityBelow
+                    else if (fuzzyMatcher.match(word, listOf("365", "365 DISCOUNT"), 0.85f, 0.3f)) return CoopParserQuantityAbove
                     else if (fuzzyMatcher.match(word, listOf("MENU"), 0.85f, 0.3f)) return MenuParser
                     else if (fuzzyMatcher.match(word, listOf("LIDL"), 0.85f, 0.3f)) { return LidlParser }
                     else if (fuzzyMatcher.match(word, listOf("SUPERBRUGSEN", "BRUGSEN"), 0.85f, 0.3f)) return SuperBrugsenParser

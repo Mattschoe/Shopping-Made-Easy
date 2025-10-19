@@ -148,7 +148,7 @@ object SuperBrugsenParser: StoreParser {
 
         //Omdanner de parsedProducts om til Products
         for (parsedProduct in parsedProducts) {
-            val product = Product(name = parsedProduct.name, price = parsedProduct.price, store = Store.Coop365)
+            val product = Product(name = parsedProduct.name, price = parsedProduct.price, store = Store.SuperBrugsen)
             val error: ScanError? = parsedProductErrors[parsedProduct]
             products.add(product)
             error?.let { error -> scanValidation = scanValidation.withProductError(product, error) }

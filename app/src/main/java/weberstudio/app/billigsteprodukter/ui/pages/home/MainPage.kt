@@ -121,7 +121,7 @@ fun MainPageContent(modifier: Modifier = Modifier, navController: NavController,
                             when(activity.activityType) {
                                 ActivityType.RECEIPT_SCANNED -> navController.navigate(PageNavigation.createReceiptRoute(activity.receiptID!!))
                                 ActivityType.BUDGET_CREATED -> navController.navigate(PageNavigation.createBudgetRoute(activity.budgetMonth!!, activity.budgetYear!!))
-                                ActivityType.SHOPPING_LIST_CREATED -> ""
+                                ActivityType.SHOPPING_LIST_CREATED -> navController.navigate(PageNavigation.createShoppingListDetailRoute(activity.shoppingListID!!))
                             }
                         }
                     )

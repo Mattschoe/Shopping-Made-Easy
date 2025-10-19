@@ -257,9 +257,9 @@ fun PreBudgetPageUI(modifier: Modifier = Modifier, newBudget: (Budget) -> Unit, 
 
 @Composable
 fun BudgetDialog(selectedMonth: Month, onDismiss: () -> Unit, onClick: (Budget) -> Unit) {
-    var totalBudget by remember { mutableStateOf(TextFieldValue("")) }
+    var totalBudget by remember { mutableStateOf("") }
     val currentYear by remember { mutableStateOf(Year.from(LocalDateTime.now())) }
-    val isValid = totalBudget.text.trim().isNotEmpty()
+    val isValid = totalBudget.trim().isNotEmpty()
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -287,20 +287,10 @@ fun BudgetDialog(selectedMonth: Month, onDismiss: () -> Unit, onClick: (Budget) 
                 //Total budget field
                 BudgetInputField(
                     value = totalBudget,
-                    onValueChange = { input ->
-                        val validInput = filterInputToValidNumberInput(input.text)
-
-                        if (!validInput.isEmpty()) {
-                            val formatted = formatInputToDanishCurrencyStandard(validInput)
-                            totalBudget = TextFieldValue(
-                                text = formatted,
-                                selection = TextRange(formatted.length)
-                            )
-                        }
-                    },
+                    onValueChange = { totalBudget = it },
                     label = "I alt",
-                    totalBudget = formatDanishCurrencyToFloat(totalBudget.text),
-                    currentAmount = formatDanishCurrencyToFloat(totalBudget.text),
+                    totalBudget = formatDanishCurrencyToFloat(totalBudget),
+                    currentAmount = formatDanishCurrencyToFloat(totalBudget),
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
 
@@ -314,7 +304,7 @@ fun BudgetDialog(selectedMonth: Month, onDismiss: () -> Unit, onClick: (Budget) 
                             val budget = Budget(
                                 month = selectedMonth,
                                 year = currentYear,
-                                budget = formatDanishCurrencyToFloat(totalBudget.text)
+                                budget = formatDanishCurrencyToFloat(totalBudget)
                             )
                             onClick(budget)
                         },
@@ -345,8 +335,8 @@ fun BudgetDialog(selectedMonth: Month, onDismiss: () -> Unit, onClick: (Budget) 
 fun BudgetInputField(
     modifier: Modifier = Modifier,
     label: String,
-    value: TextFieldValue,
-    onValueChange: (TextFieldValue) -> Unit,
+    value: String,
+    onValueChange: (String) -> Unit,
     totalBudget: Float,
     currentAmount: Float,
     showDelete: Boolean = false,
@@ -691,8 +681,8 @@ private fun BudgetTipsSection(tips: List<String>) {
 @Composable
 private fun AddExpenseDialog(onDismiss: () -> Unit, onConfirm: (String, Float) -> Unit) {
     var name by remember { mutableStateOf("") }
-    var price by remember { mutableStateOf(TextFieldValue("")) }
-    val isValid = name.trim().isNotEmpty() && price.text.trim().isNotEmpty()
+    var price by remember { mutableStateOf("") }
+    val isValid = name.trim().isNotEmpty() && price.trim().isNotEmpty()
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -728,17 +718,7 @@ private fun AddExpenseDialog(onDismiss: () -> Unit, onConfirm: (String, Float) -
 
                 OutlinedTextField(
                     value = price,
-                    onValueChange = { input ->
-                        val validInput = filterInputToValidNumberInput(input.text)
-
-                        if (!validInput.isEmpty()) {
-                            val formatted = formatInputToDanishCurrencyStandard(validInput)
-                            price = TextFieldValue(
-                                text = formatted,
-                                selection = TextRange(formatted.length)
-                            )
-                        }
-                    },
+                    onValueChange = { price = it },
                     label = { Text("Pris...") },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(24.dp),
@@ -760,7 +740,7 @@ private fun AddExpenseDialog(onDismiss: () -> Unit, onConfirm: (String, Float) -
                     Spacer(modifier = Modifier.width(8.dp))
                     Button(
                         onClick = {
-                            val priceFloat = formatDanishCurrencyToFloat(price.text)
+                            val priceFloat = formatDanishCurrencyToFloat(price)
                             if (name.isNotBlank() && priceFloat > 0) {
                                 onConfirm(name, priceFloat)
                             }

@@ -2,6 +2,7 @@ package weberstudio.app.billigsteprodukter.ui.pages.shoppingList
 
 import android.app.Application
 import android.util.Log
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -26,6 +27,7 @@ import weberstudio.app.billigsteprodukter.data.shoppingList.ShoppingListReposito
 import weberstudio.app.billigsteprodukter.data.Product
 import weberstudio.app.billigsteprodukter.data.ShoppingList
 import weberstudio.app.billigsteprodukter.data.ShoppingListCrossRef
+import weberstudio.app.billigsteprodukter.data.isEqualTo
 import weberstudio.app.billigsteprodukter.data.receipt.ReceiptRepository
 import weberstudio.app.billigsteprodukter.logic.components.MatchScoreCalculator
 import weberstudio.app.billigsteprodukter.logic.Store
@@ -237,8 +239,12 @@ class ShoppingListUndermenuViewModel(application: Application): AndroidViewModel
         _databaseSearchQuery.value = query
         if (query.length >= 3) {
             viewModelScope.launch {
+                val result = mutableListOf<Product>()
                 productRepo.searchProductsContaining(query).collect { products ->
-                    _searchResults.value = products
+                    for (product in products) {
+                        if (result.none { it.isEqualTo(product, priceDifferenceEpsilon = 0.01f, useFuzzyMatcher = true) }) result.add(product)
+                    }
+                    _searchResults.value = result
                 }
             }
         } else {

@@ -12,6 +12,7 @@ import kotlinx.parcelize.Parcelize
 import weberstudio.app.billigsteprodukter.R
 import weberstudio.app.billigsteprodukter.logic.Formatter.isIshEqualTo
 import weberstudio.app.billigsteprodukter.logic.Store
+import weberstudio.app.billigsteprodukter.logic.components.FuzzyMatcher
 import java.time.LocalDate
 import java.time.Month
 import java.time.Year
@@ -46,8 +47,19 @@ data class Product(
         get() = ProductID(store, name)
 }
 
-fun Product.isEqualTo(other: Product): Boolean {
-    return this.store == other.store && this.name == other.name && this.price.isIshEqualTo(other.price)
+/**
+ * @param priceDifferenceEpsilon the difference between the two products price.
+ * @param ussFuzzyMatcher if flaged true, the equal check will use a conservative fuzzy matcher
+ * on the to productname to prevent stupid product differences like "Milk" != "M1lk".
+ */
+fun Product.isEqualTo(other: Product, priceDifferenceEpsilon: Float = 0.0001f,useFuzzyMatcher: Boolean = false): Boolean {
+    val storeEqual = this.store == other.store
+    val priceEqual = this.price.isIshEqualTo(other.price, priceDifferenceEpsilon) //Since price is only shown with 2 decimals, using a smaller epsilon makes no sense
+    val nameEqual =
+        if (useFuzzyMatcher) FuzzyMatcher().match(this.name, listOf(other.name), 0.9f, 0.1f)
+        else this.name == other.name
+
+    return storeEqual && nameEqual && priceEqual
 }
 
 /**

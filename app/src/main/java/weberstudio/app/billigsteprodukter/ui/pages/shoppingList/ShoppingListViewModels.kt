@@ -31,6 +31,9 @@ import weberstudio.app.billigsteprodukter.logic.components.MatchScoreCalculator
 import weberstudio.app.billigsteprodukter.logic.Store
 import java.time.LocalDate
 import kotlin.math.cos
+import kotlin.random.Random
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 class ShoppingListsViewModel(application: Application): AndroidViewModel(application) {
     private val app = application as ReceiptApp
@@ -43,10 +46,12 @@ class ShoppingListsViewModel(application: Application): AndroidViewModel(applica
     )
 
 
+    @OptIn(ExperimentalUuidApi::class)
     fun addShoppingList(name: String) {
+        val ID = Uuid.random()
         val nextNumber = shoppingLists.value.size + 1
         val shoppingList = ShoppingList(
-            ID = "shoppingList_$nextNumber",
+            ID = "shoppingList_$ID",
             name = if (name.isBlank()) "Min indkøbsliste $nextNumber" else name,
             createdDate = LocalDate.now()
         )

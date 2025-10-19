@@ -12,7 +12,7 @@ interface ShoppingListDao {
     @Update
     suspend fun updateShoppingList(shoppingList: ShoppingList)
 
-    @Query("SELECT * FROM shopping_list ORDER BY createdDate DESC")
+    @Query("SELECT * FROM shopping_list ORDER BY createdDate ASC")
     fun getAllShoppingLists(): Flow<List<ShoppingList>>
 
 

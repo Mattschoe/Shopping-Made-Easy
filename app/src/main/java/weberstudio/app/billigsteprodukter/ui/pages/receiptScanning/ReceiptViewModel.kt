@@ -7,6 +7,7 @@ import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.google.mlkit.vision.text.Text
 import com.google.mlkit.vision.text.TextRecognition
@@ -40,8 +41,8 @@ class ReceiptViewModel(application: Application): AndroidViewModel(application) 
     private val _forceLoading = MutableStateFlow(false)
 
     //Camera/parsing state
-    private val _parsingState = mutableStateOf<ParsingState>(ParsingState.NotActivated)
-    val parsingState: State<ParsingState> = _parsingState
+    private val _parsingState = MutableStateFlow<ParsingState>(ParsingState.NotActivated)
+    val parsingState = _parsingState.asStateFlow()
 
     //Errors
     private val _errors = MutableStateFlow<ScanValidation?>(null)

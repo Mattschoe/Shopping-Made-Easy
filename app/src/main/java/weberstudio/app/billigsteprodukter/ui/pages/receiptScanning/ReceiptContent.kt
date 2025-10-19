@@ -1,5 +1,6 @@
 package weberstudio.app.billigsteprodukter.ui.pages.receiptScanning
 
+import android.util.Log
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -89,7 +90,7 @@ fun ReceiptScanningContent(
     viewModel: ReceiptViewModel,
     cameraCoordinator: CameraCoordinator
 ) {
-    val parsingState by viewModel.parsingState
+    val parsingState by viewModel.parsingState.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
 
     var showAddProductDialog by rememberSaveable { mutableStateOf(false) }
@@ -137,6 +138,9 @@ fun ReceiptScanningContent(
             is ParsingState.Success -> {
                 navController.navigate(PageNavigation.createReceiptRoute(state.receiptID))
                 viewModel.clearParsingState()
+            }
+            is ParsingState.Error -> {
+                Log.e("Receipt Scanning ERROR:", state.message)
             }
             else -> { }
         }

@@ -215,9 +215,11 @@ fun ApplicationNavigationHost(
         ) { backStackEntry ->
             val context = LocalContext.current
             val receiptID = backStackEntry.arguments?.getLong("ID") ?: 0
-            val receiptViewModel: ReceiptViewModel = viewModel(backStackEntry)
-            val cameraCoordinator: CameraCoordinator = viewModel(
+            val receiptViewModel: ReceiptViewModel = viewModel(
                 viewModelStoreOwner = context as ComponentActivity
+            )
+            val cameraCoordinator: CameraCoordinator = viewModel(
+                viewModelStoreOwner = context
             )
 
             LaunchedEffect(receiptID) {

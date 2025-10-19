@@ -19,6 +19,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -198,12 +201,12 @@ fun PreBudgetPageUI(modifier: Modifier = Modifier, newBudget: (Budget) -> Unit, 
                     Card(
                         modifier = Modifier
                             .fillMaxWidth(0.8f)
-                            .height(48.dp)
+                            .wrapContentHeight()
                             .clickable { showMonthPicker = true },
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.secondaryContainer
                         ),
-                        shape = RoundedCornerShape(8.dp)
+                        shape = RoundedCornerShape(24.dp)
                     ) {
                         Row(
                             modifier = Modifier
@@ -214,11 +217,15 @@ fun PreBudgetPageUI(modifier: Modifier = Modifier, newBudget: (Budget) -> Unit, 
                         ) {
                             Text(
                                 text = "Se budget for andre måneder",
-                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                modifier = Modifier.weight(1f, fill = false)
                             )
                             Icon(
                                 imageVector = ImageVector.vectorResource(R.drawable.dropdown_icon),
                                 contentDescription = "Vælg måned",
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .padding(start = 8.dp),
                                 tint = MaterialTheme.colorScheme.onSecondaryContainer
                             )
                         }

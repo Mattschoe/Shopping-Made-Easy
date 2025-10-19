@@ -90,8 +90,10 @@ interface StoreParser {
 
     /**
      * Checks whether lineA and lineB collides. **ALSO** makes sure that lineB is along lineA, if thats not the case, or if lineA is down lineB it will return false.
+     * @param awayOffset How long away the price raycast hit needs to be to be accounted for.
+     * Lower = More forgiving, Higher = Less Forgiving. FX: 0.8 = "Atleast 0.8x the line height away"
      */
-    fun doesLinesCollide(lineA: ParsedLine, lineB: ParsedLine): Boolean {
+    fun doesLinesCollide(lineA: ParsedLine, lineB: ParsedLine, awayOffset: Float = 3.0f): Boolean {
         //region SETTINGS
         //Kigger kun på de linjer hvor deres centrum er verticalTolerance pixels væk fra hinanden, på den måde slipper vi for alt for mange checks
         val angleTolerance = Math.toRadians(10.0).toFloat()  //A tolerance for ray hit
@@ -118,7 +120,7 @@ interface StoreParser {
         if (forwardDotProduct < lineHeight * buffer) return false
 
         //Parser til produkt så længe at raycast hit er langt nok væk for at det faktisk kan være en pris og ikke noise
-        val minNameToPriceOffset = lineHeight * 3.0f //How long away the price raycast hit needs to be to be accounted for. Lower = More forgiving, Higher = Less Forgiving. FX: 0.8 = "Atleast 0.8x the line height away"
+        val minNameToPriceOffset = lineHeight * awayOffset
         if (forwardDotProduct < minNameToPriceOffset) return false
 
         return true

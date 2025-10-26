@@ -1,15 +1,15 @@
 package weberstudio.app.billigsteprodukter.ui.theme
 
-import android.app.Activity
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
+import weberstudio.app.billigsteprodukter.ReceiptApp
+import weberstudio.app.billigsteprodukter.data.settings.Theme
 
 private val DarkColorScheme = darkColorScheme(
     primary = DarkPrimary,
@@ -67,18 +67,21 @@ private val LightColorScheme = lightColorScheme(
 
 @Composable
 fun BilligsteProdukterTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        // TODO("SKAL SLÅES FRA SENERE. ER UDELUKKENDE FOR AT SØRGE FOR DET ORIGINALE COLORSCHEME SER GODT UD")
-        /*dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        } */
+    val application = LocalContext.current.applicationContext as ReceiptApp
+    val settingsRepo = application.settingsRepository
+    val theme by settingsRepo.theme.collectAsState(initial = Theme.SYSTEM)
 
+    val darkTheme = when (theme) {
+        Theme.LIGHT -> false
+        Theme.DARK -> true
+        Theme.SYSTEM -> isSystemInDarkTheme()
+    }
+
+
+    val colorScheme = when {
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
     }

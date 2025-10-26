@@ -35,6 +35,7 @@ import weberstudio.app.billigsteprodukter.ui.pages.home.MainPageContent
 import weberstudio.app.billigsteprodukter.ui.pages.receiptScanning.ReceiptScanningContent
 import weberstudio.app.billigsteprodukter.ui.pages.receiptScanning.ReceiptViewModel
 import weberstudio.app.billigsteprodukter.ui.pages.settings.SettingsPageContent
+import weberstudio.app.billigsteprodukter.ui.pages.settings.SettingsViewModel
 import weberstudio.app.billigsteprodukter.ui.pages.shoppingList.ShoppingListUndermenuContent
 import weberstudio.app.billigsteprodukter.ui.pages.shoppingList.ShoppingListUndermenuViewModel
 import weberstudio.app.billigsteprodukter.ui.pages.shoppingList.ShoppingListsPage
@@ -67,7 +68,7 @@ fun ApplicationNavigationHost(
             }
             PageShell(
                 navController,
-                title = "Forside",
+                title = "Hjem",
                 pageContent = { padding ->
                     MainPageContent(
                         modifier = Modifier.padding(padding),
@@ -110,7 +111,7 @@ fun ApplicationNavigationHost(
             )
         }
 
-        // Shopping List Under menu
+        //Shopping List Under menu
         composable(
             PageNavigation.ShoppingListUndermenu.route,
             arguments = listOf(navArgument("listID") { type = NavType.StringType })
@@ -198,12 +199,13 @@ fun ApplicationNavigationHost(
         }
 
         // Settings
-        composable(PageNavigation.Settings.route) {
+        composable(PageNavigation.Settings.route) { backStackEntry ->
+            val viewModel: SettingsViewModel = viewModel(backStackEntry)
             PageShell(
                 navController,
                 title = "Indstillinger",
                 pageContent = { padding ->
-                    SettingsPageContent(Modifier.padding(padding))
+                    SettingsPageContent(Modifier.padding(padding), viewModel)
                 }
             )
         }

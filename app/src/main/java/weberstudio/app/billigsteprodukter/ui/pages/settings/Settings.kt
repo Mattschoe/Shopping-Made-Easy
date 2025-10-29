@@ -1,5 +1,6 @@
 package weberstudio.app.billigsteprodukter.ui.pages.settings
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,6 +21,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -135,6 +137,7 @@ fun SettingsPageContent(modifier: Modifier = Modifier, viewModel: SettingsViewMo
 
         //region RECEIPT SETTINGS
         SectionDivider("Kvitteringscanning")
+        //region Coop kvitteringstype
         Row (
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -151,6 +154,27 @@ fun SettingsPageContent(modifier: Modifier = Modifier, viewModel: SettingsViewMo
                 modifier = Modifier
                     .width(buttonWidth)
                     .height(buttonHeight)
+            )
+        }
+        //endregion
+        Spacer(Modifier.height(12.dp))
+        Row (
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier
+                .fillMaxWidth()
+        ) {
+            SettingsText(
+                text = "Ryd database",
+                modifier = Modifier.weight(1f)
+            )
+            SettingsButton(
+                title = "Ryd",
+                onClick = { },
+                modifier = Modifier
+                    .width(buttonWidth)
+                    .height(buttonHeight),
+                dangerous = true
             )
         }
         //endregion
@@ -211,15 +235,15 @@ fun SettingsText(text: String, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun SettingsButton(title: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun SettingsButton(title: String, onClick: () -> Unit, modifier: Modifier = Modifier, dangerous: Boolean = false) {
     OutlinedButton (
         modifier = modifier,
         onClick = onClick,
         shape = RoundedCornerShape(24.dp),
         colors = ButtonDefaults.outlinedButtonColors(
-            containerColor = MaterialTheme.colorScheme.primary,
-
-        )
+            containerColor = if (!dangerous) MaterialTheme.colorScheme.primary else Color.Red,
+        ),
+        border = BorderStroke(1.dp, Color.Black)
     ) {
         Text(
             text = title,

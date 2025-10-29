@@ -25,7 +25,7 @@ enum class Theme {
 
 data class Coop365Option(
     val type: Option,
-    val imageVector: Int
+    val image: Int
 ) {
     enum class Option {
         OVER,

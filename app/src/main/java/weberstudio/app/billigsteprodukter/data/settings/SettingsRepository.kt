@@ -4,7 +4,9 @@ import kotlinx.coroutines.flow.Flow
 
 interface SettingsRepository {
     val theme: Flow<Theme>
+    val coop365Option: Flow<Coop365Option.Option?>
     suspend fun setTheme(theme: Theme)
+    suspend fun setCoop365Option(option: Coop365Option.Option)
 }
 
 enum class Theme {
@@ -14,9 +16,26 @@ enum class Theme {
 
     override fun toString(): String {
         return when (this) {
-            Theme.DARK -> "Mørk tilstand"
-            Theme.LIGHT -> "Lys tilstand"
-            Theme.SYSTEM -> "System standard"
+            DARK -> "Mørk tilstand"
+            LIGHT -> "Lys tilstand"
+            SYSTEM -> "System standard"
+        }
+    }
+}
+
+data class Coop365Option(
+    val type: Option,
+    val imageVector: Int
+) {
+    enum class Option {
+        OVER,
+        UNDER;
+
+        override fun toString(): String {
+            return when(this) {
+                OVER -> "Mængde over"
+                UNDER -> "Mængde under"
+            }
         }
     }
 }

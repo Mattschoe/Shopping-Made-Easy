@@ -1,12 +1,14 @@
 package weberstudio.app.billigsteprodukter.ui.pages.settings
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import weberstudio.app.billigsteprodukter.ReceiptApp
+import weberstudio.app.billigsteprodukter.data.settings.Coop365Option
 import weberstudio.app.billigsteprodukter.data.settings.SettingsRepository
 import weberstudio.app.billigsteprodukter.data.settings.Theme
 
@@ -20,9 +22,22 @@ class SettingsViewModel(application: Application): AndroidViewModel(application)
         initialValue = Theme.SYSTEM
     )
 
+    val coop365Option = settingsRepo.coop365Option.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = null
+    )
+
     fun setTheme(theme: Theme) {
         viewModelScope.launch {
             settingsRepo.setTheme(theme)
+        }
+    }
+
+    fun setCoop365Option(option: Coop365Option.Option) {
+        viewModelScope.launch {
+            settingsRepo.setCoop365Option(option)
+            Log.d("DEBUG", option.name)
         }
     }
 }

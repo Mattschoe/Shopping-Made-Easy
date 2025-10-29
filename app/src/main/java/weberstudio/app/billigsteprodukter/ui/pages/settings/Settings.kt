@@ -1,6 +1,6 @@
 package weberstudio.app.billigsteprodukter.ui.pages.settings
 
-import androidx.compose.foundation.BorderStroke
+import android.widget.Button
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -19,9 +21,7 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -33,7 +33,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.room.Delete
 import weberstudio.app.billigsteprodukter.data.settings.Theme
 import weberstudio.app.billigsteprodukter.ui.components.Coop365OptionDialog
 import weberstudio.app.billigsteprodukter.ui.components.DeleteConfirmationDialog
@@ -255,14 +254,13 @@ fun SettingsText(text: String, modifier: Modifier = Modifier) {
 
 @Composable
 fun SettingsButton(title: String, onClick: () -> Unit, modifier: Modifier = Modifier, dangerous: Boolean = false) {
-    OutlinedButton (
+    Button(
         modifier = modifier,
         onClick = onClick,
         shape = RoundedCornerShape(24.dp),
-        colors = ButtonDefaults.outlinedButtonColors(
+        colors = ButtonDefaults.buttonColors(
             containerColor = if (!dangerous) MaterialTheme.colorScheme.primary else Color.Red,
-        ),
-        border = BorderStroke(1.dp, Color.Black)
+        )
     ) {
         Text(
             text = title,

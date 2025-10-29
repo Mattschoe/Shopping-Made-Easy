@@ -55,6 +55,9 @@ interface ReceiptDao {
     @Delete
     suspend fun deleteProduct(product: Product)
 
+    @Query("DELETE FROM products")
+    suspend fun deleteAllProducts()
+
     @Query("DELETE FROM products WHERE store = :store AND name = :name")
     suspend fun deleteProductByBusinessID(store: Store, name: String)
     //endregion

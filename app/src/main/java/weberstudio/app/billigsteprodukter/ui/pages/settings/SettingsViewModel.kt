@@ -33,4 +33,10 @@ class SettingsViewModel(application: Application): AndroidViewModel(application)
             settingsRepo.setCoop365Option(option)
         }
     }
+
+    fun deleteDatabase() {
+        viewModelScope.launch {
+            settingsRepo.deleteAllProducts()
+        }
+    }
 }

@@ -7,6 +7,7 @@ interface SettingsRepository {
     val coop365Option: Flow<Coop365Option.Option?>
     suspend fun setTheme(theme: Theme)
     suspend fun setCoop365Option(option: Coop365Option.Option)
+    suspend fun deleteAllProducts()
 }
 
 enum class Theme {

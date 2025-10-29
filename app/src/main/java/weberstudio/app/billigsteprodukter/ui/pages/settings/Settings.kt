@@ -33,8 +33,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.room.Delete
 import weberstudio.app.billigsteprodukter.data.settings.Theme
 import weberstudio.app.billigsteprodukter.ui.components.Coop365OptionDialog
+import weberstudio.app.billigsteprodukter.ui.components.DeleteConfirmationDialog
 
 /**
  * The UI content of the *Settings* Page
@@ -52,6 +54,7 @@ fun SettingsPageContent(modifier: Modifier = Modifier, viewModel: SettingsViewMo
 
     //RECEIPT
     var onChangeCoopReceipt by remember { mutableStateOf(false) }
+    var showClearDatabaseWarning by remember { mutableStateOf(false) }
 
     //DATABASE
 
@@ -157,7 +160,10 @@ fun SettingsPageContent(modifier: Modifier = Modifier, viewModel: SettingsViewMo
             )
         }
         //endregion
+
         Spacer(Modifier.height(12.dp))
+
+        //region RYD DATABASE
         Row (
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -170,13 +176,14 @@ fun SettingsPageContent(modifier: Modifier = Modifier, viewModel: SettingsViewMo
             )
             SettingsButton(
                 title = "Ryd",
-                onClick = { },
+                onClick = { showClearDatabaseWarning = true },
                 modifier = Modifier
                     .width(buttonWidth)
                     .height(buttonHeight),
                 dangerous = true
             )
         }
+        //endregion
         //endregion
     }
 
@@ -187,6 +194,18 @@ fun SettingsPageContent(modifier: Modifier = Modifier, viewModel: SettingsViewMo
             onConfirm = {
                 viewModel.setCoop365Option(it)
                 onChangeCoopReceipt = false
+            }
+        )
+    }
+
+    if (showClearDatabaseWarning) {
+        DeleteConfirmationDialog(
+            title = "Slet database?",
+            body = "Denne handling vil slette alle produkter der hidtil er blevet scannet igennem kvittering, samt produkter manuelt tilføjet. Denne handling vil også slette alle produkter tilføjet i indkøbslister. Dette kan IKKE fortrydes",
+            onDismiss = { showClearDatabaseWarning = false },
+            onConfirm = {
+                viewModel.deleteDatabase()
+                showClearDatabaseWarning = false
             }
         )
     }

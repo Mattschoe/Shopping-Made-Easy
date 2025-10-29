@@ -25,6 +25,6 @@ class ReceiptApp : Application() {
     val receiptRepository by lazy { OfflineReceiptRepository(database.receiptDao()) }
     val budgetRepository by lazy { OfflineBudgetRepository(database.budgetDao()) }
     val shoppingListRepository by lazy { OfflineShoppingListRepository(database.ShoppingListDao()) }
-    val settingsRepository by lazy { OfflineSettingsRepository(dataStore)  }
+    val settingsRepository by lazy { OfflineSettingsRepository(dataStore, database.receiptDao())  }
     val activityLogger by lazy { ActivityLogger(activityRepository) }
 }

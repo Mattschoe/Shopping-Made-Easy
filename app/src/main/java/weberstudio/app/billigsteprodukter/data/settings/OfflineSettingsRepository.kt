@@ -6,13 +6,19 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import weberstudio.app.billigsteprodukter.data.receipt.ReceiptDao
 
 class OfflineSettingsRepository(
-    private val dataStore: DataStore<Preferences>
+    private val dataStore: DataStore<Preferences>,
+    private val receiptDao: ReceiptDao
 ) : SettingsRepository {
     private object PreferencesKeys {
         val THEME = stringPreferencesKey("theme")
         val COOP365OPTION = stringPreferencesKey("coop365_option")
+    }
+
+    override suspend fun deleteAllProducts() {
+        receiptDao.deleteAllProducts()
     }
 
     //region GETTERS

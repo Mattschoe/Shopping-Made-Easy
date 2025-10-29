@@ -1,6 +1,5 @@
 package weberstudio.app.billigsteprodukter.ui.pages.settings
 
-import android.widget.Button
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,7 +12,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -32,7 +30,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.selects.select
 import weberstudio.app.billigsteprodukter.data.settings.Theme
 import weberstudio.app.billigsteprodukter.ui.components.Coop365OptionDialog
 import weberstudio.app.billigsteprodukter.ui.components.DeleteConfirmationDialog
@@ -50,6 +50,11 @@ fun SettingsPageContent(modifier: Modifier = Modifier, viewModel: SettingsViewMo
     //THEME
     var themeChooseExpanded by remember { mutableStateOf(false) }
     val theme by viewModel.theme.collectAsState()
+    val themeOptions = listOf(
+        DropdownOption(Theme.SYSTEM, "System standard"),
+        DropdownOption(Theme.DARK, "Mørk tilstand"),
+        DropdownOption(Theme.LIGHT, "Lys tilstand")
+    )
 
     //RECEIPT
     var onChangeCoopReceipt by remember { mutableStateOf(false) }
@@ -64,75 +69,14 @@ fun SettingsPageContent(modifier: Modifier = Modifier, viewModel: SettingsViewMo
     ) {
         //region THEME
         SectionDivider("Tema")
-        //region Light/Dark theme
-        Row (
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier
-                .fillMaxWidth()
-        ) {
-            SettingsText("Mørk/Lys tilstand")
-            ExposedDropdownMenuBox(
-                expanded = themeChooseExpanded,
-                onExpandedChange = { themeChooseExpanded = it },
-                modifier = Modifier
-                    .wrapContentWidth()
-            ) {
-                OutlinedTextField(
-                    value = theme.toString(),
-                    onValueChange = { /* READ ONLY */ },
-                    readOnly = true,
-                    trailingIcon = {
-                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = themeChooseExpanded)
-                    },
-                    singleLine = true,
-                    shape = RoundedCornerShape(24.dp),
-                    modifier = Modifier
-                        .menuAnchor()
-                        .width(buttonWidth)
-                        .height(buttonHeight)
-                )
-                ExposedDropdownMenu(
-                    expanded = themeChooseExpanded,
-                    onDismissRequest = { themeChooseExpanded = false },
-                ) {
-                    DropdownMenuItem(
-                        text = {
-                            Text(
-                                text = "System standard"
-                            )
-                        },
-                        onClick = {
-                            viewModel.setTheme(Theme.SYSTEM)
-                            themeChooseExpanded = false
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = {
-                            Text(
-                                text = "Mørk tilstand"
-                            )
-                        },
-                        onClick = {
-                            viewModel.setTheme(Theme.DARK)
-                            themeChooseExpanded = false
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = {
-                            Text(
-                                text = "Lys tilstand"
-                            )
-                        },
-                        onClick = {
-                            viewModel.setTheme(Theme.LIGHT)
-                            themeChooseExpanded = false
-                        }
-                    )
-                }
-            }
-        }
-        //endregion
+        SettingsDropdownRow(
+            label = "Mørk/Lys tilstand",
+            selectedValue = theme,
+            options = themeOptions,
+            buttonWidth = buttonWidth,
+            buttonHeight = buttonHeight,
+            onOptionSelected = { viewModel.setTheme(it) }
+        )
         //endregion
 
         Spacer(Modifier.height(24.dp))
@@ -268,4 +212,65 @@ fun SettingsButton(title: String, onClick: () -> Unit, modifier: Modifier = Modi
         )
     }
 }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun <T> SettingsDropdownRow(
+    label: String,
+    selectedValue: T,
+    options: List<DropdownOption<T>>,
+    onOptionSelected: (T) -> Unit,
+    modifier: Modifier = Modifier,
+    buttonWidth: Dp,
+    buttonHeight: Dp,
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+        modifier = modifier.fillMaxWidth()
+    ) {
+        SettingsText(label)
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { expanded = it },
+            modifier = Modifier.wrapContentWidth()
+        ) {
+            OutlinedTextField(
+                value = selectedValue.toString(),
+                onValueChange = { /* READ ONLY */ },
+                readOnly = true,
+                trailingIcon = {
+                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                },
+                singleLine = true,
+                shape = RoundedCornerShape(24.dp),
+                modifier = Modifier
+                    .menuAnchor()
+                    .width(buttonWidth)
+                    .height(buttonHeight)
+            )
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false },
+            ) {
+                options.forEach { option ->
+                    DropdownMenuItem(
+                        text = { Text(text = option.displayText) },
+                        onClick = {
+                            onOptionSelected(option.value)
+                            expanded = false
+                        }
+                    )
+                }
+            }
+        }
+    }
+}
+
+data class DropdownOption<T>(
+    val value: T,
+    val displayText: String
+)
 

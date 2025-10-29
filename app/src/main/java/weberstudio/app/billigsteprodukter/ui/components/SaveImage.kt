@@ -29,11 +29,10 @@ import java.io.File
 @Composable
 fun launchCamera(onImageCaptured: (Uri, Context) -> Unit): () -> Unit {
     val context = LocalContext.current
-    val imageURI = remember { //Uses "remember" so we dont calculate this every recomposition
-        File(context.cacheDir, "tempImage.jpg")
-            .let { imageFile ->
+    val imageURI = remember {
+        File(context.cacheDir, "tempImage.jpg").let { imageFile ->
                 FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", imageFile)
-            }
+        }
     }
 
     //Takes image and processes it

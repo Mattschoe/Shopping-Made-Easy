@@ -741,12 +741,16 @@ fun ModifyProductDialog(product: Product, onDismiss: () -> Unit, onConfirm: (Pro
 @Composable
 fun Coop365OptionDialog(
     modifier: Modifier = Modifier,
-    title: String,
-    options: List<Coop365Option>,
     initialSelection: Int = 0,
     onDismiss: () -> Unit,
     onConfirm: (Coop365Option.Option) -> Unit,
 ) {
+    val title = "Vælg kvitteringstype for Coop365"
+    val options = listOf(
+        Coop365Option(Coop365Option.Option.OVER, R.drawable.exclamation_icon),
+        Coop365Option(Coop365Option.Option.UNDER, R.drawable.exclamation_icon)
+    )
+
     val pagerState = rememberPagerState(
         initialPage = initialSelection,
         pageCount = { options.size + 1 }
@@ -813,7 +817,7 @@ fun Coop365OptionDialog(
                                 )
 
                                 Text(
-                                    text = "Enten har den mængden af et hvis købt produkt over produktnavnet, eller så er det under produktnavnet.",
+                                    text = "Enten har kvitteringen mængden af et hvis købt produkt over produktnavnet, eller så er det under produktnavnet.",
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = Color.Gray,
                                     modifier = Modifier.padding(bottom = 8.dp)

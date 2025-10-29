@@ -3,11 +3,9 @@ package weberstudio.app.billigsteprodukter.ui.pages.receiptScanning
 import android.app.Application
 import android.content.Context
 import android.net.Uri
-import android.util.Log
-import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.google.mlkit.vision.text.Text
 import com.google.mlkit.vision.text.TextRecognition
@@ -20,13 +18,14 @@ import weberstudio.app.billigsteprodukter.ReceiptApp
 import weberstudio.app.billigsteprodukter.data.Product
 import weberstudio.app.billigsteprodukter.data.Receipt
 import weberstudio.app.billigsteprodukter.data.receipt.OfflineReceiptRepository
+import weberstudio.app.billigsteprodukter.data.settings.Coop365Option
+import weberstudio.app.billigsteprodukter.data.settings.SettingsRepository
 import weberstudio.app.billigsteprodukter.logic.CameraCoordinator
 import weberstudio.app.billigsteprodukter.logic.ImagePreprocessor
 import weberstudio.app.billigsteprodukter.logic.Store
 import weberstudio.app.billigsteprodukter.logic.exceptions.ParsingException
 import weberstudio.app.billigsteprodukter.logic.parsers.ParserFactory
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser
-import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ScanError
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ScanValidation
 import weberstudio.app.billigsteprodukter.ui.ParsingState
 import weberstudio.app.billigsteprodukter.ui.ReceiptUIState
@@ -35,6 +34,7 @@ import java.time.LocalDate
 class ReceiptViewModel(application: Application): AndroidViewModel(application) {
     private val app = application as ReceiptApp
     private val receiptRepo: OfflineReceiptRepository = app.receiptRepository
+    private val settingsRepo: SettingsRepository = app.settingsRepository
 
     //Receipt display state
     private val _selectedReceiptID = MutableStateFlow<Long?>(null)
@@ -141,6 +141,12 @@ class ReceiptViewModel(application: Application): AndroidViewModel(application) 
     fun processImage(imageURI: Uri, context: Context, cameraCoordinator: CameraCoordinator) {
         viewModelScope.launch {
             _parsingState.value = ParsingState.InProgress
+            val coop365Option = settingsRepo.coop365Option.firstOrNull()
+
+            if (coop365Option == null) {
+                ParsingState.Error("Coop365Option not sat!")
+                return@launch
+            }
 
             try {
                 val textRecognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
@@ -148,7 +154,7 @@ class ReceiptViewModel(application: Application): AndroidViewModel(application) 
 
                 try {
                     val imageText = textRecognizer.process(image).await()
-                    processImageInfo(imageText, cameraCoordinator)
+                    processImageInfo(imageText, cameraCoordinator, coop365Option)
                     textRecognizer.close()
                 } catch (e: Exception) {
                     _parsingState.value = ParsingState.Error("MLKit Text recognition failed! $e")
@@ -160,14 +166,17 @@ class ReceiptViewModel(application: Application): AndroidViewModel(application) 
         }
     }
 
-    private fun processImageInfo(imageText: Text, cameraCoordinator: CameraCoordinator) {
+    private fun processImageInfo(
+        imageText: Text, cameraCoordinator: CameraCoordinator,
+        coop365Option: Coop365Option.Option
+    ) {
         if (imageText.textBlocks.isEmpty()) {
             _parsingState.value = ParsingState.Error("Ingen tekst fundet i billedet!")
             return
         }
 
         runCatching {
-            val parser: StoreParser? = ParserFactory.parseReceipt(imageText)
+            val parser: StoreParser? = ParserFactory.parseReceipt(imageText, coop365Option)
             if (parser != null) {
                 val store: Store? = Store.fromName(parser.toString())
                 if (store == null) {

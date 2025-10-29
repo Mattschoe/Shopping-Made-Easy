@@ -22,12 +22,6 @@ class SettingsViewModel(application: Application): AndroidViewModel(application)
         initialValue = Theme.SYSTEM
     )
 
-    val coop365Option = settingsRepo.coop365Option.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5_000),
-        initialValue = null
-    )
-
     fun setTheme(theme: Theme) {
         viewModelScope.launch {
             settingsRepo.setTheme(theme)

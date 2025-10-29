@@ -1,5 +1,6 @@
 package weberstudio.app.billigsteprodukter.ui.components
 
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.size
@@ -18,6 +19,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -27,7 +32,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.launch
 import weberstudio.app.billigsteprodukter.R
+import weberstudio.app.billigsteprodukter.ReceiptApp
 import weberstudio.app.billigsteprodukter.logic.CameraCoordinator
 import weberstudio.app.billigsteprodukter.ui.navigation.PageNavigation
 import weberstudio.app.billigsteprodukter.ui.pages.home.MainPageContent
@@ -103,6 +111,13 @@ fun NavigationBar(navController: NavController) {
         viewModelStoreOwner = context as ComponentActivity
     )
 
+    //region SCANNING VALIDATION
+    val settingsRepo = (LocalContext.current.applicationContext as ReceiptApp).settingsRepository
+    val scope = rememberCoroutineScope()
+    var showCoop365OptionsDialog by remember { mutableStateOf(false) }
+    //endregion
+
+
     NavigationBar(
         windowInsets = NavigationBarDefaults.windowInsets,
         containerColor = MaterialTheme.colorScheme.surface,
@@ -113,9 +128,7 @@ fun NavigationBar(navController: NavController) {
 
         val launchCamera = launchCamera(
             onImageCaptured = { uri, ctx ->
-                // Store the captured image in the coordinator
                 cameraCoordinator.onImageCaptured(uri, ctx)
-                // Navigate to receipt screen - it will pick up the image
                 navController.navigate(PageNavigation.createReceiptRoute(0))
             }
         )
@@ -187,7 +200,29 @@ fun NavigationBar(navController: NavController) {
                 )
             },
             selected = currentRoute?.startsWith("receipt/") == true,
-            onClick = { launchCamera() }
+            onClick = {
+                scope.launch {
+                    val coopOption = settingsRepo.coop365Option.firstOrNull()
+                    Log.d("DEBUG", coopOption.toString())
+                    if (coopOption == null) showCoop365OptionsDialog = true
+                    else launchCamera()
+                }
+            }
         )
     }
+
+    //region DIALOGS
+    if (showCoop365OptionsDialog) {
+        Coop365OptionDialog(
+            onDismiss = { showCoop365OptionsDialog = false },
+            onConfirm = { option ->
+                scope.launch {
+                    settingsRepo.setCoop365Option(option)
+                    showCoop365OptionsDialog = false
+
+                }
+            }
+        )
+    }
+    //endregion
 }

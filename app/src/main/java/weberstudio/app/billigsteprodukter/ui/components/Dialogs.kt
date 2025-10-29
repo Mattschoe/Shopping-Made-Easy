@@ -1,10 +1,14 @@
 package weberstudio.app.billigsteprodukter.ui.components
 
 import android.util.Log
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,6 +21,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -54,12 +60,14 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import weberstudio.app.billigsteprodukter.R
 import weberstudio.app.billigsteprodukter.data.Product
+import weberstudio.app.billigsteprodukter.data.settings.Coop365Option
 import weberstudio.app.billigsteprodukter.logic.Formatter.formatFloatToDanishCurrency
 import weberstudio.app.billigsteprodukter.logic.Formatter.formatInputToDanishCurrencyStandard
 import weberstudio.app.billigsteprodukter.logic.Formatter.normalizeText
@@ -624,7 +632,6 @@ fun DeleteConfirmationDialog(title: String, body: String, onDismiss: () -> Unit,
     }
 }
 
-
 /**
  * Updates a product given user input, and returns it via [onConfirm]
  */
@@ -729,21 +736,241 @@ fun ModifyProductDialog(product: Product, onDismiss: () -> Unit, onConfirm: (Pro
 }
 
 /**
- * Maps a raw cursor position to the formatted string position
- * @param raw: the exact string the user typed (may contain grouping dots)
- * @param formatted: the output from [formatInputToDanishCurrencyStandard]
- * @param rawCursor: the selection start in raw string
+ * En swipable dialog der lader useren vælge imellem de forskellige options for kvitteringstype Coop365 har
  */
-fun mapCursorRawToFormatted(raw: String, formatted: String, rawCursor: Int): Int {
-    // Count how many digits are *before* rawCursor in the raw input
-    val digitsBefore = raw.substring(0, rawCursor.coerceIn(0, raw.length)).count { it.isDigit() }
-    if (digitsBefore == 0) return 0
+@Composable
+fun Coop365OptionDialog(
+    modifier: Modifier = Modifier,
+    title: String,
+    options: List<Coop365Option>,
+    initialSelection: Int = 0,
+    onDismiss: () -> Unit,
+    onConfirm: (Coop365Option.Option) -> Unit,
+) {
+    val pagerState = rememberPagerState(
+        initialPage = initialSelection,
+        pageCount = { options.size + 1 }
+    )
 
-    // Find position in formatted where we've seen digitsBefore digits
-    var digitsSeen = 0
-    for (i in formatted.indices) {
-        if (formatted[i].isDigit()) digitsSeen++
-        if (digitsSeen >= digitsBefore) return (i + 1).coerceIn(0, formatted.length)
+    val option = options.elementAtOrNull(pagerState.currentPage - 1)
+    val isValid = option != null
+
+    Dialog(
+        onDismissRequest = onDismiss,
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer
+            )
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(20.dp)
+            ) {
+                //TITEL
+                Text(
+                    text = title,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                //OPTIONS
+                HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                ) { page ->
+                    if (page == 0) {
+                        //region Forklarer problemet
+                        Card(
+                            modifier = modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 8.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surface
+                            ),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(20.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+
+                                Text(
+                                    text = "Coop365 kvittering kommer i 2 forskellige formater.",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    modifier = Modifier.padding(bottom = 8.dp)
+                                )
+
+                                Text(
+                                    text = "Enten har den mængden af et hvis købt produkt over produktnavnet, eller så er det under produktnavnet.",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = Color.Gray,
+                                    modifier = Modifier.padding(bottom = 8.dp)
+                                )
+                                Spacer(Modifier.height(8.dp))
+                                Text(
+                                    text = "Vælg venligst ud fra de to muligheder hvordan din butiks kvitteringer ser ud",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = Color.Gray,
+                                    modifier = Modifier.padding(bottom = 8.dp)
+                                )
+                            }
+                        }
+                        //endregion
+                    } else {
+                        Coop365OptionDisplay(option = options[page - 1])
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                //DOTS
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                ) {
+                    PagerIndicator(
+                        pageCount = options.size + 1, //So intro page is included
+                        currentPage = pagerState.currentPage,
+                        currentPageOffsetFraction = pagerState.currentPageOffsetFraction,
+                        modifier = Modifier.padding(vertical = 8.dp),
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                //region OK/ANNULLER
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TextButton(
+                        onClick = onDismiss,
+                    ) {
+                        Text(
+                            text = "Annuller",
+                            color = Color.Gray
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
+                        enabled = isValid,
+                        onClick = { option?.let { onConfirm(it.type) } }
+                    ) {
+                        Text(
+                            text = "Ok",
+                            color = if (isValid) MaterialTheme.colorScheme.onPrimary else Color.Gray
+                        )
+                    }
+                }
+                //endregion
+            }
+        }
     }
-    return formatted.length
+}
+
+
+
+
+@Composable
+fun Coop365OptionDisplay(
+    option: Coop365Option,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            //Title
+            Text(
+                text = option.type.toString(),
+                style = MaterialTheme.typography.titleMedium,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+
+            //Image
+            Image(
+                imageVector = ImageVector.vectorResource(option.imageVector),
+                contentDescription = null,
+            )
+        }
+    }
+}
+
+/**
+ * Often used in swipeable dialogs to indicate where the user is between the swipeable cards
+ */
+@Composable
+fun PagerIndicator(
+    pageCount: Int,
+    currentPage: Int,
+    modifier: Modifier = Modifier,
+    currentPageOffsetFraction: Float = 0f
+) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        repeat(pageCount) { page ->
+            val isSelected = page == currentPage
+            val isNextSelected = page == currentPage + 1
+
+            // Calculate width based on scroll offset
+            val width by animateDpAsState(
+                targetValue = when {
+                    isSelected -> 24.dp - (currentPageOffsetFraction * 16).dp
+                    isNextSelected -> 8.dp + (currentPageOffsetFraction * 16).dp
+                    else -> 8.dp
+                },
+                animationSpec = tween(durationMillis = 300),
+                label = "dot_width"
+            )
+
+            // Calculate alpha based on scroll offset
+            val alpha = when {
+                isSelected -> 1f - (currentPageOffsetFraction * 0.7f)
+                isNextSelected -> 0.3f + (currentPageOffsetFraction * 0.7f)
+                else -> 0.3f
+            }
+
+            Box(
+                modifier = Modifier
+                    .width(width)
+                    .height(8.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = alpha),
+                        shape = RoundedCornerShape(4.dp)
+                    )
+            )
+        }
+    }
 }

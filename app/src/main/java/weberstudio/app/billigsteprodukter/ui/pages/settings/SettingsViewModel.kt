@@ -37,7 +37,6 @@ class SettingsViewModel(application: Application): AndroidViewModel(application)
     fun setCoop365Option(option: Coop365Option.Option) {
         viewModelScope.launch {
             settingsRepo.setCoop365Option(option)
-            Log.d("DEBUG", option.name)
         }
     }
 }

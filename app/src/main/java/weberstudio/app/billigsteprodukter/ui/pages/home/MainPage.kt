@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import weberstudio.app.billigsteprodukter.data.ActivityType
 import weberstudio.app.billigsteprodukter.data.AdsID
+import weberstudio.app.billigsteprodukter.data.Budget
 import weberstudio.app.billigsteprodukter.data.ExtraExpense
 import weberstudio.app.billigsteprodukter.data.ReceiptWithProducts
 import weberstudio.app.billigsteprodukter.data.RecentActivity
@@ -51,6 +52,7 @@ import weberstudio.app.billigsteprodukter.ui.pages.budget.BudgetCircle
 import weberstudio.app.billigsteprodukter.ui.pages.budget.BudgetViewModel
 import java.time.LocalDateTime
 import java.time.Month
+import java.time.Year
 
 /**
  * The UI content of the *Main* Page

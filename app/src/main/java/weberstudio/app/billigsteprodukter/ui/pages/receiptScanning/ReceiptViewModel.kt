@@ -3,8 +3,6 @@ package weberstudio.app.billigsteprodukter.ui.pages.receiptScanning
 import android.app.Application
 import android.content.Context
 import android.net.Uri
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.mlkit.vision.text.Text
@@ -20,6 +18,8 @@ import weberstudio.app.billigsteprodukter.data.Receipt
 import weberstudio.app.billigsteprodukter.data.receipt.OfflineReceiptRepository
 import weberstudio.app.billigsteprodukter.data.settings.Coop365Option
 import weberstudio.app.billigsteprodukter.data.settings.SettingsRepository
+import weberstudio.app.billigsteprodukter.data.settings.TotalOption
+import weberstudio.app.billigsteprodukter.data.settings.TotalOption.*
 import weberstudio.app.billigsteprodukter.logic.CameraCoordinator
 import weberstudio.app.billigsteprodukter.logic.ImagePreprocessor
 import weberstudio.app.billigsteprodukter.logic.Store
@@ -39,6 +39,11 @@ class ReceiptViewModel(application: Application): AndroidViewModel(application) 
     //Receipt display state
     private val _selectedReceiptID = MutableStateFlow<Long?>(null)
     private val _forceLoading = MutableStateFlow(false)
+    private val _totalOption = settingsRepo.totalOption.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = TotalOption.PRODUCT_TOTAL
+    )
 
     //Camera/parsing state
     private val _parsingState = MutableStateFlow<ParsingState>(ParsingState.NotActivated)
@@ -55,19 +60,26 @@ class ReceiptViewModel(application: Application): AndroidViewModel(application) 
     val uiState: StateFlow<ReceiptUIState> = combine(
         _selectedReceiptID,
         _forceLoading,
-        _errors
-    ) { receiptID, forceLoading, errors ->
-        Triple(receiptID, forceLoading, errors)
-    }.flatMapLatest { (receiptID, forceLoading, errors) ->
+        _errors,
+        _totalOption
+    ) { receiptID, forceLoading, errors, totalOption ->
+        data class CombinedState(val receiptID: Long?, val forceLoading: Boolean, val errors: ScanValidation?, val totalOption: TotalOption)
+        CombinedState(receiptID, forceLoading, errors, totalOption)
+    }.flatMapLatest { (receiptID, forceLoading, errors, totalOption) ->
         when {
             forceLoading -> flowOf(ReceiptUIState.Loading)
             receiptID == null -> flowOf(ReceiptUIState.Empty)
             else -> receiptRepo.getReceiptWithProducts(receiptID).map { receiptWithProducts ->
                 if (receiptWithProducts?.products?.isNotEmpty() == true) {
+                    val total = when (totalOption) {
+                        RECEIPT_TOTAL -> receiptWithProducts.receipt.total
+                        PRODUCT_TOTAL -> receiptWithProducts.products.sumOf { it.price.toDouble() }.toFloat()
+                    }
+
                     ReceiptUIState.Success(
                         products = receiptWithProducts.products,
                         store = receiptWithProducts.receipt.store,
-                        receiptTotal = receiptWithProducts.receipt.total,
+                        receiptTotal = total,
                         errors = errors
                     )
                 } else {

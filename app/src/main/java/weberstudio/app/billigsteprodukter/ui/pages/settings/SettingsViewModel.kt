@@ -11,6 +11,7 @@ import weberstudio.app.billigsteprodukter.ReceiptApp
 import weberstudio.app.billigsteprodukter.data.settings.Coop365Option
 import weberstudio.app.billigsteprodukter.data.settings.SettingsRepository
 import weberstudio.app.billigsteprodukter.data.settings.Theme
+import weberstudio.app.billigsteprodukter.data.settings.TotalOption
 
 class SettingsViewModel(application: Application): AndroidViewModel(application) {
     private val app = application as ReceiptApp
@@ -22,6 +23,12 @@ class SettingsViewModel(application: Application): AndroidViewModel(application)
         initialValue = Theme.SYSTEM
     )
 
+    val totalOption = settingsRepo.totalOption.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = TotalOption.PRODUCT_TOTAL
+    )
+
     fun setTheme(theme: Theme) {
         viewModelScope.launch {
             settingsRepo.setTheme(theme)
@@ -31,6 +38,12 @@ class SettingsViewModel(application: Application): AndroidViewModel(application)
     fun setCoop365Option(option: Coop365Option.Option) {
         viewModelScope.launch {
             settingsRepo.setCoop365Option(option)
+        }
+    }
+
+    fun setTotalOption(option: TotalOption) {
+        viewModelScope.launch {
+            settingsRepo.setTotalOption(option)
         }
     }
 

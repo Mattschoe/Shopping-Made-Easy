@@ -5,8 +5,10 @@ import kotlinx.coroutines.flow.Flow
 interface SettingsRepository {
     val theme: Flow<Theme>
     val coop365Option: Flow<Coop365Option.Option?>
+    val totalOption: Flow<TotalOption>
     suspend fun setTheme(theme: Theme)
     suspend fun setCoop365Option(option: Coop365Option.Option)
+    suspend fun setTotalOption(option: TotalOption)
     suspend fun deleteAllProducts()
 }
 
@@ -37,6 +39,18 @@ data class Coop365Option(
                 OVER -> "Mængde over"
                 UNDER -> "Mængde under"
             }
+        }
+    }
+}
+
+enum class TotalOption {
+    RECEIPT_TOTAL,
+    PRODUCT_TOTAL;
+
+    override fun toString(): String {
+        return when (this) {
+            RECEIPT_TOTAL -> "Kvitteringstotal"
+            PRODUCT_TOTAL -> "Produkttotal"
         }
     }
 }

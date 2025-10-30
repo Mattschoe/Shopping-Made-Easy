@@ -14,7 +14,8 @@ class OfflineSettingsRepository(
 ) : SettingsRepository {
     private object PreferencesKeys {
         val THEME = stringPreferencesKey("theme")
-        val COOP365OPTION = stringPreferencesKey("coop365_option")
+        val COOP365_OPTION = stringPreferencesKey("coop365_option")
+        val TOTAL_OPTION = stringPreferencesKey("total_option")
     }
 
     override suspend fun deleteAllProducts() {
@@ -28,9 +29,14 @@ class OfflineSettingsRepository(
     }
 
     override val coop365Option = dataStore.data.map { preferences ->
-        val optionName = preferences[PreferencesKeys.COOP365OPTION]
+        val optionName = preferences[PreferencesKeys.COOP365_OPTION]
         if (optionName == null) null
         else Coop365Option.Option.valueOf(optionName)
+    }
+
+    override val totalOption = dataStore.data.map { preferences ->
+        val optionName = preferences[PreferencesKeys.TOTAL_OPTION] ?: TotalOption.PRODUCT_TOTAL.name
+        TotalOption.valueOf(optionName)
     }
     //endregion
 
@@ -43,7 +49,14 @@ class OfflineSettingsRepository(
 
     override suspend fun setCoop365Option(option: Coop365Option.Option) {
         dataStore.edit { preferences ->
-            preferences[PreferencesKeys.COOP365OPTION] = option.name
+            preferences[PreferencesKeys.COOP365_OPTION] = option.name
+        }
+    }
+
+
+    override suspend fun setTotalOption(option: TotalOption) {
+        dataStore.edit { preferences ->
+            preferences[PreferencesKeys.TOTAL_OPTION] = option.name
         }
     }
     //endregion

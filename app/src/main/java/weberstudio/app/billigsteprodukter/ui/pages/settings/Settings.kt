@@ -30,10 +30,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.selects.select
 import weberstudio.app.billigsteprodukter.data.settings.Theme
+import weberstudio.app.billigsteprodukter.data.settings.TotalOption
 import weberstudio.app.billigsteprodukter.ui.components.Coop365OptionDialog
 import weberstudio.app.billigsteprodukter.ui.components.DeleteConfirmationDialog
 
@@ -44,19 +47,23 @@ import weberstudio.app.billigsteprodukter.ui.components.DeleteConfirmationDialog
 @Composable
 fun SettingsPageContent(modifier: Modifier = Modifier, viewModel: SettingsViewModel) {
     //UI
-    val buttonWidth = 200.dp
+    val buttonWidth = 180.dp
     val buttonHeight = 56.dp
 
     //THEME
-    var themeChooseExpanded by remember { mutableStateOf(false) }
     val theme by viewModel.theme.collectAsState()
     val themeOptions = listOf(
-        DropdownOption(Theme.SYSTEM, "System standard"),
-        DropdownOption(Theme.DARK, "Mørk tilstand"),
-        DropdownOption(Theme.LIGHT, "Lys tilstand")
+        DropdownOption(Theme.SYSTEM, Theme.SYSTEM.toString()),
+        DropdownOption(Theme.DARK, Theme.DARK.toString()),
+        DropdownOption(Theme.LIGHT, Theme.LIGHT.toString())
     )
 
     //RECEIPT
+    val totalOption by viewModel.totalOption.collectAsState()
+    val totalOptions = listOf(
+        DropdownOption(TotalOption.RECEIPT_TOTAL, TotalOption.RECEIPT_TOTAL.toString()),
+        DropdownOption(TotalOption.PRODUCT_TOTAL, TotalOption.PRODUCT_TOTAL.toString())
+    )
     var onChangeCoopReceipt by remember { mutableStateOf(false) }
     var showClearDatabaseWarning by remember { mutableStateOf(false) }
 
@@ -83,6 +90,17 @@ fun SettingsPageContent(modifier: Modifier = Modifier, viewModel: SettingsViewMo
 
         //region RECEIPT SETTINGS
         SectionDivider("Kvitteringscanning")
+        SettingsDropdownRow(
+            label = "Vælg hvordan totalpris beregnes",
+            selectedValue = totalOption,
+            options = totalOptions,
+            buttonWidth = buttonWidth,
+            buttonHeight = buttonHeight,
+            onOptionSelected = { viewModel.setTotalOption(it) }
+        )
+
+        Spacer(Modifier.height(12.dp))
+
         //region Coop kvitteringstype
         Row (
             verticalAlignment = Alignment.CenterVertically,
@@ -231,7 +249,7 @@ fun <T> SettingsDropdownRow(
         horizontalArrangement = Arrangement.SpaceBetween,
         modifier = modifier.fillMaxWidth()
     ) {
-        SettingsText(label)
+        SettingsText(label, Modifier.weight(1f).padding(end = 2.dp))
         ExposedDropdownMenuBox(
             expanded = expanded,
             onExpandedChange = { expanded = it },
@@ -246,6 +264,7 @@ fun <T> SettingsDropdownRow(
                 },
                 singleLine = true,
                 shape = RoundedCornerShape(24.dp),
+                textStyle = TextStyle(fontSize = 14.sp),
                 modifier = Modifier
                     .menuAnchor()
                     .width(buttonWidth)

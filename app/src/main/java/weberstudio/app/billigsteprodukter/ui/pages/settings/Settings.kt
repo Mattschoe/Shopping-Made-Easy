@@ -35,10 +35,12 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.selects.select
+import weberstudio.app.billigsteprodukter.data.AdsID
 import weberstudio.app.billigsteprodukter.data.settings.Theme
 import weberstudio.app.billigsteprodukter.data.settings.TotalOption
 import weberstudio.app.billigsteprodukter.ui.components.Coop365OptionDialog
 import weberstudio.app.billigsteprodukter.ui.components.DeleteConfirmationDialog
+import weberstudio.app.billigsteprodukter.ui.components.LargeBannerAd
 
 /**
  * The UI content of the *Settings* Page
@@ -146,6 +148,9 @@ fun SettingsPageContent(modifier: Modifier = Modifier, viewModel: SettingsViewMo
         }
         //endregion
         //endregion
+
+        Spacer(Modifier.weight(1f))
+        LargeBannerAd(AdsID.SETTINGS_BANNER)
     }
 
     //region DIALOGS

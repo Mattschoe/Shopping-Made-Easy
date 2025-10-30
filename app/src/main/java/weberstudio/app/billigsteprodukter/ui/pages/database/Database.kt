@@ -69,8 +69,10 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import weberstudio.app.billigsteprodukter.R
+import weberstudio.app.billigsteprodukter.data.AdsID
 import weberstudio.app.billigsteprodukter.data.Product
 import weberstudio.app.billigsteprodukter.logic.Store
+import weberstudio.app.billigsteprodukter.ui.components.LargeBannerAd
 import weberstudio.app.billigsteprodukter.ui.components.ModifyProductDialog
 import weberstudio.app.billigsteprodukter.ui.components.ProductCard
 import weberstudio.app.billigsteprodukter.ui.components.ProductCardSkeleton
@@ -316,6 +318,8 @@ fun DatabaseContent(
             }
         }
         //endregion
+
+        LargeBannerAd(AdsID.DATABASE_BANNER)
 
         //region DIALOGS
         product2Modify?.let { product ->

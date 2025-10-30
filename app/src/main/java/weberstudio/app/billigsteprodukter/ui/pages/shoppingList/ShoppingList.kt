@@ -65,8 +65,10 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import kotlinx.coroutines.delay
 import weberstudio.app.billigsteprodukter.R
+import weberstudio.app.billigsteprodukter.data.AdsID
 import weberstudio.app.billigsteprodukter.data.Product
 import weberstudio.app.billigsteprodukter.data.ShoppingList
+import weberstudio.app.billigsteprodukter.ui.components.BannerAd
 import weberstudio.app.billigsteprodukter.ui.components.DeleteConfirmationDialog
 import weberstudio.app.billigsteprodukter.ui.components.ReceiptTotalCard
 import weberstudio.app.billigsteprodukter.ui.components.SearchBar
@@ -107,6 +109,9 @@ fun ShoppingListsPage(modifier: Modifier = Modifier, navController: NavControlle
                         showDeleteDialog = true
                     }
                 )
+            }
+            item {
+                BannerAd(AdsID.SHOPPINGLIST_BANNER, Modifier.fillMaxWidth())
             }
         }
     }

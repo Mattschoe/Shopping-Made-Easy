@@ -1,6 +1,7 @@
 package weberstudio.app.billigsteprodukter.ui.pages.home
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,6 +30,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -36,12 +38,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import weberstudio.app.billigsteprodukter.data.ActivityType
+import weberstudio.app.billigsteprodukter.data.AdsID
 import weberstudio.app.billigsteprodukter.data.ExtraExpense
 import weberstudio.app.billigsteprodukter.data.ReceiptWithProducts
 import weberstudio.app.billigsteprodukter.data.RecentActivity
 import weberstudio.app.billigsteprodukter.data.getIcon
 import weberstudio.app.billigsteprodukter.logic.ActivityViewModel
 import weberstudio.app.billigsteprodukter.logic.Formatter.toDanishString
+import weberstudio.app.billigsteprodukter.ui.components.BannerAd
 import weberstudio.app.billigsteprodukter.ui.navigation.PageNavigation
 import weberstudio.app.billigsteprodukter.ui.pages.budget.BudgetCircle
 import weberstudio.app.billigsteprodukter.ui.pages.budget.BudgetViewModel
@@ -96,7 +100,7 @@ fun MainPageContent(modifier: Modifier = Modifier, navController: NavController,
         }
         //endregion
 
-        Spacer(Modifier.height(4.dp))
+        BannerAd(AdsID.MAINPAGE_BANNER)
 
         //region LATEST ACTIVITY
         Column(

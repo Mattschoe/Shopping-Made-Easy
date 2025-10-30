@@ -3,6 +3,7 @@ package weberstudio.app.billigsteprodukter.ui.pages.receiptScanning
 import android.app.Application
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.mlkit.vision.text.Text
@@ -156,7 +157,7 @@ class ReceiptViewModel(application: Application): AndroidViewModel(application) 
             val coop365Option = settingsRepo.coop365Option.firstOrNull()
 
             if (coop365Option == null) {
-                ParsingState.Error("Coop365Option not sat!")
+                ParsingState.Error("Coop365Option ikke valgt! Se indstillinger.")
                 return@launch
             }
 
@@ -169,11 +170,13 @@ class ReceiptViewModel(application: Application): AndroidViewModel(application) 
                     processImageInfo(imageText, cameraCoordinator, coop365Option)
                     textRecognizer.close()
                 } catch (e: Exception) {
-                    _parsingState.value = ParsingState.Error("MLKit Text recognition failed! $e")
+                    _parsingState.value = ParsingState.Error("Prøv venligst igen.")
+                    Log.e("PARSING_ERROR", e.toString())
                     textRecognizer.close()
                 }
             } catch(e: Exception) {
-                _parsingState.value = ParsingState.Error("Error loading image!: ${e.message}")
+                _parsingState.value = ParsingState.Error("Kunne ikke loade billedet. Prøv venligst igen.")
+                Log.e("PARSING_ERROR", e.message.toString())
             }
         }
     }
@@ -192,7 +195,8 @@ class ReceiptViewModel(application: Application): AndroidViewModel(application) 
             if (parser != null) {
                 val store: Store? = Store.fromName(parser.toString())
                 if (store == null) {
-                    throw ParsingException("Couldn't find store from ${parser}!")
+                    Log.e("PARSING_ERROR", "Ingen butik fundet")
+                    throw ParsingException("Prøv venligst igen.")
                 }
 
                 try {
@@ -213,7 +217,7 @@ class ReceiptViewModel(application: Application): AndroidViewModel(application) 
                     _parsingState.value = ParsingState.Error("Fejl med at scanne kvittering, $e")
                 }
             } else {
-                _parsingState.value = ParsingState.Error("Ingen butik fundet!")
+                _parsingState.value = ParsingState.Error("Ingen butik fundet! Prøv venligst at inkludere billedet af butikslogoet")
             }
         }
     }

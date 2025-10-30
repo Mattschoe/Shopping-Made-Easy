@@ -1,6 +1,5 @@
 package weberstudio.app.billigsteprodukter.ui.pages.budget
 
-import android.util.Log
 import androidx.compose.animation.core.EaseOutCubic
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -20,8 +19,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -66,15 +63,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import weberstudio.app.billigsteprodukter.R
+import weberstudio.app.billigsteprodukter.data.AdsID
 import weberstudio.app.billigsteprodukter.data.Budget
 import weberstudio.app.billigsteprodukter.data.ExtraExpense
 import weberstudio.app.billigsteprodukter.data.ReceiptWithProducts
+import weberstudio.app.billigsteprodukter.logic.Formatter.filterInputToValidNumberInput
 import weberstudio.app.billigsteprodukter.logic.Formatter.formatDanishCurrencyToFloat
+import weberstudio.app.billigsteprodukter.logic.Formatter.formatFloatToDanishCurrency
 import weberstudio.app.billigsteprodukter.logic.Formatter.formatInputToDanishCurrencyStandard
 import weberstudio.app.billigsteprodukter.logic.Formatter.toDanishString
-import weberstudio.app.billigsteprodukter.logic.Formatter.filterInputToValidNumberInput
-import weberstudio.app.billigsteprodukter.logic.Formatter.formatFloatToDanishCurrency
 import weberstudio.app.billigsteprodukter.ui.components.DeleteConfirmationDialog
+import weberstudio.app.billigsteprodukter.ui.components.MediumRectangleBannerAd
 import java.text.DecimalFormat
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -455,10 +454,8 @@ fun BudgetPageUI(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        //TIPS
-        BudgetTipsSection(
-            tips = getCurrentTips(spentPercentage)
-        )
+        //AD
+        MediumRectangleBannerAd(AdsID.BANNERPAGE_BANNER, Modifier.fillMaxSize())
     }
 
     //region DIALOGS
@@ -653,37 +650,7 @@ fun BudgetCircle(
     }
 }
 
-@Composable
-private fun BudgetTipsSection(tips: List<String>) {
-    Column {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(bottom = 12.dp)
-        ) {
-            Text(
-                text = "Tips & Indsigter",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(
-                text = "💡",
-                fontSize = 16.sp
-            )
-        }
 
-        tips.forEach { tip ->
-            Text(
-                text = "- $tip",
-                fontSize = 14.sp,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.padding(bottom = 8.dp),
-                lineHeight = 20.sp
-            )
-        }
-    }
-}
 
 @Composable
 private fun AddExpenseDialog(onDismiss: () -> Unit, onConfirm: (String, Float) -> Unit) {

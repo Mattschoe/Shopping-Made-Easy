@@ -8,6 +8,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import com.google.android.gms.ads.MobileAds
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.opencv.android.OpenCVLoader
 import weberstudio.app.billigsteprodukter.ui.navigation.ApplicationNavigationHost
 import weberstudio.app.billigsteprodukter.ui.theme.BilligsteProdukterTheme
@@ -20,6 +24,11 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        // Initialize the Google Mobile Ads SDK on a background thread. Source: https://developers.google.com/admob/android/quick-start#kotlin_2
+        CoroutineScope(Dispatchers.IO).launch {
+            MobileAds.initialize(this@MainActivity) {}
+        }
 
         //Loader OpenCV så det er klar til at process billeder
         if (OpenCVLoader.initLocal()) {

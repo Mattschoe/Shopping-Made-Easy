@@ -1,7 +1,7 @@
 package weberstudio.app.billigsteprodukter.ui.pages.home
 
+import androidx.compose.runtime.getValue
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,33 +13,50 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.animateLottieCompositionAsState
+import com.airbnb.lottie.compose.rememberLottieComposition
+import weberstudio.app.billigsteprodukter.R
 import weberstudio.app.billigsteprodukter.data.ActivityType
 import weberstudio.app.billigsteprodukter.data.AdsID
-import weberstudio.app.billigsteprodukter.data.Budget
 import weberstudio.app.billigsteprodukter.data.ExtraExpense
 import weberstudio.app.billigsteprodukter.data.ReceiptWithProducts
 import weberstudio.app.billigsteprodukter.data.RecentActivity
@@ -47,22 +64,31 @@ import weberstudio.app.billigsteprodukter.data.getIcon
 import weberstudio.app.billigsteprodukter.logic.ActivityViewModel
 import weberstudio.app.billigsteprodukter.logic.Formatter.toDanishString
 import weberstudio.app.billigsteprodukter.ui.components.BannerAd
+import weberstudio.app.billigsteprodukter.ui.components.PagerIndicator
 import weberstudio.app.billigsteprodukter.ui.navigation.PageNavigation
 import weberstudio.app.billigsteprodukter.ui.pages.budget.BudgetCircle
 import weberstudio.app.billigsteprodukter.ui.pages.budget.BudgetViewModel
 import java.time.LocalDateTime
 import java.time.Month
-import java.time.Year
 
 /**
  * The UI content of the *Main* Page
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun MainPageContent(modifier: Modifier = Modifier, navController: NavController, budgetViewModel: BudgetViewModel, activityViewModel: ActivityViewModel) {
+fun MainPageContent(
+    modifier: Modifier = Modifier,
+    navController: NavController,
+    budgetViewModel: BudgetViewModel,
+    mainPageViewModel: MainPageViewModel,
+    activityViewModel: ActivityViewModel
+) {
     val currentBudget by budgetViewModel.currentBudget.collectAsState()
     val currentReceipts by budgetViewModel.currentReceipts.collectAsState()
     val currentExpenses by budgetViewModel.currentExtraExpenses.collectAsState()
+
+    val hasCompletedOnboarding by mainPageViewModel.hasCompletedOnboarding.collectAsState(initial = true)
+    var showParsersAvailableDialog by remember { mutableStateOf(false) }
 
     val recentActivities by activityViewModel.recentActivities.collectAsState(initial = emptyList())
 
@@ -136,7 +162,241 @@ fun MainPageContent(modifier: Modifier = Modifier, navController: NavController,
         }
         //endregion
     }
+
+    if (!hasCompletedOnboarding) {
+        OnboardingDialog(
+            onDismiss = {
+                mainPageViewModel.setOnboardingCompleted(true)
+                showParsersAvailableDialog = true
+            },
+            onConfirm = {
+                mainPageViewModel.setOnboardingCompleted(true)
+                showParsersAvailableDialog = true
+            },
+        )
+    }
+
+    if (showParsersAvailableDialog) {
+        ParsersAvailableDialog(
+            onDismiss = { showParsersAvailableDialog = false },
+            onConfirm = { showParsersAvailableDialog = false },
+        )
+    }
 }
+
+@Composable
+fun OnboardingDialog(
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit,
+    modifier: Modifier = Modifier,
+    initialSelection: Int = 0,
+) {
+    val title = "Velkommen til!"
+    val animations = listOf<Pair<String, Int>>(
+        Pair("Scan din kvittering", R.raw.onboardingpage1_animation),
+        Pair("Opret indkøbslister, vælg produkter hvor det er billigst", R.raw.onboardingpage2_animation),
+        Pair("Sæt et budget og få overblik", R.raw.onboardingpage3_animation),
+    )
+    val pagerState = rememberPagerState(
+        initialPage = initialSelection,
+        pageCount = { animations.size }
+    )
+    val isValid = pagerState.currentPage == animations.size - 1
+
+    Dialog(
+        onDismissRequest = onDismiss
+    ) {
+        Card(
+            modifier = modifier
+                .fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer
+            )
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(20.dp)
+            ) {
+                //TITEL
+                Text(
+                    text = title,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+                Spacer(Modifier.height(12.dp))
+
+                //region DISPLAY
+                HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                ) { page ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(300.dp)
+                            .padding(horizontal = 8.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surface
+                        ),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(20.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            //Title
+                            Text(
+                                text = animations[page].first,
+                                style = MaterialTheme.typography.titleMedium,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(bottom = 8.dp)
+                            )
+
+                            //Animation
+                            val composition by rememberLottieComposition(
+                                LottieCompositionSpec.RawRes(animations[page].second)
+                            )
+
+                            val isLoaded = composition != null
+
+                            val progress by animateLottieCompositionAsState(
+                                composition = composition,
+                                iterations = LottieConstants.IterateForever
+                            )
+
+                            if (isLoaded) {
+                                LottieAnimation(
+                                    composition = composition,
+                                    progress = { progress },
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                )
+                            } else {
+                                CircularProgressIndicator(Modifier.size(100.dp))
+                            }
+                        }
+                    }
+                }
+
+                //endregion
+
+                //region DOTS
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                ) {
+                    PagerIndicator(
+                        pageCount = animations.size,
+                        currentPage = pagerState.currentPage,
+                        currentPageOffsetFraction = pagerState.currentPageOffsetFraction,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                }
+                //endregion
+
+                //region OK/ANNULER
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TextButton(
+                        onClick = onDismiss,
+                    ) {
+                        Text(
+                            text = "Annuller",
+                            color = Color.Gray
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
+                        enabled = isValid,
+                        onClick = onConfirm
+                    ) {
+                        Text(
+                            text = "Ok",
+                            color = if (isValid) MaterialTheme.colorScheme.onPrimary else Color.Gray
+                        )
+                    }
+                }
+                //endregion
+            }
+        }
+    }
+
+}
+
+@Composable
+fun ParsersAvailableDialog(
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = RoundedCornerShape(24.dp),
+            shadowElevation = 6.dp,
+            modifier = modifier
+                .padding(16.dp),
+            color = MaterialTheme.colorScheme.secondaryContainer
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(12.dp)
+                    .widthIn(min = 280.dp, max = 380.dp)
+            ) {
+                //Titel
+                Text(
+                    text = "Butikskvitteringer som kan scannes",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Medium),
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+
+                //Body
+                Text(
+                    text = "Vi arbejder hele tiden på at tilføjer nye kvitteringer, men det tager desværre tid. For nu kan kvitteringer fra disse butikker scannes:",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+
+                Text(text = "- Netto", fontWeight = FontWeight.SemiBold)
+                Text(text = "- Coop365", fontWeight = FontWeight.SemiBold)
+                Text(text = "- SuperBrugsen", fontWeight = FontWeight.SemiBold)
+                Text(text = "- Lidl", fontWeight = FontWeight.SemiBold)
+                Text(text = "- Rema1000", fontWeight = FontWeight.SemiBold)
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
+                        onClick = onConfirm
+                    ) {
+                        Text(
+                            text = "Ok",
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
 
 @Composable
 fun NoBudgetCard(modifier: Modifier = Modifier, onClick: () -> Unit) {

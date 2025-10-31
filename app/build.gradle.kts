@@ -72,4 +72,6 @@ dependencies {
     implementation(libs.androidx.datastore.preferences.core)
 
     implementation(libs.play.services.ads)
+
+    implementation(libs.lottie.compose)
 }

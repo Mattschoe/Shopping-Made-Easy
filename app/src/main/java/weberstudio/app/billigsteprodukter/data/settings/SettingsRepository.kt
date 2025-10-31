@@ -6,9 +6,11 @@ interface SettingsRepository {
     val theme: Flow<Theme>
     val coop365Option: Flow<Coop365Option.Option?>
     val totalOption: Flow<TotalOption>
+    val hasCompletedOnboarding: Flow<Boolean>
     suspend fun setTheme(theme: Theme)
     suspend fun setCoop365Option(option: Coop365Option.Option)
     suspend fun setTotalOption(option: TotalOption)
+    suspend fun setOnboardingCompleted(completed: Boolean)
     suspend fun deleteAllProducts()
 }
 

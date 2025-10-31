@@ -2,6 +2,7 @@ package weberstudio.app.billigsteprodukter.data.settings
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.Flow
@@ -16,6 +17,7 @@ class OfflineSettingsRepository(
         val THEME = stringPreferencesKey("theme")
         val COOP365_OPTION = stringPreferencesKey("coop365_option")
         val TOTAL_OPTION = stringPreferencesKey("total_option")
+        val HAS_COMPLETED_ONBOARDING = booleanPreferencesKey("has_completed_onboarding")
     }
 
     override suspend fun deleteAllProducts() {
@@ -38,6 +40,10 @@ class OfflineSettingsRepository(
         val optionName = preferences[PreferencesKeys.TOTAL_OPTION] ?: TotalOption.PRODUCT_TOTAL.name
         TotalOption.valueOf(optionName)
     }
+
+    override val hasCompletedOnboarding = dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.HAS_COMPLETED_ONBOARDING] == true
+    }
     //endregion
 
     //region SETTERS
@@ -57,6 +63,12 @@ class OfflineSettingsRepository(
     override suspend fun setTotalOption(option: TotalOption) {
         dataStore.edit { preferences ->
             preferences[PreferencesKeys.TOTAL_OPTION] = option.name
+        }
+    }
+
+    override suspend fun setOnboardingCompleted(completed: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[PreferencesKeys.HAS_COMPLETED_ONBOARDING] = completed
         }
     }
     //endregion

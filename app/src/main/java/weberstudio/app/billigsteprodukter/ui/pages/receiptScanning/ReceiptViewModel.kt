@@ -43,7 +43,7 @@ class ReceiptViewModel(application: Application): AndroidViewModel(application) 
     private val _totalOption = settingsRepo.totalOption.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
-        initialValue = TotalOption.PRODUCT_TOTAL
+        initialValue = PRODUCT_TOTAL
     )
 
     //Camera/parsing state

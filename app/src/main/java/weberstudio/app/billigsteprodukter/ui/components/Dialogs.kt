@@ -764,7 +764,7 @@ fun Coop365OptionDialog(
         onDismissRequest = onDismiss,
     ) {
         Card(
-            modifier = Modifier
+            modifier = modifier
                 .fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(
@@ -909,17 +909,6 @@ fun Coop365OptionDialog(
             }
         }
     }
-}
-
-
-
-
-@Composable
-fun Coop365OptionDisplay(
-    option: Coop365Option,
-    modifier: Modifier = Modifier
-) {
-
 }
 
 /**

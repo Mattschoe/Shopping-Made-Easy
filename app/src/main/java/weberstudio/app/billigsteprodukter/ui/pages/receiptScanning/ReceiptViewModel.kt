@@ -13,6 +13,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import org.apache.commons.lang3.NotImplementedException
 import weberstudio.app.billigsteprodukter.ReceiptApp
 import weberstudio.app.billigsteprodukter.data.Product
 import weberstudio.app.billigsteprodukter.data.Receipt
@@ -191,7 +192,11 @@ class ReceiptViewModel(application: Application): AndroidViewModel(application) 
         }
 
         runCatching {
-            val parser: StoreParser? = ParserFactory.parseReceipt(imageText, coop365Option)
+            val parser = try {
+                ParserFactory.parseReceipt(imageText, coop365Option)
+            } catch (e: NotImplementedException) {
+                throw ParsingException(e.toString())
+            }
             if (parser != null) {
                 val store: Store? = Store.fromName(parser.toString())
                 if (store == null) {

@@ -1,16 +1,18 @@
 package weberstudio.app.billigsteprodukter.logic.parsers
 
 import com.google.mlkit.vision.text.Text
+import org.apache.commons.lang3.NotImplementedException
 import weberstudio.app.billigsteprodukter.data.settings.Coop365Option
 import weberstudio.app.billigsteprodukter.data.settings.Coop365Option.Option.*
 import weberstudio.app.billigsteprodukter.logic.components.FuzzyMatcher
-import weberstudio.app.billigsteprodukter.ui.components.Coop365OptionDialog
+import kotlin.jvm.Throws
 
 ///Parses the given textblock into the correct store
 object ParserFactory {
     val fuzzyMatcher = FuzzyMatcher()
 
     ///Runs through the entire receipt and finds the correct Store
+    @Throws(NotImplementedException::class)
     fun parseReceipt(receipt: Text, coop365Option: Coop365Option.Option): StoreParser? {
         for (block in receipt.textBlocks) {
             for (line in block.lines) {
@@ -24,6 +26,8 @@ object ParserFactory {
                             UNDER -> CoopParserQuantityBelow
                         }
                     }
+                    else if (fuzzyMatcher.match(word, listOf("BILKA"), 0.85f, 0.3f)) return BilkaParser
+                    else if (fuzzyMatcher.match(word, listOf("FØTEX"), 0.85f, 0.3f)) return FoetexParser
                     else if (fuzzyMatcher.match(word, listOf("MENU"), 0.85f, 0.3f)) return MenuParser
                     else if (fuzzyMatcher.match(word, listOf("LIDL"), 0.85f, 0.3f)) { return LidlParser }
                     else if (fuzzyMatcher.match(word, listOf("SUPERBRUGSEN", "BRUGSEN"), 0.85f, 0.3f)) return SuperBrugsenParser

@@ -18,6 +18,8 @@ class OfflineSettingsRepository(
         val COOP365_OPTION = stringPreferencesKey("coop365_option")
         val TOTAL_OPTION = stringPreferencesKey("total_option")
         val HAS_COMPLETED_ONBOARDING = booleanPreferencesKey("has_completed_onboarding")
+        val HAS_BEEN_WARNED_ABOUT_RECEIPT_READABILITY = booleanPreferencesKey("receipt_scan_readability")
+        val HAS_VISITED_RECEIPT_PAGE = booleanPreferencesKey("visited_receipt_page")
     }
 
     override suspend fun deleteAllProducts() {
@@ -44,6 +46,14 @@ class OfflineSettingsRepository(
     override val hasCompletedOnboarding = dataStore.data.map { preferences ->
         preferences[PreferencesKeys.HAS_COMPLETED_ONBOARDING] == true
     }
+
+    override val hasBeenWarnedAboutReceiptReadability = dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.HAS_BEEN_WARNED_ABOUT_RECEIPT_READABILITY] == true
+    }
+
+    override val hasVisitedReceiptPage = dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.HAS_VISITED_RECEIPT_PAGE] == true
+    }
     //endregion
 
     //region SETTERS
@@ -69,6 +79,18 @@ class OfflineSettingsRepository(
     override suspend fun setOnboardingCompleted(completed: Boolean) {
         dataStore.edit { preferences ->
             preferences[PreferencesKeys.HAS_COMPLETED_ONBOARDING] = completed
+        }
+    }
+
+    override suspend fun setHasBeenWarnedAboutScanReadability(hasBeenWarned: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[PreferencesKeys.HAS_BEEN_WARNED_ABOUT_RECEIPT_READABILITY] = hasBeenWarned
+        }
+    }
+
+    override suspend fun setHasVisitedReceiptPage(hasVisited: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[PreferencesKeys.HAS_VISITED_RECEIPT_PAGE] = hasVisited
         }
     }
     //endregion

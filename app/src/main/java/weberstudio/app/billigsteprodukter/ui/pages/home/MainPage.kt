@@ -88,6 +88,8 @@ fun MainPageContent(
     val currentExpenses by budgetViewModel.currentExtraExpenses.collectAsState()
 
     val hasCompletedOnboarding by mainPageViewModel.hasCompletedOnboarding.collectAsState(initial = true)
+    val hasVisitedReceiptPage by mainPageViewModel.hasVisitedReceiptPage.collectAsState(initial = true)
+    val hasBeenWarnedAboutReceipt by mainPageViewModel.hasBeenWarnedAboutReceiptReadability.collectAsState(initial = true)
     var showParsersAvailableDialog by remember { mutableStateOf(false) }
 
     val recentActivities by activityViewModel.recentActivities.collectAsState(initial = emptyList())
@@ -181,6 +183,67 @@ fun MainPageContent(
             onDismiss = { showParsersAvailableDialog = false },
             onConfirm = { showParsersAvailableDialog = false },
         )
+    }
+
+    if (hasVisitedReceiptPage && !hasBeenWarnedAboutReceipt) {
+        WarnAboutReceiptDialog(
+            onDismiss = { mainPageViewModel.setHasBeenWarnedAboutReceipt(true) },
+            onConfirm = { mainPageViewModel.setHasBeenWarnedAboutReceipt(true) },
+        )
+    }
+}
+
+@Composable
+fun WarnAboutReceiptDialog(
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = RoundedCornerShape(24.dp),
+            shadowElevation = 6.dp,
+            modifier = modifier
+                .padding(16.dp),
+            color = MaterialTheme.colorScheme.secondaryContainer
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(12.dp)
+                    .widthIn(min = 280.dp, max = 380.dp)
+            ) {
+                //Titel
+                Text(
+                    text = "Hey!",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Medium),
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+
+                //Body
+                Text(
+                    text = "Håber scanningen gik godt! Nogle gange kan der komme problemer med at scanneren læser teksten bag på tynde kvitteringer. Hvis du oplever at produkterne får mærkelige navne så prøv at strege teksten bag på kvitteringen ud med en tusch før scanning",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
+                        onClick = onConfirm
+                    ) {
+                        Text(
+                            text = "Ok",
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -333,7 +396,6 @@ fun OnboardingDialog(
             }
         }
     }
-
 }
 
 @Composable

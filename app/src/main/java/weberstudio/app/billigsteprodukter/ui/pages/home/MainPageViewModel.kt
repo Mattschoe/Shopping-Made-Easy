@@ -11,10 +11,25 @@ class MainPageViewModel(application: Application): AndroidViewModel(application)
     private val settingsRepo = app.settingsRepository
 
     val hasCompletedOnboarding = settingsRepo.hasCompletedOnboarding
+    val hasVisitedReceiptPage = settingsRepo.hasVisitedReceiptPage
+    val hasBeenWarnedAboutReceiptReadability = settingsRepo.hasBeenWarnedAboutReceiptReadability
 
     fun setOnboardingCompleted(completed: Boolean) {
         viewModelScope.launch {
             settingsRepo.setOnboardingCompleted(completed)
         }
     }
+
+    fun setHasVisitedReceiptPage(hasVisited: Boolean) {
+        viewModelScope.launch {
+            settingsRepo.setHasVisitedReceiptPage(hasVisited)
+        }
+    }
+
+    fun setHasBeenWarnedAboutReceipt(beenWarned: Boolean) {
+        viewModelScope.launch {
+            settingsRepo.setHasBeenWarnedAboutScanReadability(beenWarned)
+        }
+    }
+
 }

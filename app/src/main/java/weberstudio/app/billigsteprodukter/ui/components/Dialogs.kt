@@ -1,5 +1,6 @@
 package weberstudio.app.billigsteprodukter.ui.components
 
+import android.util.Log
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
@@ -795,7 +796,8 @@ fun Coop365OptionDialog(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(300.dp)
-                            .padding(horizontal = 8.dp),
+                            .padding(horizontal = 8.dp)
+                            .clickable { if (page != 0) option?.let { onConfirm(it.type) } },
                         shape = RoundedCornerShape(12.dp),
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.surface
@@ -826,7 +828,7 @@ fun Coop365OptionDialog(
                                 )
                                 Spacer(Modifier.height(8.dp))
                                 Text(
-                                    text = "Vælg venligst ud fra de to muligheder hvordan din butiks kvitteringer ser ud",
+                                    text = "Vælg venligst ud fra de to muligheder hvordan din butiks kvitteringer ser ud. Du kan altid ændre det i indstillinger.",
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = Color.Gray,
                                     modifier = Modifier.padding(bottom = 8.dp)

@@ -1,6 +1,5 @@
 package weberstudio.app.billigsteprodukter.ui.components
 
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.size
@@ -117,6 +116,12 @@ fun NavigationBar(navController: NavController) {
     var showCoop365OptionsDialog by remember { mutableStateOf(false) }
     //endregion
 
+    val launchCamera = launchCamera(
+        onImageCaptured = { uri, ctx ->
+            cameraCoordinator.onImageCaptured(uri, ctx)
+            navController.navigate(PageNavigation.createReceiptRoute(0))
+        }
+    )
 
     NavigationBar(
         windowInsets = NavigationBarDefaults.windowInsets,
@@ -125,13 +130,6 @@ fun NavigationBar(navController: NavController) {
     ) {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route
-
-        val launchCamera = launchCamera(
-            onImageCaptured = { uri, ctx ->
-                cameraCoordinator.onImageCaptured(uri, ctx)
-                navController.navigate(PageNavigation.createReceiptRoute(0))
-            }
-        )
 
         //Home
         NavigationBarItem(
@@ -203,7 +201,6 @@ fun NavigationBar(navController: NavController) {
             onClick = {
                 scope.launch {
                     val coopOption = settingsRepo.coop365Option.firstOrNull()
-                    Log.d("DEBUG", coopOption.toString())
                     if (coopOption == null) showCoop365OptionsDialog = true
                     else launchCamera()
                 }
@@ -219,10 +216,11 @@ fun NavigationBar(navController: NavController) {
                 scope.launch {
                     settingsRepo.setCoop365Option(option)
                     showCoop365OptionsDialog = false
-
+                    launchCamera()
                 }
             }
         )
     }
     //endregion
 }
+

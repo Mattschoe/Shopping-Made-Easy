@@ -475,7 +475,7 @@ fun ShoppingListProductCardUI(modifier: Modifier = Modifier, product: Product, s
 
                 //Produktdetaljer
                 Text(
-                    text = "${product.price} | 1kg", //TODO: Her skal prober enhed tilføjes når den funktionalitet er implementeret
+                    text = "${product.price}",
                     style = MaterialTheme.typography.bodySmall,
                     color = textColor.copy(alpha = 0.8f),
                     textDecoration = if (selected) TextDecoration.LineThrough else TextDecoration.None

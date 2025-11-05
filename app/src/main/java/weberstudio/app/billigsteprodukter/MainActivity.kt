@@ -1,6 +1,7 @@
 package weberstudio.app.billigsteprodukter
 
 import android.Manifest
+import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -23,6 +24,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         enableEdgeToEdge()
 
         // Initialize the Google Mobile Ads SDK on a background thread. Source: https://developers.google.com/admob/android/quick-start#kotlin_2

@@ -32,7 +32,7 @@ fun LogoBarHandler(modifier: Modifier = Modifier, storeName: String) {
         }
         is StoreLookupResult.Error -> {
             //If NO store was found
-            println(result.errorMessage) //ToDo: Fix so this produces a alertdialog so the user can correctly choose the store
+            println(result.errorMessage)
         }
     }
 }

@@ -11,7 +11,6 @@ object MatchScoreCalculator {
     private val fuzzyMatcherJaro = JaroWinklerSimilarity()
 
     fun calculate(productName: String, query: String): Int {
-        //TODO: Det her skal normalizes helt (se hvordan i parser), og ikke bar trimmes og lowercases
         val productName = productName.lowercase().trim()
         val query = query.lowercase().trim()
 

@@ -20,11 +20,19 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(na
  */
 class ReceiptApp : Application() {
     private val database by lazy { AppDatabase.getDatabase(this) }
- 
     val activityRepository by lazy { OfflineActivityRepository(database.recentActivityDao()) }
     val receiptRepository by lazy { OfflineReceiptRepository(database.receiptDao()) }
     val budgetRepository by lazy { OfflineBudgetRepository(database.budgetDao()) }
     val shoppingListRepository by lazy { OfflineShoppingListRepository(database.ShoppingListDao()) }
     val settingsRepository by lazy { OfflineSettingsRepository(dataStore, database.receiptDao())  }
     val activityLogger by lazy { ActivityLogger(activityRepository) }
+
+    companion object {
+        lateinit var instance: ReceiptApp; private set
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        instance = this
+    }
 }

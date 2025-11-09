@@ -5,6 +5,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Arrangement
@@ -15,6 +16,8 @@ import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -28,6 +31,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PageSize
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -47,6 +51,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -64,6 +70,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.lerp
 import androidx.compose.ui.zIndex
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -74,10 +81,11 @@ import weberstudio.app.billigsteprodukter.data.Product
 import weberstudio.app.billigsteprodukter.logic.Store
 import weberstudio.app.billigsteprodukter.ui.components.LargeBannerAd
 import weberstudio.app.billigsteprodukter.ui.components.ModifyProductDialog
+import weberstudio.app.billigsteprodukter.ui.components.PagerIndicator
 import weberstudio.app.billigsteprodukter.ui.components.ProductCard
-import weberstudio.app.billigsteprodukter.ui.components.ProductCardSkeleton
 import weberstudio.app.billigsteprodukter.ui.components.SearchBar
 import weberstudio.app.billigsteprodukter.ui.components.StoreScopeDropDownMenu
+import kotlin.math.absoluteValue
 import kotlin.math.max
 import kotlin.math.roundToInt
 
@@ -124,30 +132,78 @@ fun DatabaseContent(
         //region STORE LOGO
         BoxWithConstraints(
             modifier = Modifier
-                .height(150.dp)
+                .fillMaxWidth()
         ) {
-            val pageInset: Dp = maxWidth * 0.17f //The small "before" and "after" stores you can see in the pager
-            HorizontalPager(
-                state = pagerState,
-                contentPadding = PaddingValues(horizontal = pageInset),
-                pageSpacing = 8.dp,
+            val pagerTotalHeight = maxHeight * 0.25f
+            val pagerHeight = pagerTotalHeight - 30.dp //Space for indicators
+            val horizontalContentPadding = maxWidth * 0.25f
+
+            Box(
+                contentAlignment = Alignment.Center,
                 modifier = Modifier
                     .fillMaxWidth()
-            ) { page ->
-                Box(
+                    .height(pagerTotalHeight)
+                    //.border(2.dp, Color.Black)
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
-                        .fillMaxSize(),
-                    contentAlignment = Alignment.Center
+                        .fillMaxSize()
                 ) {
-                    val store = stores[page]
-                    Image(
-                        painter = painterResource(id = store.image),
-                        contentDescription = "Logo for ${store.name}",
-                        contentScale = ContentScale.Fit,
+                    HorizontalPager(
+                        state = pagerState,
+                        pageSize = PageSize.Fill,
+                        contentPadding = PaddingValues(horizontal = horizontalContentPadding),
                         modifier = Modifier
-                            .fillMaxSize()
-                            .wrapContentSize()
-                            .clip(RoundedCornerShape(8.dp))
+                            .height(pagerHeight)
+                            //.border(2.dp, Color.Magenta)
+                    ) { page ->
+                        //Page offset for animations
+                        val pageOffset = (pagerState.currentPage - page) + pagerState.currentPageOffsetFraction
+                        val absoluteOffset = pageOffset.absoluteValue
+
+                        //Scale
+                        val scale = lerp(1f, 0.85f, absoluteOffset.coerceIn(0f, 1f))
+
+                        //Opacity
+                        val alpha = when {
+                            absoluteOffset < 1f -> lerp(1f, 0.6f, absoluteOffset)
+                            else -> 0.3f
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                //.border(2.dp, Color.Blue)
+                                    ,
+                            contentAlignment = Alignment.Center
+                        ) {
+                            val store = stores[page]
+                            Image(
+                                painter = painterResource(id = store.image),
+                                contentDescription = store.contentDescription,
+                                contentScale = ContentScale.Fit,
+                                modifier = Modifier
+                                    .fillMaxHeight()
+                                    .aspectRatio(1f)
+                                    .graphicsLayer {
+                                        scaleX = scale
+                                        scaleY = scale
+                                        this.alpha = alpha
+                                        transformOrigin = TransformOrigin.Center
+                                    }
+                                    .clip(RoundedCornerShape(8.dp))
+                                    //.border(2.dp, Color.Yellow)
+                            )
+                        }
+                    }
+
+                    PagerIndicator(
+                        pageCount = stores.size,
+                        currentPage = pagerState.currentPage,
+                        currentPageOffsetFraction = pagerState.currentPageOffsetFraction,
+                        modifier = Modifier
+                            .padding(top = 4.dp,     bottom = 8.dp)
                     )
                 }
             }

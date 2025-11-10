@@ -10,6 +10,6 @@ object FoetexParser : StoreParser {
     }
 
     override fun toString(): String {
-        return "Rema1000"
+        return "Føtex"
     }
 }

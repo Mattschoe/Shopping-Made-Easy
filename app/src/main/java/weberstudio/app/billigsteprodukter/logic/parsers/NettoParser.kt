@@ -8,6 +8,7 @@ import org.apache.commons.text.similarity.LevenshteinDistance
 import weberstudio.app.billigsteprodukter.data.Product
 import weberstudio.app.billigsteprodukter.logic.Formatter.isIshEqualTo
 import weberstudio.app.billigsteprodukter.logic.Formatter.normalizeText
+import weberstudio.app.billigsteprodukter.logic.Logger
 import weberstudio.app.billigsteprodukter.logic.Store
 import weberstudio.app.billigsteprodukter.logic.components.FuzzyMatcher
 import weberstudio.app.billigsteprodukter.logic.exceptions.ParsingException
@@ -56,7 +57,10 @@ object NettoParser : StoreParser {
                 }
             }
         }
-        if (controlLine == null) throw ParsingException("No control line found!")
+        if (controlLine == null) {
+            Logger.log(this.toString(), "No control line found!")
+            throw ParsingException("Kunne ikke finde butikken. Husk at inkludere butikslogoet i billedet.")
+        }
 
         //Parser de linjecomboer vi missede fordi kontrollinjen endnu ik var fundet
         parseAfterControlLineFound.forEach { pair ->
@@ -149,7 +153,8 @@ object NettoParser : StoreParser {
         }
 
         if (products.isEmpty()) {
-            throw ParsingException("Productlist is empty!")
+            Logger.log(this.toString(), "Productlist is empty!")
+            throw ParsingException("Kunne ikke finde nogle produkter i kvitteringen! Prøv at flade kvitteringen ud og tag billedet i flashlight mode")
         }
 
         //region Filtering and returning
@@ -169,7 +174,10 @@ object NettoParser : StoreParser {
             !product.price.isIshEqualTo(total)
         }.toHashSet()
 
-        if (filteredSet.isEmpty()) throw ParsingException("Filtered set of products is empty!. Please try again")
+        if (filteredSet.isEmpty()) {
+            Logger.log(this.toString(), "Filtered set of products is empty!. Please try again")
+            throw ParsingException("Kunne ikke finde nogle produkter i kvitteringen! Prøv at flade kvitteringen ud og tag billedet i flashlight mode")
+        }
 
         //Checker om total er det vi regner med, ellers så marker vi at vi tror der er gået noget galt
         val productsTotal = filteredSet.sumOf { product -> product.price.toDouble() }

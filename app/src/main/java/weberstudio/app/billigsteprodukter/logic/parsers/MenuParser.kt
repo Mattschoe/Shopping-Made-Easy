@@ -10,6 +10,6 @@ object MenuParser: StoreParser {
     }
 
     override fun toString(): String {
-        return "Rema1000"
+        return "Menu"
     }
 }

@@ -8,6 +8,7 @@ import org.apache.commons.text.similarity.LevenshteinDistance
 import weberstudio.app.billigsteprodukter.data.Product
 import weberstudio.app.billigsteprodukter.logic.Formatter.isIshEqualTo
 import weberstudio.app.billigsteprodukter.logic.Formatter.normalizeText
+import weberstudio.app.billigsteprodukter.logic.Logger
 import weberstudio.app.billigsteprodukter.logic.Store
 import weberstudio.app.billigsteprodukter.logic.components.FuzzyMatcher
 import weberstudio.app.billigsteprodukter.logic.exceptions.ParsingException
@@ -48,8 +49,8 @@ object CoopParserQuantityBelow : StoreParser {
             if (controlLine == null && (fuzzyMatcher.match(line.text, listOf("DET RIGTIGE STED AT SPARE", "365", "365 DISCOUNT"), 0.85f, 0.15f))) controlLine = line
         }
         if (controlLine == null) {
-            Log.d("ERROR", "Couldn't find any control line!")
-            throw ParsingException("No control line found!")
+            Logger.log(this.toString(), "Couldn't find any control line!")
+            throw ParsingException("Kunne ikke finde butikken. Husk at inkludere butikslogoet i billedet.")
         }
         //endregion
 
@@ -59,7 +60,7 @@ object CoopParserQuantityBelow : StoreParser {
             if (isQuantityLine(line.text)) {
                 val childLine = getLineAboveUsingReference(parsedLines, line, controlLine)
                 if (childLine != null) isMarked.put(childLine, true)
-                else Log.d("ERROR", "Couldn't find childLine for line: ${line.text}")
+                else Logger.log(this.toString(), "Couldn't find childLine for line: ${line.text}")
                 continue
             }
         }
@@ -145,7 +146,10 @@ object CoopParserQuantityBelow : StoreParser {
             products.add(product)
             error?.let { error -> scanValidation = scanValidation.withProductError(product, error) }
         }
-        if (products.isEmpty()) throw ParsingException("Productlist is empty!")
+        if (products.isEmpty()) {
+            Logger.log(this.toString(), "Productlist is empty!")
+            throw ParsingException("Kunne ikke finde nogle produkter i kvitteringen! Prøv at flade kvitteringen ud og tag billedet i flashlight mode")
+        }
 
         //region Filtering and returning
         //Hvis der er mere end to produkter (så ét produkt og ét stopord), så gemmer vi alle dem som har den samme pris som stop ordene (Så hvis "Total" fucker f.eks.)
@@ -165,7 +169,10 @@ object CoopParserQuantityBelow : StoreParser {
             !product.price.isIshEqualTo(total)
         }.toHashSet()
 
-        if (filteredSet.isEmpty()) throw ParsingException("Filtered set of products is empty!. Please try again")
+        if (filteredSet.isEmpty()) {
+            Logger.log(this.toString(), "Filtered set of products is empty!")
+            throw ParsingException("Kunne ikke finde nogle produkter i kvitteringen! Prøv at flade kvitteringen ud og tag billedet i flashlight mode")
+        }
 
         //Checker om total er det vi regner med, ellers så marker vi at vi tror der er gået noget galt
         val productsTotal = filteredSet.sumOf { product -> product.price.toDouble() }
@@ -284,8 +291,8 @@ object CoopParserQuantityAbove : StoreParser {
             if (controlLine == null && (fuzzyMatcher.match(line.text, listOf("DET RIGTIGE STED AT SPARE", "365", "365 DISCOUNT"), 0.85f, 0.15f))) controlLine = line
         }
         if (controlLine == null) {
-            Log.d("ERROR", "Couldn't find any control line!")
-            throw ParsingException("No control line found!")
+            Logger.log(this.toString(), "Couldn't find any control line!")
+            throw ParsingException("Kunne ikke finde butikken. Husk at inkludere butikslogoet i billedet.")
         }
         //endregion
 
@@ -295,7 +302,7 @@ object CoopParserQuantityAbove : StoreParser {
             if (isQuantityLine(line.text)) {
                 val childLine = getProductLineBelowUsingReference(parsedLines, line, controlLine)
                 if (childLine != null) isMarked.put(childLine, true)
-                else Log.d("ERROR", "Couldn't find childLine for line: ${line.text}")
+                else Logger.log(this.toString(), "Couldn't find childLine for line: ${line.text}")
                 continue
             }
         }
@@ -388,8 +395,8 @@ object CoopParserQuantityAbove : StoreParser {
         }
 
         if (products.isEmpty()) {
-            Log.d("ERROR", "ProductList is empty!")
-            throw ParsingException("Productlist is empty!")
+            Logger.log(this.toString(), "ProductList is empty!")
+            throw ParsingException("Kunne ikke finde nogle produkter i kvitteringen! Prøv at flade kvitteringen ud og tag billedet i flashlight mode")
         }
 
         //region Filtering and returning
@@ -411,8 +418,8 @@ object CoopParserQuantityAbove : StoreParser {
         }.toHashSet()
 
         if (filteredSet.isEmpty()) {
-            Log.d("ERROR", "Filtered set of products is empty!. Please try again")
-            throw ParsingException("Filtered set of products is empty!. Please try again")
+            Logger.log(this.toString(), "Filtered set of products is empty!. Please try again")
+            throw ParsingException("Kunne ikke finde nogle produkter i kvitteringen! Prøv at flade kvitteringen ud og tag billedet i flashlight mode")
         }
 
 

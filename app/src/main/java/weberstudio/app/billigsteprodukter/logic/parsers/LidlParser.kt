@@ -8,6 +8,7 @@ import org.apache.commons.text.similarity.LevenshteinDistance
 import weberstudio.app.billigsteprodukter.data.Product
 import weberstudio.app.billigsteprodukter.logic.Formatter.isIshEqualTo
 import weberstudio.app.billigsteprodukter.logic.Formatter.normalizeText
+import weberstudio.app.billigsteprodukter.logic.Logger
 import weberstudio.app.billigsteprodukter.logic.Store
 import weberstudio.app.billigsteprodukter.logic.components.FuzzyMatcher
 import weberstudio.app.billigsteprodukter.logic.exceptions.ParsingException
@@ -132,8 +133,8 @@ object LidlParser: StoreParser {
         }
 
         if (products.isEmpty()) {
-            Log.d("ERROR", "ProductList is empty!")
-            throw ParsingException("Productlist is empty!")
+            Logger.log(this.toString(), "ProductList is empty!")
+            throw ParsingException("Kunne ikke finde nogle produkter i kvitteringen! Prøv at flade kvitteringen ud og tag billedet i flashlight mode")
         }
 
         //region Filtering and returning
@@ -158,8 +159,8 @@ object LidlParser: StoreParser {
 
 
         if (filteredSet.isEmpty()) {
-            Log.d("ERROR", "Filtered set of products is empty!. Please try again")
-            throw ParsingException("Filtered set of products is empty!. Please try again")
+            Logger.log(this.toString(), "Filtered set of products is empty!. Please try again")
+            throw ParsingException("Kunne ikke finde nogle produkter i kvitteringen! Prøv at flade kvitteringen ud og tag billedet i flashlight mode")
         }
 
         //Checker om total er det vi regner med, ellers så marker vi at vi tror der er gået noget galt

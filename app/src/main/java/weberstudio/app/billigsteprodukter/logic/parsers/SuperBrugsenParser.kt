@@ -8,6 +8,7 @@ import org.apache.commons.text.similarity.LevenshteinDistance
 import weberstudio.app.billigsteprodukter.data.Product
 import weberstudio.app.billigsteprodukter.logic.Formatter.isIshEqualTo
 import weberstudio.app.billigsteprodukter.logic.Formatter.normalizeText
+import weberstudio.app.billigsteprodukter.logic.Logger
 import weberstudio.app.billigsteprodukter.logic.Store
 import weberstudio.app.billigsteprodukter.logic.components.FuzzyMatcher
 import weberstudio.app.billigsteprodukter.logic.exceptions.ParsingException
@@ -43,8 +44,8 @@ object SuperBrugsenParser: StoreParser {
             }
         }
         if (controlLine == null) {
-            Log.d("ERROR", "Couldn't find any control line!")
-            throw ParsingException("No control line found!")
+            Logger.log(this.toString(), "No control line found!")
+            throw ParsingException("Kunne ikke finde butikken. Husk at inkludere butikslogoet i billedet.")
         }
         //endregion
 
@@ -54,7 +55,7 @@ object SuperBrugsenParser: StoreParser {
             if (isQuantityLine(line.text)) {
                 val childLine = getProductLineBelowUsingReference(parsedLines, line, controlLine)
                 if (childLine != null) isMarked.put(childLine, true)
-                else Log.d("ERROR", "Couldn't find childLine for line: ${line.text}")
+                else Logger.log(this.toString(), "Couldn't find childLine for line: ${line.text}")
                 continue
             }
         }
@@ -155,8 +156,8 @@ object SuperBrugsenParser: StoreParser {
         }
 
         if (products.isEmpty()) {
-            Log.d("ERROR", "ProductList is empty!")
-            throw ParsingException("Productlist is empty!")
+            Logger.log(this.toString(), "ProductList is empty!")
+            throw ParsingException("Kunne ikke finde nogle produkter i kvitteringen! Prøv at flade kvitteringen ud og tag billedet i flashlight mode")
         }
 
         //region Filtering and returning
@@ -178,8 +179,8 @@ object SuperBrugsenParser: StoreParser {
         }.toHashSet()
 
         if (filteredSet.isEmpty()) {
-            Log.d("ERROR", "Filtered set of products is empty!. Please try again")
-            throw ParsingException("Filtered set of products is empty!. Please try again")
+            Logger.log(this.toString(), "Filtered set of products is empty!")
+            throw ParsingException("Kunne ikke finde nogle produkter i kvitteringen! Prøv at flade kvitteringen ud og tag billedet i flashlight mode")
         }
 
         //Checker om total er det vi regner med, ellers så marker vi at vi tror der er gået noget galt

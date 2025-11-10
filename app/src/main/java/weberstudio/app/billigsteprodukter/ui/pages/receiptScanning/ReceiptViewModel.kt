@@ -206,7 +206,7 @@ class ReceiptViewModel(application: Application): AndroidViewModel(application) 
                 Logger.log(tag, "Parsing Exception: ${e.toString()}")
                 throw ParsingException(e.toString())
             }
-            Logger.log(tag, "Parser: $parser")
+            Logger.log(tag, "Parser: ${parser?.javaClass}")
             if (parser != null) {
                 val store: Store? = Store.fromName(parser.toString())
                 if (store == null) {

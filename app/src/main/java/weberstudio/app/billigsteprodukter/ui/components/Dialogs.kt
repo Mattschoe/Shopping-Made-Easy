@@ -1,6 +1,5 @@
 package weberstudio.app.billigsteprodukter.ui.components
 
-import android.util.Log
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
@@ -10,7 +9,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -56,7 +54,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
@@ -749,8 +746,8 @@ fun Coop365OptionDialog(
 ) {
     val title = "Vælg kvitteringstype for Coop365"
     val options = listOf(
-        Coop365Option(Coop365Option.Option.OVER, R.drawable.coop365_overpng),
-        Coop365Option(Coop365Option.Option.UNDER, R.drawable.coop365_under)
+        Coop365Option(Coop365Option.Option.UNDER, R.drawable.coop365_under),
+        Coop365Option(Coop365Option.Option.OVER, R.drawable.coop365_over)
     )
 
     val pagerState = rememberPagerState(

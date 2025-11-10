@@ -14,6 +14,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.opencv.android.OpenCVLoader
+import weberstudio.app.billigsteprodukter.logic.Logger
 import weberstudio.app.billigsteprodukter.ui.navigation.ApplicationNavigationHost
 import weberstudio.app.billigsteprodukter.ui.theme.BilligsteProdukterTheme
 
@@ -24,6 +25,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Logger.log("MainActivity", "App Start")
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         enableEdgeToEdge()
 

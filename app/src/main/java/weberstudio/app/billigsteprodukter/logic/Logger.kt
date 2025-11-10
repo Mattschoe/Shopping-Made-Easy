@@ -25,7 +25,5 @@ object Logger {
             Log.e("Logger", "Failed to write log:", e)
         }
     }
-
-    fun getLogFile() = logFile
 }
 

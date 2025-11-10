@@ -12,6 +12,7 @@ import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ScanValidati
 * This ViewModel does NOT contain business logic - it's just a temporary data holder.
 */
 class CameraCoordinator : ViewModel() {
+    private val tag = "CameraCoordinator"
     private val _pendingImageCapture = MutableStateFlow<PendingCapture?>(null)
     val pendingImageCapture: StateFlow<PendingCapture?> = _pendingImageCapture.asStateFlow()
 
@@ -23,6 +24,7 @@ class CameraCoordinator : ViewModel() {
      * Stores it temporarily until the receipt screen can process it.
      */
     fun onImageCaptured(uri: Uri, context: Context) {
+        Logger.log(tag, "Image Captured registered!")
         _pendingImageCapture.value = PendingCapture(uri, context)
     }
 
@@ -31,14 +33,17 @@ class CameraCoordinator : ViewModel() {
      * Clears the pending capture.
      */
     fun clearPendingCapture() {
+        Logger.log(tag, "Clearing pending Capture")
         _pendingImageCapture.value = null
     }
 
     fun setScanValidation(receiptID: Long, validation: ScanValidation) {
+        Logger.log(tag, "Setting scan validation for receiptID: $receiptID, with validation: $validation")
         _pendingScanValidation.value = PendingScanValidation(receiptID, validation)
     }
 
     fun clearScanValidation() {
+        Logger.log(tag, "Clearing scan validation")
         _pendingScanValidation.value = null
     }
 

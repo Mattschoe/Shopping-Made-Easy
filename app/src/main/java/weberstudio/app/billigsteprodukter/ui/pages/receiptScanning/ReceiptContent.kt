@@ -90,6 +90,8 @@ fun ReceiptScanningContent(
     viewModel: ReceiptViewModel,
     cameraCoordinator: CameraCoordinator
 ) {
+    val tag = remember { "ReceiptScanningContent" }
+
     val parsingState by viewModel.parsingState.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
 

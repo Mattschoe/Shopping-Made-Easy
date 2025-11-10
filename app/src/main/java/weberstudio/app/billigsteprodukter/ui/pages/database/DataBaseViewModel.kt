@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -115,7 +116,7 @@ class DataBaseViewModel(application: Application): AndroidViewModel(application)
     /**
      * Filters, ranks and returns the products based on how much they match the searchQuery, and returns a list of items matching the query + parameters given
      */
-    @OptIn(ExperimentalCoroutinesApi::class)
+    @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
     val filteredProductsFlow: StateFlow<List<Product>> by lazy {
         //region SETTINGS
         val minimumQueryLength = 2 //How long the query has to be before search kicks in

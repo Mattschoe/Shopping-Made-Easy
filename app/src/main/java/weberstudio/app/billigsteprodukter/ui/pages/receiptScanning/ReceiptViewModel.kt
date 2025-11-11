@@ -3,6 +3,7 @@ package weberstudio.app.billigsteprodukter.ui.pages.receiptScanning
 import android.app.Application
 import android.content.Context
 import android.net.Uri
+import weberstudio.app.billigsteprodukter.logic.Formatter.isIshEqualTo
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -262,7 +263,19 @@ class ReceiptViewModel(application: Application): AndroidViewModel(application) 
                 val receiptID = receiptRepo.addReceiptProducts(receipt, parsedText.products)
                 Logger.log(tag, "Receipt saved with ID: $receiptID, products: ${parsedText.products.size}")
 
-                cameraCoordinator.setScanValidation(receiptID, parsedText.scanErrors)
+                //Removes the total error if product total corresponds with what the parser calculated
+                val errors = if (_totalOption.value == PRODUCT_TOTAL) {
+                    val isValid = parsedText.products
+                        .sumOf { it.price.toDouble() }
+                        .toFloat()
+                        .isIshEqualTo(parsedText.total)
+                    if (isValid) parsedText.scanErrors.copy(totalError = false)
+                    else parsedText.scanErrors
+                } else {
+                    parsedText.scanErrors
+                }
+
+                cameraCoordinator.setScanValidation(receiptID, errors)
                 app.activityLogger.logReceiptScan(receipt.copy(receiptID = receiptID))
 
                 _parsingState.value = ParsingState.Success(store, receiptID)

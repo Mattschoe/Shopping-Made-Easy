@@ -1,7 +1,10 @@
 package weberstudio.app.billigsteprodukter.ui.components
 
+import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
@@ -36,6 +39,7 @@ import kotlinx.coroutines.launch
 import weberstudio.app.billigsteprodukter.R
 import weberstudio.app.billigsteprodukter.ReceiptApp
 import weberstudio.app.billigsteprodukter.logic.CameraCoordinator
+import weberstudio.app.billigsteprodukter.logic.Logger
 import weberstudio.app.billigsteprodukter.ui.navigation.PageNavigation
 import weberstudio.app.billigsteprodukter.ui.pages.home.MainPageContent
 
@@ -56,72 +60,97 @@ fun PageShell(
     pageContent: @Composable (PaddingValues) -> Unit,
     floatingActionButton: (@Composable () -> Unit)? = null,
 ) {
-    Scaffold(
-        modifier = modifier,
-        topBar = {
-            //Only shows settings on home page
-            if (title == "Hjem") {
-                TopAppBar(
-                    title = {
-                        Text(
-                            text = title,
-                            style = MaterialTheme.typography.displayLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                    },
-                    actions = {
-                        IconButton(onClick = {
-                            navController.navigate(PageNavigation.Settings.route)
-                        }) {
-                            Icon(
-                                Icons.Default.Settings,
-                                contentDescription = "Indstillinger"
-                            )
-                        }
-                    },
-                )
-            } else {
-                TopAppBar(
-                    title = {
-                        Text(
-                            text = title,
-                            style = MaterialTheme.typography.displayLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                    }
-                )
-            }
-        },
-        bottomBar = { NavigationBar(navController) },
-        floatingActionButton = {
-            if (floatingActionButton != null) floatingActionButton()
-        },
-    ) { innerPadding ->
-        pageContent(innerPadding)
-    }
-}
-
-@Composable
-fun NavigationBar(navController: NavController) {
     val context = LocalContext.current
     val cameraCoordinator: CameraCoordinator = viewModel(
         viewModelStoreOwner = context as ComponentActivity
     )
 
+    // Hoist camera state to PageShell level
+    var showCamera by remember { mutableStateOf(false) }
+
+    Box(modifier = modifier) {
+        Scaffold(
+            modifier = Modifier.fillMaxSize(),
+            topBar = {
+                //Only shows settings on home page
+                if (title == "Hjem") {
+                    TopAppBar(
+                        title = {
+                            Text(
+                                text = title,
+                                style = MaterialTheme.typography.displayLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                        },
+                        actions = {
+                            IconButton(onClick = {
+                                navController.navigate(PageNavigation.Settings.route)
+                            }) {
+                                Icon(
+                                    Icons.Default.Settings,
+                                    contentDescription = "Indstillinger"
+                                )
+                            }
+                        },
+                    )
+                } else {
+                    TopAppBar(
+                        title = {
+                            Text(
+                                text = title,
+                                style = MaterialTheme.typography.displayLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
+                    )
+                }
+            },
+            bottomBar = {
+                NavigationBar(
+                    navController = navController,
+                    onLaunchCamera = { showCamera = true }
+                )
+            },
+            floatingActionButton = {
+                if (floatingActionButton != null) floatingActionButton()
+            },
+        ) { innerPadding ->
+            pageContent(innerPadding)
+        }
+
+        // Camera overlay - renders on top of everything
+        if (showCamera) {
+            CameraWithFlashlight(
+                onImageCaptured = { uri, ctx ->
+                    cameraCoordinator.onImageCaptured(uri, ctx)
+                    showCamera = false
+                    navController.navigate(PageNavigation.createReceiptRoute(0))
+                },
+                onError = { exception ->
+                    Logger.log("Camera", "TakePicture Failure! ${exception.message}")
+                    Toast.makeText(context, "Image capture failed!", Toast.LENGTH_SHORT).show()
+                    showCamera = false
+                },
+                onDismiss = {
+                    showCamera = false
+                }
+            )
+        }
+    }
+}
+
+@Composable
+fun NavigationBar(
+    navController: NavController,
+    onLaunchCamera: () -> Unit
+) {
     //region SCANNING VALIDATION
     val settingsRepo = (LocalContext.current.applicationContext as ReceiptApp).settingsRepository
     val scope = rememberCoroutineScope()
     var showCoop365OptionsDialog by remember { mutableStateOf(false) }
     //endregion
-
-    val launchCamera = launchCamera(
-        onImageCaptured = { uri, ctx ->
-            cameraCoordinator.onImageCaptured(uri, ctx)
-            navController.navigate(PageNavigation.createReceiptRoute(0))
-        }
-    )
 
     NavigationBar(
         windowInsets = NavigationBarDefaults.windowInsets,
@@ -202,7 +231,7 @@ fun NavigationBar(navController: NavController) {
                 scope.launch {
                     val coopOption = settingsRepo.coop365Option.firstOrNull()
                     if (coopOption == null) showCoop365OptionsDialog = true
-                    else launchCamera()
+                    else onLaunchCamera()
                 }
             }
         )
@@ -216,7 +245,7 @@ fun NavigationBar(navController: NavController) {
                 scope.launch {
                     settingsRepo.setCoop365Option(option)
                     showCoop365OptionsDialog = false
-                    launchCamera()
+                    onLaunchCamera()
                 }
             }
         )

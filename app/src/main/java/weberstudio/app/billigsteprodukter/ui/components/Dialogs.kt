@@ -469,7 +469,6 @@ fun AddProductDialog(showDialog: Boolean, onDismiss: () -> Unit, onConfirm: (nam
 fun ModifyTotalDialog(showDialog: Boolean, originalTotal: Float, hasTotalError: Boolean = false, onDismiss: () -> Unit, onConfirm: (Float) -> Unit) {
     if (!showDialog) return
 
-
     var newTotal by remember { mutableStateOf("") }
     val isValid = newTotal.toFloatOrNull() != null
 

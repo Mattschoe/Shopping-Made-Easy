@@ -214,10 +214,11 @@ fun ReceiptScanningContent(
             standardStore = store
         )
 
+        //TODO: Maybe bring back hasTotalError
+        //(uiState as ReceiptUIState.Success).errors?.totalError == true,
         ModifyTotalDialog(
             showDialog = showModifyTotalDialog,
             originalTotal = (uiState as ReceiptUIState.Success).receiptTotal,
-            hasTotalError = (uiState as ReceiptUIState.Success).errors?.totalError == true,
             onDismiss = {
                 showModifyTotalDialog = false
             },
@@ -338,9 +339,10 @@ private fun ReceiptContent(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    //TODO: Maybe bring back hasTotalError
+                    //totalError = errors?.totalError == true && !hasFixedTotalError
                     ReceiptTotalCard(
-                        totalPrice = formatFloatToDanishCurrency(receiptTotal),
-                        totalError = errors?.totalError == true && !hasFixedTotalError
+                        totalPrice = formatFloatToDanishCurrency(receiptTotal), 
                     )
                 }
             }

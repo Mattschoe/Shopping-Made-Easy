@@ -61,30 +61,33 @@ interface StoreParser {
      * OBS: DET HER ER BLACK MAGIC SHIT OG GG MED AT FORSTÅ DET
      * @param referenceLine the line that controls which way is up and down on the Y-axis. Often provided from either the "Total", "Betalingskort" and "Moms" lines.
      */
-    fun getLineBelowUsingReference(allLines: List<ParsedLine>, quantityLine: ParsedLine, referenceLine: ParsedLine): ParsedLine? {
-        Log.d("DEBUG", "Quantity line: ${quantityLine.text}")
-        // 1) Compute the "upward" unit vector (from quantityLine → referenceLine)
+    fun getLineBelowUsingReference(
+        allLines: List<ParsedLine>,
+        quantityLine: ParsedLine,
+        referenceLine: ParsedLine
+    ): ParsedLine? {
+        // Compute the "upward" unit vector (from quantityLine → referenceLine)
         val vUpX = referenceLine.center.x - quantityLine.center.x
         val vUpY = referenceLine.center.y - quantityLine.center.y
         val vLen = hypot(vUpX, vUpY)
-        if (vLen == 0f) return null  // Avoid division by zero if same point
+        if (vLen == 0f) return null
         val upX = vUpX / vLen
         val upY = vUpY / vLen
 
-        // 2) Project all other lines onto this vector
+        //Project all other lines onto this vector
         return allLines
             .asSequence()
             .filter { it != quantityLine }
             .map { line ->
                 val toLineX = line.center.x - quantityLine.center.x
                 val toLineY = line.center.y - quantityLine.center.y
-                val dot = toLineX * upX + toLineY * upY  // signed projection
+                val dot = toLineX * upX + toLineY * upY  //signed projection onto "up" vector
                 val dist = hypot(toLineX, toLineY)
-                Log.d("DEBUG", "${line.text} | $dot | $dist")
+                Log.d("DEBUG", "${line.text} | dot=$dot | dist=$dist")
                 Triple(line, dot, dist)
             }
-            .filter { (_, dot, _) -> dot > 0f }  // Only lines "above" in projected direction
-            .minByOrNull { (_, _, dist) -> dist }
+            .filter { (_, dot, _) -> dot < 0f }  //lines in the opposite direction of reference (i.e. "below")
+            .minByOrNull { (_, _, dist) -> dist } //nearest one in that direction
             ?.first
     }
 
@@ -99,7 +102,7 @@ interface StoreParser {
         val angleTolerance = Math.toRadians(10.0).toFloat()  //A tolerance for ray hit
         val corners = lineA.corners
         val lineHeight = ((euclidDistance(corners[0], corners[3]) + euclidDistance(corners[1], corners[2]))/2f)
-        val verticalBounds = lineHeight * 0.6f //Halvdelen af linjens højde
+        val verticalBounds = lineHeight * 1f //Halvdelen af linjens højde. Higher = More Forgiveness
         //endregion
 
         //Skipper hvis de ikke er inde for tolerancen

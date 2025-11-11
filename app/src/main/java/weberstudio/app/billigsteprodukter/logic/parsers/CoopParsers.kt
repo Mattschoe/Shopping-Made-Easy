@@ -1,7 +1,6 @@
 package weberstudio.app.billigsteprodukter.logic.parsers
 
 import android.graphics.PointF
-import android.util.Log
 import com.google.mlkit.vision.text.Text
 import org.apache.commons.text.similarity.JaroWinklerSimilarity
 import org.apache.commons.text.similarity.LevenshteinDistance
@@ -12,15 +11,12 @@ import weberstudio.app.billigsteprodukter.logic.Logger
 import weberstudio.app.billigsteprodukter.logic.Store
 import weberstudio.app.billigsteprodukter.logic.components.FuzzyMatcher
 import weberstudio.app.billigsteprodukter.logic.exceptions.ParsingException
-import weberstudio.app.billigsteprodukter.logic.parsers.CoopParserQuantityAbove.getProductLineBelowUsingReference
-import weberstudio.app.billigsteprodukter.logic.parsers.CoopParserQuantityAbove.getQuantityLineAboveUsingReference
 import weberstudio.app.billigsteprodukter.logic.parsers.ParserFactory.fuzzyMatcher
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ParsedImageText
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ParsedLine
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ParsedProduct
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ScanError
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ScanValidation
-import kotlin.math.hypot
 import kotlin.math.sqrt
 
 /**
@@ -316,7 +312,6 @@ object CoopParserQuantityAbove : StoreParser {
                     val (product, error) = parseLinesToProduct(lineA, lineB, controlLine, parsedLines, isMarked)
                     parsedProducts.add(product)
                     scanLogicErrors.put(product, error)
-                    break
                 }
             }
         }
@@ -344,20 +339,20 @@ object CoopParserQuantityAbove : StoreParser {
     ): Pair<ParsedProduct, ScanError?> {
         //Snupper navn og pris
         val productName = lineA.text
-        val productPrice = lineB.text.toFloatOrNull() ?: 0.0f
+        val productPrice = lineB.text.replace(" ", ".").replace(",", ".").toFloatOrNull() ?: 0.0f
 
 
         //region QUANTITY LINE
         //Hvis linjen over er en quantity line, så prøver vi at beregne prisen ud fra quantity line
         if (isMarked.contains(lineA) || isMarked.contains(lineB)) {
-            val quantityLine = getQuantityLineAboveUsingReference(parsedLines, lineA, controlLine)
-            if (quantityLine == null) {
+            val childLine = getLineBelowUsingReference(parsedLines, lineA, controlLine)
+            if (childLine == null) {
                 Logger.log(this.toString(), "Couldn't find childLine for line: ${lineA.text}")
                 return Pair(ParsedProduct(productName, productPrice), ScanError.WRONG_NAME)
             } else {
                 try {
                     //Hvis det lykkedes at snuppe quantity linjen, så beregner vi enhedsprisen ud fra det.
-                    val productPrice = productPrice/normalizeText(quantityLine.text[0].toString()).toFloat()
+                    val productPrice = productPrice/normalizeText(childLine.text[0].toString()).toFloat()
                     return Pair(ParsedProduct(lineA.text, productPrice), null)
                 } catch (_: NumberFormatException) {
                     return Pair(ParsedProduct(productName, 0.0f), ScanError.PRODUCT_WITHOUT_PRICE)
@@ -397,13 +392,9 @@ object CoopParserQuantityAbove : StoreParser {
 
         //region Filtering and returning
         //Hvis der er mere end to produkter (så ét produkt og ét stopord), så gemmer vi alle dem som har den samme pris som stop ordene (Så hvis "Total" fucker f.eks.)
-        val total = if (products.size > 2) {
-            products
-                .filter { isReceiptTotalWord(it.name) }
-                .maxOf { it.price }
-        } else {
-            0.0f
-        }
+        val total = products
+            .filter { isReceiptTotalWord(it.name) }
+            .maxOf { it.price }
 
         //Returner kun produkter som ikke er stop ordet, eller som har den samme pris som stop ordet (så hvis "Total" fucker f.eks.)
         val filteredSet = products.filter { product ->
@@ -505,71 +496,5 @@ object CoopParserQuantityAbove : StoreParser {
 
     override fun toString(): String {
         return "Coop365"
-    }
-
-    /**
-     * Returns the next **PRODUCT** below the one given as reference, will avoid quantity lines
-     * @param referenceLine a reference to the line where the one directly above it will be returned
-     * @param controlLineAbove the control line that shows what's "above" in the image (Often taking from storeLogo text)
-     */
-    fun getProductLineBelowUsingReference(allLines: List<ParsedLine>, referenceLine: ParsedLine, controlLineAbove: ParsedLine): ParsedLine? {
-        // 1) Compute the "upward" unit vector
-        val vUpX = (controlLineAbove.corners[3].x - referenceLine.corners[3].x).toFloat()
-        val vUpY = (controlLineAbove.corners[3].y - referenceLine.corners[3].y).toFloat()
-        val vLen = hypot(vUpX, vUpY)
-        if (vLen == 0f) return null
-        val upX = vUpX / vLen
-        val upY = vUpY / vLen
-
-        // 2) Project, filter, sort by true‐distance, then pick first matching isQuantityLine
-        return allLines
-            .asSequence()
-            .filter { it != referenceLine }
-            .map { line ->
-                val toLineX = line.center.x - referenceLine.center.x
-                val toLineY = line.center.y - referenceLine.center.y
-                val dot  = toLineX * upX + toLineY * upY   // projection
-                val dist = hypot(toLineX, toLineY)        // Euclidean distance
-                Triple(line, dot, dist)
-            }
-            .filter { (_, dot, _) -> dot < 0f }           // only “above”
-            .sortedBy { (_, _, dist) -> dist }           // nearest first
-            .firstOrNull { (line, _, _) -> //Makes sure its not a quantity line
-                !isQuantityLine(line.text)
-            }
-            ?.first
-    }
-
-    /**
-     * Returns the next **QUANTITY** above the one given as reference, will avoid product lines
-     * @param referenceLine a reference to the line where the one directly above it will be returned
-     * @param controlLineAbove the control line that shows what's "above" in the image (Often taking from storeLogo text)
-     */
-    fun getQuantityLineAboveUsingReference(allLines: List<ParsedLine>, referenceLine: ParsedLine, controlLineAbove: ParsedLine): ParsedLine? {
-        // 1) Compute the "upward" unit vector
-        val vUpX = (controlLineAbove.corners[3].x - referenceLine.corners[3].x).toFloat()
-        val vUpY = (controlLineAbove.corners[3].y - referenceLine.corners[3].y).toFloat()
-        val vLen = hypot(vUpX, vUpY)
-        if (vLen == 0f) return null
-        val upX = vUpX / vLen
-        val upY = vUpY / vLen
-
-        // 2) Project, filter, sort by true‐distance, then pick first matching isQuantityLine
-        return allLines
-            .asSequence()
-            .filter { it != referenceLine }
-            .map { line ->
-                val toLineX = line.center.x - referenceLine.center.x
-                val toLineY = line.center.y - referenceLine.center.y
-                val dot  = toLineX * upX + toLineY * upY   // projection
-                val dist = hypot(toLineX, toLineY)        // Euclidean distance
-                Triple(line, dot, dist)
-            }
-            .filter { (_, dot, _) -> dot > 0f }           // only “above”
-            .sortedBy { (_, _, dist) -> dist }           // nearest first
-            .firstOrNull { (line, _, _) -> //Makes sure its not a quantity line
-                isQuantityLine(line.text)
-            }
-            ?.first
     }
 }

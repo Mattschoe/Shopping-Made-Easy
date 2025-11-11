@@ -18,7 +18,6 @@ import java.io.File
 @Composable
 fun launchCamera(onImageCaptured: (Uri, Context) -> Unit): () -> Unit {
     val tag = "launchCamera"
-    Logger.log(tag, "Starting camera launch")
     val context = LocalContext.current
     val imageURI = remember {
         File(context.cacheDir, "tempImage.jpg").let { imageFile ->

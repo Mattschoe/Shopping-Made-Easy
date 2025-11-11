@@ -58,9 +58,7 @@ object CoopParserQuantityBelow : StoreParser {
         //Hvis linje er en quantity så markerer vi den under den som en der skal have dens pris ændret senere
         for (line in parsedLines) {
             if (isQuantityLine(line.text)) {
-                val childLine = getLineAboveUsingReference(parsedLines, line, controlLine)
-                if (childLine != null) isMarked.put(childLine, true)
-                else Logger.log(this.toString(), "Couldn't find childLine for line: ${line.text}")
+                isMarked.put(line, true)
                 continue
             }
         }
@@ -106,12 +104,15 @@ object CoopParserQuantityBelow : StoreParser {
         isMarked: Map<ParsedLine, Boolean>
     ): Pair<ParsedProduct, ScanError?> {
         val productName = lineA.text
-        val productPrice = lineB.text.toFloatOrNull() ?: 0.0f
+        val productPrice = lineB.text.replace(" ", ".").replace(",", ".").toFloatOrNull() ?: 0.0f
 
         //region QUANTITY LINE
         if (isMarked.contains(lineA) ||isMarked.contains(lineB)) {
             val parentLine = getLineAboveUsingReference(parsedLines, lineA, controlLine) //OBS: BLACK MAGIC FUCKERY
-            if (parentLine == null) return Pair(ParsedProduct(productName, productPrice), ScanError.WRONG_NAME)
+            if (parentLine == null) {
+                Logger.log(this.toString(), "Couldn't find parentLine for line: ${lineA.text}")
+                return Pair(ParsedProduct(productName, productPrice), ScanError.WRONG_NAME)
+            }
             else {
                 try {
                     //If we successfully got the actual product we save that instead of the original "2 x 25,5", and divide the price of the product by the amount
@@ -153,13 +154,9 @@ object CoopParserQuantityBelow : StoreParser {
 
         //region Filtering and returning
         //Hvis der er mere end to produkter (så ét produkt og ét stopord), så gemmer vi alle dem som har den samme pris som stop ordene (Så hvis "Total" fucker f.eks.)
-        val total = if (products.size > 2) {
-            products
-                .filter { isReceiptTotalWord(it.name) }
-                .maxOf { it.price }
-        } else {
-            0.0f
-        }
+        val total = products
+            .filter { isReceiptTotalWord(it.name) }
+            .maxOf { it.price }
 
         //Returner kun produkter som ikke er stop ordet, eller som har den samme pris som stop ordet (så hvis "Total" fucker f.eks.)
         val filteredSet = products.filter { product ->
@@ -300,9 +297,7 @@ object CoopParserQuantityAbove : StoreParser {
         //Hvis linje er en quantity så markerer vi den under den som en der skal have dens pris ændret senere
         for (line in parsedLines) {
             if (isQuantityLine(line.text)) {
-                val childLine = getProductLineBelowUsingReference(parsedLines, line, controlLine)
-                if (childLine != null) isMarked.put(childLine, true)
-                else Logger.log(this.toString(), "Couldn't find childLine for line: ${line.text}")
+                isMarked.put(line, true)
                 continue
             }
         }
@@ -354,9 +349,10 @@ object CoopParserQuantityAbove : StoreParser {
 
         //region QUANTITY LINE
         //Hvis linjen over er en quantity line, så prøver vi at beregne prisen ud fra quantity line
-        if (isMarked.contains(lineA) ||isMarked.contains(lineB)) {
+        if (isMarked.contains(lineA) || isMarked.contains(lineB)) {
             val quantityLine = getQuantityLineAboveUsingReference(parsedLines, lineA, controlLine)
             if (quantityLine == null) {
+                Logger.log(this.toString(), "Couldn't find childLine for line: ${lineA.text}")
                 return Pair(ParsedProduct(productName, productPrice), ScanError.WRONG_NAME)
             } else {
                 try {

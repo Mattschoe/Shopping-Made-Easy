@@ -474,7 +474,7 @@ fun NoBudgetCard(modifier: Modifier = Modifier, onClick: () -> Unit) {
             spentPercentage = 0f,
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.weight(0.3f))
 
         Surface(
             onClick = onClick,

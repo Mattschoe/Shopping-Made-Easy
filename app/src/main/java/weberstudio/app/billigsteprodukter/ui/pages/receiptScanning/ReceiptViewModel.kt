@@ -23,11 +23,14 @@ import weberstudio.app.billigsteprodukter.data.settings.SettingsRepository
 import weberstudio.app.billigsteprodukter.data.settings.TotalOption
 import weberstudio.app.billigsteprodukter.data.settings.TotalOption.*
 import weberstudio.app.billigsteprodukter.logic.CameraCoordinator
+import weberstudio.app.billigsteprodukter.logic.Formatter.normalizeText
 import weberstudio.app.billigsteprodukter.logic.ImagePreprocessor
 import weberstudio.app.billigsteprodukter.logic.Logger
 import weberstudio.app.billigsteprodukter.logic.Store
+import weberstudio.app.billigsteprodukter.logic.components.FuzzyMatcher
 import weberstudio.app.billigsteprodukter.logic.exceptions.ParsingException
 import weberstudio.app.billigsteprodukter.logic.parsers.ParserFactory
+import weberstudio.app.billigsteprodukter.logic.parsers.ParserFactory.detectStore
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ScanValidation
 import weberstudio.app.billigsteprodukter.ui.ParsingState
@@ -166,77 +169,111 @@ class ReceiptViewModel(application: Application): AndroidViewModel(application) 
                 return@launch
             }
 
+            val textRecognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
             try {
-                val textRecognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
-                val image = ImagePreprocessor.preprocessForMlKit(context, imageURI)
+                Logger.log(tag, "First OCR pass: Full image")
+                val fullImage = ImagePreprocessor.preprocessForMlKit(context, imageURI)
+                val fullImageText = textRecognizer.process(fullImage).await()
 
-                try {
-                    val imageText = textRecognizer.process(image).await()
-                    Logger.log(tag, "ImageText processed")
-                    processImageInfo(imageText, cameraCoordinator, coop365Option)
-                    Logger.log(tag, "ImageInfo processed")
+                if (fullImageText.textBlocks.isEmpty()) {
+                    Logger.log(tag, "No text found in picture")
+                    _parsingState.value = ParsingState.Error("Ingen tekst fundet i billedet!")
                     textRecognizer.close()
-                } catch (e: Exception) {
-                    _parsingState.value = ParsingState.Error("Prøv venligst igen.")
-                    Logger.log(tag, "Parsing error: ${e.toString()}")
-                    textRecognizer.close()
+                    return@launch
                 }
+
+                val detectedStore = detectStore(fullImageText)
+                if (detectedStore == null) {
+                    Logger.log(tag, "No store found in first pass")
+                    _parsingState.value = ParsingState.Error(
+                        "Ingen butik fundet! Prøv venligst at inkludere billedet af butikslogoet"
+                    )
+                    textRecognizer.close()
+                    return@launch
+                }
+                Logger.log(tag, "Store detected: $detectedStore")
+
+                when (val cropResult = ImagePreprocessor.preprocessAndCropForMlKit(
+                    context, imageURI, fullImageText, detectedStore
+                )) {
+                    is ImagePreprocessor.CropResult.Success -> {
+                        Logger.log(tag, "Crop successful, running second OCR pass")
+                        val croppedImageText = textRecognizer.process(cropResult.inputImage).await()
+
+                        // Parse products from cropped image
+                        parseAndSaveReceipt(
+                            imageText = croppedImageText,
+                            store = detectedStore,
+                            cameraCoordinator = cameraCoordinator,
+                            coop365Option = coop365Option
+                        )
+                    }
+
+                    is ImagePreprocessor.CropResult.Failed -> {
+                        // Fallback: Use full image if cropping fails
+                        Logger.log(tag, "Cropping failed: ${cropResult.reason}. Using full image.")
+                        parseAndSaveReceipt(
+                            imageText = fullImageText,
+                            store = detectedStore,
+                            cameraCoordinator = cameraCoordinator,
+                            coop365Option = coop365Option
+                        )
+                    }
+                }
+                textRecognizer.close()
             } catch(e: Exception) {
-                _parsingState.value = ParsingState.Error("Kunne ikke loade billedet. Prøv venligst igen.")
-                Logger.log(tag, "Parsing error: ${e.message.toString()}")
+                Logger.log(tag, "Error processing image: ${e.message}")
+                _parsingState.value = ParsingState.Error("Kunne ikke behandle billedet. Prøv venligst igen.")
+                textRecognizer.close()
             }
         }
         Logger.log(tag, "Image processing done")
     }
 
-    private fun processImageInfo(
-        imageText: Text, cameraCoordinator: CameraCoordinator,
+
+
+    /**
+     * Parse receipt and save to database
+     */
+    private fun parseAndSaveReceipt(
+        imageText: Text,
+        store: Store,
+        cameraCoordinator: CameraCoordinator,
         coop365Option: Coop365Option.Option
     ) {
-        if (imageText.textBlocks.isEmpty()) {
-            Logger.log(tag, "No image found in picture")
-            _parsingState.value = ParsingState.Error("Ingen tekst fundet i billedet!")
-            return
-        }
-
-        runCatching {
-            val parser = try {
-                ParserFactory.parseReceipt(imageText, coop365Option)
-            } catch (e: NotImplementedException) {
-                Logger.log(tag, "Parsing Exception: ${e.toString()}")
-                throw ParsingException(e.toString())
+        try {
+            val parser = ParserFactory.parseReceipt(imageText, coop365Option)
+            if (parser == null) {
+                Logger.log(tag, "Parser returned null")
+                _parsingState.value = ParsingState.Error("Kunne ikke parse kvittering. Prøv igen.")
+                return
             }
-            Logger.log(tag, "Parser: ${parser?.javaClass}")
-            if (parser != null) {
-                val store: Store? = Store.fromName(parser.toString())
-                if (store == null) {
-                    Logger.log(tag, "Ingen butik fundet")
-                    throw ParsingException("Prøv venligst igen.")
-                }
 
-                try {
-                    val parsedText = parser.parse(imageText)
-                    val receipt = Receipt(
-                        store = store,
-                        date = LocalDate.now(),
-                        total = parsedText.total
-                    )
+            Logger.log(tag, "Parsing with: ${parser.javaClass.simpleName}")
 
-                    viewModelScope.launch {
-                        val receiptID = receiptRepo.addReceiptProducts(receipt, parsedText.products)
-                        Logger.log(tag, "Finished with receipt with data: $receipt and ID: $receiptID")
-                        cameraCoordinator.setScanValidation(receiptID, parsedText.scanErrors)
-                        app.activityLogger.logReceiptScan(receipt.copy(receiptID = receiptID))
-                        _parsingState.value = ParsingState.Success(store, receiptID)
-                    }
-                } catch (e: ParsingException) {
-                    Logger.log(tag, "Error in scanning receipt: $e")
-                    _parsingState.value = ParsingState.Error("Fejl med at scanne kvittering, $e")
-                }
-            } else {
-                Logger.log(tag, "No store found")
-                _parsingState.value = ParsingState.Error("Ingen butik fundet! Prøv venligst at inkludere billedet af butikslogoet")
+            val parsedText = parser.parse(imageText)
+            val receipt = Receipt(
+                store = store,
+                date = LocalDate.now(),
+                total = parsedText.total
+            )
+
+            viewModelScope.launch {
+                val receiptID = receiptRepo.addReceiptProducts(receipt, parsedText.products)
+                Logger.log(tag, "Receipt saved with ID: $receiptID, products: ${parsedText.products.size}")
+
+                cameraCoordinator.setScanValidation(receiptID, parsedText.scanErrors)
+                app.activityLogger.logReceiptScan(receipt.copy(receiptID = receiptID))
+
+                _parsingState.value = ParsingState.Success(store, receiptID)
             }
+
+        } catch (e: ParsingException) {
+            Logger.log(tag, "Parsing exception: ${e.message}")
+            _parsingState.value = ParsingState.Error("Fejl med at scanne kvittering: ${e.message}")
+        } catch (e: Exception) {
+            Logger.log(tag, "Unexpected error: ${e.message}")
+            _parsingState.value = ParsingState.Error("Uventet fejl: ${e.message}")
         }
     }
 

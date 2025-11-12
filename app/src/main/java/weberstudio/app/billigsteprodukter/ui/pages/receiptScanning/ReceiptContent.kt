@@ -512,13 +512,14 @@ private fun ReceiptContent(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp)
             ) {
                 Text(
                     text = "Tip: Hold inde på produkterne for at slette dem og tryk for at redigere",
                     fontStyle = FontStyle.Italic,
                     color = Color.Gray,
-                    fontSize = 12.sp
+                    fontSize = 12.sp,
+                    modifier = Modifier
+                        .padding(horizontal = 20.dp, vertical = 4.dp)
                 )
             }
         }

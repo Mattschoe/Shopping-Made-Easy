@@ -835,9 +835,12 @@ private fun ViewExpensesDialog(
                         .fillMaxWidth()
                         .weight(1f),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
-                    contentPadding = PaddingValues(vertical = 16.dp)
+                    contentPadding = PaddingValues(vertical = 16.dp),
                 ) {
-                    items(receipts) { receipt ->
+                    items(
+                        items = receipts.asReversed(),
+                        key = { it.receipt.receiptID }
+                    ) { receipt ->
                         ReceiptCard(
                             receipt = receipt,
                             onDeleteReceipt = onDeleteReceipt

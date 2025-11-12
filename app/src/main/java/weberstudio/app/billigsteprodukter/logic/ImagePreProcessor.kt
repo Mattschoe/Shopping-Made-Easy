@@ -19,14 +19,13 @@ import org.opencv.android.Utils
 import org.opencv.core.Mat
 import org.opencv.imgproc.Imgproc
 import weberstudio.app.billigsteprodukter.logic.Formatter.normalizeText
+import weberstudio.app.billigsteprodukter.logic.Store.Companion.bottomAnchors
+import weberstudio.app.billigsteprodukter.logic.Store.Companion.topAnchors
 import weberstudio.app.billigsteprodukter.logic.components.FuzzyMatcher
 import kotlin.math.max
 import kotlin.math.min
 
-/**
- * Enhanced ImagePreprocessor that handles both image preprocessing
- * and intelligent cropping to isolate the product section of receipts.
- */
+
 //OBS: AI-Generated SLOP, source: https://claude.ai/chat/7c4df045-144f-4a8c-ba12-7ba6d1b7bf56
 object ImagePreprocessor {
 
@@ -37,40 +36,7 @@ object ImagePreprocessor {
     /**
      * Store-specific anchor configurations for cropping
      */
-    private val storeAnchors = mapOf(
-        Store.Coop365 to StoreAnchorConfig(
-            topKeywords = listOf("365", "COOP", "DISCOUNT"),
-            bottomKeywords = listOf("AT BETALE", "VISA", "BETALINGSKORT")
-        ),
-        Store.Netto to StoreAnchorConfig(
-            topKeywords = listOf("NETTO"),
-            bottomKeywords = listOf("AT BETALE", "TOTAL", "KONTANT")
-        ),
-        Store.Rema1000 to StoreAnchorConfig(
-            topKeywords = listOf("REMA", "1000"),
-            bottomKeywords = listOf("AT BETALE", "TOTAL")
-        ),
-        Store.Bilka to StoreAnchorConfig(
-            topKeywords = listOf("BILKA"),
-            bottomKeywords = listOf("AT BETALE", "TOTAL")
-        ),
-        Store.Foetex to StoreAnchorConfig(
-            topKeywords = listOf("FØTEX", "FOETEX"),
-            bottomKeywords = listOf("AT BETALE", "TOTAL")
-        ),
-        Store.Menu to StoreAnchorConfig(
-            topKeywords = listOf("MENU"),
-            bottomKeywords = listOf("AT BETALE", "TOTAL")
-        ),
-        Store.Lidl to StoreAnchorConfig(
-            topKeywords = listOf("LIDL"),
-            bottomKeywords = listOf("SUMME", "TOTAL", "GESAMT")
-        ),
-        Store.SuperBrugsen to StoreAnchorConfig(
-            topKeywords = listOf("SUPERBRUGSEN", "BRUGSEN"),
-            bottomKeywords = listOf("AT BETALE", "TOTAL")
-        )
-    )
+
 
     /**
      * Load a Bitmap from the given URI
@@ -166,8 +132,7 @@ object ImagePreprocessor {
         val original = loadBitmap(context, imageUri)
 
         // Find anchors in the OCR result
-        val config = storeAnchors[detectedStore]
-            ?: return CropResult.Failed("Store not configured: ${detectedStore.name}")
+        val config = StoreAnchorConfig(topKeywords = detectedStore.topAnchors, bottomKeywords = detectedStore.bottomAnchors)
 
         val topAnchor = findTopAnchor(firstPassOcrResult, config)
         val bottomAnchor = findBottomAnchor(firstPassOcrResult, config)
@@ -348,7 +313,7 @@ object ImagePreprocessor {
     /**
      * Configuration for store-specific anchor words
      */
-    private data class StoreAnchorConfig(
+    data class StoreAnchorConfig(
         val topKeywords: List<String>,
         val bottomKeywords: List<String>,
     )

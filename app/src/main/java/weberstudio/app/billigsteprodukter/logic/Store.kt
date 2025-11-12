@@ -30,6 +30,30 @@ enum class Store(
          */
         fun fromID(ID: Int): Store? =
             Store.entries.firstOrNull() { it.ID == ID }
+
+        val Store.topAnchors: List<String>
+            get() = when (this) {
+                Coop365 -> listOf("365", "365 DISCOUNT", "DET RIGTIGE STED AT SPARE")
+                Netto -> listOf("NETTO")
+                Rema1000 -> listOf("REMA", "REMA1000")
+                Bilka -> listOf("BILKA")
+                Foetex -> listOf("FØTEX", "FOETEX")
+                Menu -> listOf("MENU")
+                Lidl -> listOf("LIDL", "BONKOPI")
+                SuperBrugsen -> listOf("SUPERBRUGSEN", "BRUGSEN")
+            }
+
+        val Store.bottomAnchors: List<String>
+            get() = when (this) {
+                Coop365 -> listOf("AT BETALE", "VISA", "BETALINGSKORT")
+                Netto -> listOf("AT BETALE", "TOTAL", "KONTANT")
+                Rema1000 -> listOf("AT BETALE", "TOTAL")
+                Bilka -> listOf("AT BETALE", "TOTAL")
+                Foetex -> listOf("AT BETALE", "TOTAL")
+                Menu -> listOf("AT BETALE", "TOTAL")
+                Lidl -> listOf("SUM", "KORT")
+                SuperBrugsen -> listOf("AT BETALE", "TOTAL")
+            }
     }
 }
 

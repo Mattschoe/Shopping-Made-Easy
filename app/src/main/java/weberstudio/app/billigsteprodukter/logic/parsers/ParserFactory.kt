@@ -7,6 +7,7 @@ import weberstudio.app.billigsteprodukter.data.settings.Coop365Option.Option.*
 import weberstudio.app.billigsteprodukter.logic.Formatter
 import weberstudio.app.billigsteprodukter.logic.Store
 import weberstudio.app.billigsteprodukter.logic.Store.*
+import weberstudio.app.billigsteprodukter.logic.Store.Companion.topAnchors
 import weberstudio.app.billigsteprodukter.logic.components.FuzzyMatcher
 import kotlin.jvm.Throws
 
@@ -41,14 +42,14 @@ object ParserFactory {
         for (block in text.textBlocks) {
             for (line in block.lines) {
                 val normalizedText = Formatter.normalizeText(line.text)
-                if (fuzzyMatcher.match(normalizedText, listOf("NETTO"), 0.85f, 0.3f)) return Store.Netto
-                else if (fuzzyMatcher.match(normalizedText, listOf("365", "365 DISCOUNT", "DET RIGTIGE STED AT SPARE"), 0.85f, 0.3f)) return Store.Coop365
-                else if (fuzzyMatcher.match(normalizedText, listOf("BILKA"), 0.85f, 0.3f)) return Store.Bilka
-                else if (fuzzyMatcher.match(normalizedText, listOf("REMA"), 0.85f, 0.3f)) return Store.Rema1000
-                else if (fuzzyMatcher.match(normalizedText, listOf("MENU"), 0.85f, 0.3f)) return Store.Menu
-                else if (fuzzyMatcher.match(normalizedText, listOf("LIDL"), 0.85f, 0.3f)) return Store.Lidl
-                else if (fuzzyMatcher.match(normalizedText, listOf("SUPERBRUGSEN", "BRUGSEN"), 0.85f, 0.3f)) return Store.SuperBrugsen
-                else if (fuzzyMatcher.match(normalizedText, listOf("FØTEX"), 0.85f, 0.3f)) return Store.Foetex
+                if (fuzzyMatcher.match(normalizedText, Netto.topAnchors, 0.85f, 0.3f)) return Netto
+                else if (fuzzyMatcher.match(normalizedText, Coop365.topAnchors, 0.85f, 0.3f)) return Coop365
+                else if (fuzzyMatcher.match(normalizedText, Bilka.topAnchors, 0.85f, 0.3f)) return Bilka
+                else if (fuzzyMatcher.match(normalizedText, Rema1000.topAnchors, 0.85f, 0.3f)) return Rema1000
+                else if (fuzzyMatcher.match(normalizedText, Menu.topAnchors, 0.85f, 0.3f)) return Menu
+                else if (fuzzyMatcher.match(normalizedText, Lidl.topAnchors, 0.85f, 0.3f)) return Lidl
+                else if (fuzzyMatcher.match(normalizedText, SuperBrugsen.topAnchors, 0.85f, 0.3f)) return SuperBrugsen
+                else if (fuzzyMatcher.match(normalizedText, Foetex.topAnchors, 0.85f, 0.3f)) return Foetex
             }
         }
         return null

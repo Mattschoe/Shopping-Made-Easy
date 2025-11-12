@@ -17,7 +17,6 @@ import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ParsedLine
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ParsedProduct
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ScanError
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ScanValidation
-import kotlin.math.abs
 import kotlin.math.hypot
 import kotlin.math.sqrt
 
@@ -33,7 +32,7 @@ object SuperBrugsenParser: StoreParser {
         val parsedLines = processImageText(receipt)
         var controlLine: ParsedLine? = null //A line thats "Above" all products. Often coming from StoreLogo text
         val parsedProducts = ArrayList<ParsedProduct>()
-        val isMarked = HashMap<ParsedLine, Boolean>()
+        val product2Quantity = HashMap<ParsedLine, ParsedLine>() //
         val scanLogicErrors = HashMap<ParsedProduct, ScanError?>()
 
         //region FINDS CONTROLLINE
@@ -53,8 +52,8 @@ object SuperBrugsenParser: StoreParser {
         //Hvis linje er en quantity så markerer vi den under den som en der skal have dens pris ændret senere
         for (line in parsedLines) {
             if (isQuantityLine(line.text)) {
-                val childLine = getProductLineBelowUsingReference(parsedLines, line, controlLine)
-                if (childLine != null) isMarked.put(childLine, true)
+                val childLine = getProductLineBelowUsingReference(parsedLines, controlLine, line)
+                if (childLine != null) product2Quantity.put(childLine, line)
                 else Logger.log(this.toString(), "Couldn't find childLine for line: ${line.text}")
                 continue
             }
@@ -71,7 +70,7 @@ object SuperBrugsenParser: StoreParser {
                 val lineB = parsedLines[j]
 
                 if (doesLinesCollide(lineA, lineB)) {
-                    val (product, error) = parseLinesToProduct(lineA, lineB, controlLine, includeRABAT, parsedLines, parsedProducts, isMarked)
+                    val (product, error) = parseLinesToProduct(lineA, lineB, controlLine, includeRABAT, parsedLines, parsedProducts, product2Quantity)
                     parsedProducts.add(product)
                     scanLogicErrors.put(product, error)
                     break
@@ -100,28 +99,28 @@ object SuperBrugsenParser: StoreParser {
         includeRABAT: Boolean,
         parsedLines: List<ParsedLine>,
         parsedProducts: List<ParsedProduct>,
-        isMarked: Map<ParsedLine, Boolean>
+        product2Quantity: Map<ParsedLine, ParsedLine>
     ): Pair<ParsedProduct, ScanError?> {
         //Snupper navn og pris
         val productName = lineA.text
-        val productPrice = lineB.text.toFloatOrNull() ?: 0.0f
+        val productPrice = lineB.text
+            .replace(',', '.')
+            .replace(" ", "")
+            .filter { it.isDigit() || it == '.' }
+            .toFloatOrNull() ?: 0.0f
 
         //region QUANTITY LINE
         //Hvis linjen over er en quantity line, så prøver vi at beregne prisen ud fra quantity line
-        if (isMarked.contains(lineA) ||isMarked.contains(lineB)) {
-            val quantityLine = getQuantityLineAboveUsingReference(parsedLines, lineA, controlLine)
-            if (quantityLine == null) {
-                return Pair(ParsedProduct(productName, productPrice), ScanError.WRONG_NAME)
-            } else {
-                try {
-                    //Hvis det lykkedes at snuppe quantity linjen, så beregner vi enhedsprisen ud fra det.
-                    val productPrice = productPrice/normalizeText(quantityLine.text[0].toString()).toFloat()
-                    return Pair(ParsedProduct(lineA.text, productPrice), null)
-                } catch (_: NumberFormatException) {
-                    return Pair(ParsedProduct(productName, 0.0f), ScanError.PRODUCT_WITHOUT_PRICE)
-                }
+        product2Quantity[lineA]?.let { quantityLine ->
+            try {
+                val productPrice = productPrice/normalizeText(quantityLine.text[0].toString()).toFloat()
+                return Pair(ParsedProduct(lineA.text, productPrice), null)
+            } catch (_: NumberFormatException) {
+                Logger.log(this.toString(), "Error calculating quantityprice for input: [productPrice: $productPrice], [quantityLine: ${quantityLine.text}]")
+                return Pair(ParsedProduct(productName, 0.0f), ScanError.PRODUCT_WITHOUT_PRICE)
             }
         }
+
         //endregion
 
         //region RABAT
@@ -162,13 +161,9 @@ object SuperBrugsenParser: StoreParser {
 
         //region Filtering and returning
         //Hvis der er mere end to produkter (så ét produkt og ét stopord), så gemmer vi alle dem som har den samme pris som stop ordene (Så hvis "Total" fucker f.eks.)
-        val total = if (products.size > 2) {
-            products
-                .filter { isReceiptTotalWord(it.name) }
-                .maxOf { it.price }
-        } else {
-            0.0f
-        }
+        val total = products
+            .filter { isReceiptTotalWord(it.name) }
+            .maxOf { it.price }
 
         //Returner kun produkter som ikke er stop ordet, eller som har den samme pris som stop ordet (så hvis "Total" fucker f.eks.)
         val filteredSet = products.filter { product ->
@@ -274,69 +269,31 @@ object SuperBrugsenParser: StoreParser {
 
     /**
      * Returns the next **PRODUCT** below the one given as reference, will avoid quantity lines
-     * @param referenceLine a reference to the line where the one directly above it will be returned
+     * @param controlLine a reference to the line where the one directly above it will be returned
      * @param controlLineAbove the control line that shows what's "above" in the image (Often taking from storeLogo text)
      */
-    fun getProductLineBelowUsingReference(allLines: List<ParsedLine>, referenceLine: ParsedLine, controlLineAbove: ParsedLine): ParsedLine? {
-        //Compute the "upward" unit vector
-        val vUpX = (controlLineAbove.center.x - referenceLine.center.x).toFloat()
-        val vUpY = (controlLineAbove.center.y - referenceLine.center.y).toFloat()
+    fun getProductLineBelowUsingReference(allLines: List<ParsedLine>, controlLine: ParsedLine, quantityLine: ParsedLine): ParsedLine? {
+        // Compute the "upward" unit vector (from quantityLine → referenceLine)
+        val vUpX = controlLine.center.x - quantityLine.center.x
+        val vUpY = controlLine.center.y - quantityLine.center.y
         val vLen = hypot(vUpX, vUpY)
         if (vLen == 0f) return null
         val upX = vUpX / vLen
         val upY = vUpY / vLen
 
-        val perpX = -upY
-        val perpY = upX
-        val perpendicularTolerance = 5000f
-
-        //Project, filter, sort by true‐distance, then pick first matching isQuantityLine
+        //Project all other lines onto this vector
         return allLines
             .asSequence()
-            .filter { it != referenceLine }
+            .filter { it != quantityLine && !isQuantityLine(it.text) }
             .map { line ->
-                val toLineX = line.center.x - referenceLine.center.x
-                val toLineY = line.center.y - referenceLine.center.y
-                val dot = toLineX * upX + toLineY * upY
-                val perpDist = abs(toLineX * perpX + toLineY * perpY)
-                Triple(line, dot, perpDist)
-            }
-            .filter { (_, _, perpDist) -> perpDist < perpendicularTolerance }  //First: within lane
-            .filter { (_, dot, _) -> dot < 0f }  //Then: below
-            .sortedBy { (_, dot, _) -> -dot }
-            .firstOrNull { (line, _, _) -> !isQuantityLine(line.text) }
-            ?.first
-    }
-    /**
-     * Returns the next **QUANTITY** above the one given as reference, will avoid product lines
-     * @param referenceLine a reference to the line where the one directly above it will be returned
-     * @param controlLineAbove the control line that shows what's "above" in the image (Often taking from storeLogo text)
-     */
-    fun getQuantityLineAboveUsingReference(allLines: List<ParsedLine>, referenceLine: ParsedLine, controlLineAbove: ParsedLine): ParsedLine? {
-        // 1) Compute the "upward" unit vector
-        val vUpX = (controlLineAbove.corners[3].x - referenceLine.corners[3].x).toFloat()
-        val vUpY = (controlLineAbove.corners[3].y - referenceLine.corners[3].y).toFloat()
-        val vLen = hypot(vUpX, vUpY)
-        if (vLen == 0f) return null
-        val upX = vUpX / vLen
-        val upY = vUpY / vLen
-
-        // 2) Project, filter, sort by true‐distance, then pick first matching isQuantityLine
-        return allLines
-            .asSequence()
-            .filter { it != referenceLine }
-            .map { line ->
-                val toLineX = line.center.x - referenceLine.center.x
-                val toLineY = line.center.y - referenceLine.center.y
-                val dot  = toLineX * upX + toLineY * upY   // projection
-                val dist = hypot(toLineX, toLineY)        // Euclidean distance
+                val toLineX = line.center.x - quantityLine.center.x
+                val toLineY = line.center.y - quantityLine.center.y
+                val dot = toLineX * upX + toLineY * upY  //signed projection onto "up" vector
+                val dist = hypot(toLineX, toLineY)
                 Triple(line, dot, dist)
             }
-            .filter { (_, dot, _) -> dot > 0f }           // only “above”
-            .sortedBy { (_, _, dist) -> dist }           // nearest first
-            .firstOrNull { (line, _, _) -> //Makes sure its not a quantity line
-                isQuantityLine(line.text)
-            }
+            .filter { (_, dot, _) -> dot < 0f }  //lines in the opposite direction of reference (i.e. "below")
+            .minByOrNull { (_, _, dist) -> dist } //nearest one in that direction
             ?.first
     }
 }

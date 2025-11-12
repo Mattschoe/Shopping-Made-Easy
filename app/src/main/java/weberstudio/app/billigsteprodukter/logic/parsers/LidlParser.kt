@@ -1,7 +1,6 @@
 package weberstudio.app.billigsteprodukter.logic.parsers
 
 import android.graphics.PointF
-import android.util.Log
 import com.google.mlkit.vision.text.Text
 import org.apache.commons.text.similarity.JaroWinklerSimilarity
 import org.apache.commons.text.similarity.LevenshteinDistance
@@ -10,7 +9,6 @@ import weberstudio.app.billigsteprodukter.logic.Formatter.isIshEqualTo
 import weberstudio.app.billigsteprodukter.logic.Formatter.normalizeText
 import weberstudio.app.billigsteprodukter.logic.Logger
 import weberstudio.app.billigsteprodukter.logic.Store
-import weberstudio.app.billigsteprodukter.logic.components.FuzzyMatcher
 import weberstudio.app.billigsteprodukter.logic.exceptions.ParsingException
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ParsedLine
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ParsedProduct
@@ -138,14 +136,9 @@ object LidlParser: StoreParser {
         }
 
         //region Filtering and returning
-        //Hvis der er mere end to produkter (så ét produkt og ét stopord), så gemmer vi alle dem som har den samme pris som stop ordene (Så hvis "Total" fucker f.eks.)
-        val total = if (products.size > 2) {
-            products
-                .filter { isReceiptTotalWord(it.name) }
-                .maxOf { it.price }
-        } else {
-            0.0f
-        }
+        val total = products
+            .filter { isReceiptTotalWord(it.name) }
+            .maxOf { it.price }
 
         //Returner kun produkter som ikke er stop ordet, eller som har den samme pris som stop ordet (så hvis "Total" fucker f.eks.)
         val filteredSet = products.filter { product ->
@@ -257,7 +250,7 @@ object LidlParser: StoreParser {
      */
     private fun productPriceToFloat(productPrice: String): Float? {
         //Filter så vi kun har hvad der er gyldigt for Float-literal
-        val withDots = productPrice.replace(',', '.')
+        val withDots = productPrice.replace(',', '.').replace(' ', '.')
         val filtered = withDots.filter { it.isDigit() || it == '.' || it == '-' || it == '+' }
 
         //Fjerner ekstra kommaer/punktummere end decimaltalet

@@ -52,7 +52,7 @@ enum class Store(
                 Foetex -> listOf("AT BETALE", "TOTAL")
                 Menu -> listOf("AT BETALE", "TOTAL")
                 Lidl -> listOf("SUM", "KORT")
-                SuperBrugsen -> listOf("AT BETALE", "TOTAL")
+                SuperBrugsen -> listOf("AT BETALE", "TOTAL", "BETALINGSKORT", "BYTTEPENGE")
             }
     }
 }

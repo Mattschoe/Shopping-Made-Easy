@@ -10,6 +10,7 @@ import weberstudio.app.billigsteprodukter.logic.Formatter.isIshEqualTo
 import weberstudio.app.billigsteprodukter.logic.Formatter.normalizeText
 import weberstudio.app.billigsteprodukter.logic.Logger
 import weberstudio.app.billigsteprodukter.logic.Store
+import weberstudio.app.billigsteprodukter.logic.Store.Companion.topAnchors
 import weberstudio.app.billigsteprodukter.logic.components.FuzzyMatcher
 import weberstudio.app.billigsteprodukter.logic.exceptions.ParsingException
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ParsedImageText
@@ -43,8 +44,8 @@ object NettoParser : StoreParser {
                 val lineB = parsedLines[j]
 
                 //Tries to get a controlLine
-                if (controlLine == null && (fuzzyMatcher.match(lineB.text, listOf("NETTO"), 0.85f, 0.15f))) controlLine = lineA
-                if (controlLine == null && (fuzzyMatcher.match(lineB.text, listOf("NETTO"), 0.85f, 0.15f))) controlLine = lineB
+                if (controlLine == null && (fuzzyMatcher.match(lineB.text, Store.Netto.topAnchors, 0.85f, 0.15f))) controlLine = lineA
+                if (controlLine == null && (fuzzyMatcher.match(lineB.text, Store.Netto.topAnchors, 0.85f, 0.15f))) controlLine = lineB
 
                 if (doesLinesCollide(lineA, lineB)) {
                     //Enten parser produkterne, eller gemmer parsningen til efter vi har fundet kontrollinjen.
@@ -159,13 +160,9 @@ object NettoParser : StoreParser {
 
         //region Filtering and returning
         //Hvis der er mere end to produkter (så ét produkt og ét stopord), så gemmer vi alle dem som har den samme pris som stop ordene (Så hvis "Total" fucker f.eks.)
-        val total: Float = if (products.size > 2) {
-            products
-                .filter { isReceiptTotalWord(it.name) }
-                .maxOf { it.price }
-        } else {
-            0.0f
-        }
+        val total = products
+            .filter { isReceiptTotalWord(it.name) }
+            .maxOf { it.price }
 
         //Returner kun produkter som ikke er stop ordet, eller som har den samme pris som stop ordet (så hvis "Total" fucker f.eks.)
         val filteredSet = products.filter { product ->

@@ -2,12 +2,14 @@ package weberstudio.app.billigsteprodukter.ui.pages.home
 
 import androidx.compose.runtime.getValue
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -110,14 +112,10 @@ fun MainPageContent(
             color = MaterialTheme.colorScheme.onBackground
         )
         if (currentBudget == null) {
-            Column(
-                modifier = Modifier
-                    .weight(1.5f)
-            ) {
-                NoBudgetCard(
-                    onClick = { navController.navigate(PageNavigation.Budget.route) }
-                )
-            }
+            NoBudgetCard(
+                modifier = Modifier.weight(1f),
+                onClick = { navController.navigate(PageNavigation.Budget.route) }
+            )
         } else {
             currentBudget?.let { currentBudget ->
                 BudgetCard(
@@ -133,32 +131,34 @@ fun MainPageContent(
         BannerAd(AdsID.MAINPAGE_BANNER)
 
         //region LATEST ACTIVITY
-        Column(
-            modifier = Modifier
-                .weight(1f)
-        ) {
-            Text(
-                text = "Seneste Aktivitet",
-                style = MaterialTheme.typography.displaySmall,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground
-            )
-
-            LazyColumn(
+        if (currentBudget != null) {
+            Column(
                 modifier = Modifier
+                    .weight(1f)
             ) {
-                items(recentActivities) { activity ->
-                    LatestActivityCard(
-                        modifier = Modifier,
-                        activity = activity,
-                        onClick = {
-                            when(activity.activityType) {
-                                ActivityType.RECEIPT_SCANNED -> navController.navigate(PageNavigation.createReceiptRoute(activity.receiptID!!))
-                                ActivityType.BUDGET_CREATED -> navController.navigate(PageNavigation.createBudgetRoute(activity.budgetMonth!!, activity.budgetYear!!))
-                                ActivityType.SHOPPING_LIST_CREATED -> navController.navigate(PageNavigation.createShoppingListDetailRoute(activity.shoppingListID!!))
+                Text(
+                    text = "Seneste Aktivitet",
+                    style = MaterialTheme.typography.displaySmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+
+                LazyColumn(
+                    modifier = Modifier
+                ) {
+                    items(recentActivities) { activity ->
+                        LatestActivityCard(
+                            modifier = Modifier,
+                            activity = activity,
+                            onClick = {
+                                when(activity.activityType) {
+                                    ActivityType.RECEIPT_SCANNED -> navController.navigate(PageNavigation.createReceiptRoute(activity.receiptID!!))
+                                    ActivityType.BUDGET_CREATED -> navController.navigate(PageNavigation.createBudgetRoute(activity.budgetMonth!!, activity.budgetYear!!))
+                                    ActivityType.SHOPPING_LIST_CREATED -> navController.navigate(PageNavigation.createShoppingListDetailRoute(activity.shoppingListID!!))
+                                }
                             }
-                        }
-                    )
+                        )
+                    }
                 }
             }
         }
@@ -467,15 +467,18 @@ fun NoBudgetCard(modifier: Modifier = Modifier, onClick: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         BudgetCircle(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier
+                .fillMaxWidth(0.6f)
+                .aspectRatio(1f),
             currentBudget = 0f,
             totalSpent = 0f,
             remaining = 0f,
             spentPercentage = 0f,
         )
 
-        Spacer(modifier = Modifier.weight(0.3f))
+        Spacer(modifier = Modifier.height(16.dp))
 
+        //Button
         Surface(
             onClick = onClick,
             modifier = Modifier.fillMaxWidth(),

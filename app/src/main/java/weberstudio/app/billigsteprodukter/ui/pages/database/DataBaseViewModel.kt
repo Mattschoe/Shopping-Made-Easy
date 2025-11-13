@@ -29,6 +29,7 @@ import org.apache.commons.text.similarity.JaroWinklerSimilarity
 import org.apache.commons.text.similarity.LevenshteinDistance
 import weberstudio.app.billigsteprodukter.ReceiptApp
 import weberstudio.app.billigsteprodukter.data.Product
+import weberstudio.app.billigsteprodukter.data.isEqualTo
 import weberstudio.app.billigsteprodukter.data.receipt.ReceiptRepository
 import weberstudio.app.billigsteprodukter.logic.components.MatchScoreCalculator
 import weberstudio.app.billigsteprodukter.logic.Store
@@ -114,6 +115,17 @@ class DataBaseViewModel(application: Application): AndroidViewModel(application)
     }
 
     /**
+     * Filters products, only returning those that are not equal to another.
+     */
+    private fun filterProducts(products: List<Product>): List<Product> {
+        val results = mutableListOf<Product>()
+        for (product in products) {
+            if (results.none { it.isEqualTo(product, priceDifferenceEpsilon = 5.0f, useFuzzyMatcher = true) }) results.add(product)
+        }
+        return results
+    }
+
+    /**
      * Filters, ranks and returns the products based on how much they match the searchQuery, and returns a list of items matching the query + parameters given
      */
     @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
@@ -172,6 +184,7 @@ class DataBaseViewModel(application: Application): AndroidViewModel(application)
             sortedProducts.sortedByDescending { it.isFavorite }
         }
         .distinctUntilChanged()
+        .map { filterProducts(it) }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.Eagerly,

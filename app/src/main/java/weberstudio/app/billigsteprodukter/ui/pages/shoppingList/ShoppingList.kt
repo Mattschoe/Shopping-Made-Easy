@@ -324,12 +324,12 @@ fun ShoppingListUndermenuContent(modifier: Modifier, viewModel: ShoppingListUnde
             verticalAlignment = Alignment.CenterVertically
         ) {
             SearchBar(
-                Modifier.weight(0.65f).fillMaxHeight(),
+                modifier = Modifier.weight(1f),
                 searchQuery =  viewModel.listSearchQuery.collectAsState().value,
                 onQueryChange =  viewModel::setListSearchQuery
             )
             ReceiptTotalCard(
-                modifier = Modifier.weight(0.35f).fillMaxHeight(), //So we have space for max 9999,99kr
+                modifier = Modifier,
                 totalPrice = BigDecimal(totalPrice).setScale(2, RoundingMode.HALF_EVEN).toString().replace(".", ",")
             )
         }

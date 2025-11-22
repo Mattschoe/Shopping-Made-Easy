@@ -11,7 +11,7 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "creategoodthings.app.shoppingmadeeasy"
+        applicationId = "weberstudio.app.billigsteprodukter"
         minSdk = 26
         targetSdk = 35
         versionCode = 2

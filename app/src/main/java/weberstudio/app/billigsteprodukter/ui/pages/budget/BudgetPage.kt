@@ -993,31 +993,31 @@ private fun ReceiptDialog(onDismiss: () -> Unit, receipt: ReceiptWithProducts, o
                     )
                 }
 
-                LazyColumn {
-                    items(receipt.products) { product ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 4.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
+                // Wrap LazyColumn in a Box with weight modifier
+                Box(modifier = Modifier.weight(1f)) {
+                    LazyColumn {
+                        items(receipt.products) { product ->
+                            Row(
                                 modifier = Modifier
-                                    .weight(1f, fill = false),
-                                text = product.name,
-                                color = MaterialTheme.colorScheme.onSecondaryContainer,
-                                overflow = TextOverflow.Ellipsis,
-                                maxLines = 1
-                            )
-                            Text(
-                                text = formatFloatToDanishCurrency(product.price),
-                                color = MaterialTheme.colorScheme.onSecondaryContainer,
-                            )
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    modifier = Modifier.weight(1f, fill = false),
+                                    text = product.name,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                    overflow = TextOverflow.Ellipsis,
+                                    maxLines = 1
+                                )
+                                Text(
+                                    text = formatFloatToDanishCurrency(product.price),
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                )
+                            }
                         }
                     }
                 }
-
-                Spacer(modifier = Modifier.weight(1f))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),

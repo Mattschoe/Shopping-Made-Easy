@@ -165,7 +165,7 @@ fun ReceiptScanningContent(
             },
             onConfirmError = {
                 viewModel.clearParsingState()
-                launchCamera()
+                viewModel.requestCameraLaunch()
             },
             onDismissError = { viewModel.clearParsingState() }
         )

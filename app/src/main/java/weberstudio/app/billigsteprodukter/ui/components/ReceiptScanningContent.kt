@@ -104,7 +104,8 @@ fun ProductRow(productName: String, productPrice: String, error: ScanError? = nu
 @Composable
 fun ReceiptTotalCard(modifier: Modifier = Modifier, totalPrice: String, totalError: Boolean = false) {
     Card(
-        modifier = modifier,
+        modifier = modifier
+            .fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)

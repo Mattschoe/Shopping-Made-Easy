@@ -20,6 +20,7 @@ class OfflineSettingsRepository(
         val HAS_COMPLETED_ONBOARDING = booleanPreferencesKey("has_completed_onboarding")
         val HAS_BEEN_WARNED_ABOUT_RECEIPT_READABILITY = booleanPreferencesKey("receipt_scan_readability")
         val HAS_VISITED_RECEIPT_PAGE = booleanPreferencesKey("visited_receipt_page")
+        val CAMERA_LAUNCH_REQUEST = booleanPreferencesKey("camera_launch_request")
     }
 
     override suspend fun deleteAllProducts() {
@@ -53,6 +54,10 @@ class OfflineSettingsRepository(
 
     override val hasVisitedReceiptPage = dataStore.data.map { preferences ->
         preferences[PreferencesKeys.HAS_VISITED_RECEIPT_PAGE] == true
+    }
+
+    override val cameraLaunchRequest = dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.CAMERA_LAUNCH_REQUEST] == true
     }
     //endregion
 
@@ -91,6 +96,12 @@ class OfflineSettingsRepository(
     override suspend fun setHasVisitedReceiptPage(hasVisited: Boolean) {
         dataStore.edit { preferences ->
             preferences[PreferencesKeys.HAS_VISITED_RECEIPT_PAGE] = hasVisited
+        }
+    }
+
+    override suspend fun setCameraLaunchRequest(requestLaunch: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[PreferencesKeys.CAMERA_LAUNCH_REQUEST] = requestLaunch
         }
     }
     //endregion

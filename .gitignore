@@ -163,3 +163,5 @@ cython_debug/
 /.gradle/8.11.1
 /.gradle/8.11.1/executionHistory
 /.idea
+*.jks
+/app/release

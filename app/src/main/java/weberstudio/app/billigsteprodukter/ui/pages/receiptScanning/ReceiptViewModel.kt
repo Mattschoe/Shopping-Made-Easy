@@ -3,7 +3,6 @@ package weberstudio.app.billigsteprodukter.ui.pages.receiptScanning
 import android.app.Application
 import android.content.Context
 import android.net.Uri
-import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.mlkit.vision.text.Text
@@ -13,7 +12,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import org.apache.commons.lang3.NotImplementedException
 import weberstudio.app.billigsteprodukter.ReceiptApp
 import weberstudio.app.billigsteprodukter.data.Product
 import weberstudio.app.billigsteprodukter.data.Receipt
@@ -23,30 +21,27 @@ import weberstudio.app.billigsteprodukter.data.settings.SettingsRepository
 import weberstudio.app.billigsteprodukter.data.settings.TotalOption
 import weberstudio.app.billigsteprodukter.data.settings.TotalOption.*
 import weberstudio.app.billigsteprodukter.logic.CameraCoordinator
-import weberstudio.app.billigsteprodukter.logic.Formatter.normalizeText
 import weberstudio.app.billigsteprodukter.logic.ImagePreprocessor
 import weberstudio.app.billigsteprodukter.logic.Logger
 import weberstudio.app.billigsteprodukter.logic.Store
-import weberstudio.app.billigsteprodukter.logic.components.FuzzyMatcher
 import weberstudio.app.billigsteprodukter.logic.exceptions.ParsingException
 import weberstudio.app.billigsteprodukter.logic.parsers.ParserFactory
 import weberstudio.app.billigsteprodukter.logic.parsers.ParserFactory.detectStore
-import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser
 import weberstudio.app.billigsteprodukter.logic.parsers.StoreParser.ScanValidation
 import weberstudio.app.billigsteprodukter.ui.ParsingState
 import weberstudio.app.billigsteprodukter.ui.ReceiptUIState
 import java.time.LocalDate
 
 class ReceiptViewModel(application: Application): AndroidViewModel(application) {
-    private val tag = "ReceiptViewModel"
-    private val app = application as ReceiptApp
-    private val receiptRepo: OfflineReceiptRepository = app.receiptRepository
-    private val settingsRepo: SettingsRepository = app.settingsRepository
+    private val _tag = "ReceiptViewModel"
+    private val _app = application as ReceiptApp
+    private val _receiptRepo: OfflineReceiptRepository = _app.receiptRepository
+    private val _settingsRepo: SettingsRepository = _app.settingsRepository
 
     //Receipt display state
     private val _selectedReceiptID = MutableStateFlow<Long?>(null)
     private val _forceLoading = MutableStateFlow(false)
-    private val _totalOption = settingsRepo.totalOption.stateIn(
+    private val _totalOption = _settingsRepo.totalOption.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = PRODUCT_TOTAL
@@ -76,7 +71,7 @@ class ReceiptViewModel(application: Application): AndroidViewModel(application) 
         when {
             forceLoading -> flowOf(ReceiptUIState.Loading)
             receiptID == null -> flowOf(ReceiptUIState.Empty)
-            else -> receiptRepo.getReceiptWithProducts(receiptID).map { receiptWithProducts ->
+            else -> _receiptRepo.getReceiptWithProducts(receiptID).map { receiptWithProducts ->
                 if (receiptWithProducts?.products?.isNotEmpty() == true) {
                     val total = when (totalOption) {
                         RECEIPT_TOTAL -> receiptWithProducts.receipt.total
@@ -119,7 +114,7 @@ class ReceiptViewModel(application: Application): AndroidViewModel(application) 
      */
     fun updateProduct(product: Product) {
         viewModelScope.launch {
-            receiptRepo.updateProduct(product)
+            _receiptRepo.updateProduct(product)
         }
     }
 
@@ -129,7 +124,7 @@ class ReceiptViewModel(application: Application): AndroidViewModel(application) 
     fun updateTotalForSelectedReceipt(newTotal: Float) {
         _selectedReceiptID.value?.let { ID ->
             viewModelScope.launch {
-                receiptRepo.updateReceiptTotal(newTotal, ID)
+                _receiptRepo.updateReceiptTotal(newTotal, ID)
             }
         }
     }
@@ -142,13 +137,19 @@ class ReceiptViewModel(application: Application): AndroidViewModel(application) 
         val product = Product(name = productName, price = productPrice, store = store)
 
         viewModelScope.launch {
-            receiptRepo.addProductToReceipt(receiptID, product)
+            _receiptRepo.addProductToReceipt(receiptID, product)
         }
     }
 
     fun deleteProduct(product: Product) {
         viewModelScope.launch {
-            receiptRepo.deleteProduct(product)
+            _receiptRepo.deleteProduct(product)
+        }
+    }
+
+    fun requestCameraLaunch() {
+        viewModelScope.launch {
+            _settingsRepo.setCameraLaunchRequest(true)
         }
     }
 
@@ -158,25 +159,25 @@ class ReceiptViewModel(application: Application): AndroidViewModel(application) 
      * Will parse the receipt and save it to the database.
      */
     fun processImage(imageURI: Uri, context: Context, cameraCoordinator: CameraCoordinator) {
-        Logger.log(tag, "Processing image")
+        Logger.log(_tag, "Processing image")
         viewModelScope.launch {
             _parsingState.value = ParsingState.InProgress
-            val coop365Option = settingsRepo.coop365Option.firstOrNull()
+            val coop365Option = _settingsRepo.coop365Option.firstOrNull()
 
             if (coop365Option == null) {
-                Logger.log(tag, "Coop365Option not sat")
+                Logger.log(_tag, "Coop365Option not sat")
                 ParsingState.Error("Coop365Option ikke valgt! Se indstillinger.")
                 return@launch
             }
 
             val textRecognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
             try {
-                Logger.log(tag, "First OCR pass: Full image")
+                Logger.log(_tag, "First OCR pass: Full image")
                 val fullImage = ImagePreprocessor.preprocessForMlKit(context, imageURI)
                 val fullImageText = textRecognizer.process(fullImage).await()
 
                 if (fullImageText.textBlocks.isEmpty()) {
-                    Logger.log(tag, "No text found in picture")
+                    Logger.log(_tag, "No text found in picture")
                     _parsingState.value = ParsingState.Error("Ingen tekst fundet i billedet!")
                     textRecognizer.close()
                     return@launch
@@ -184,20 +185,20 @@ class ReceiptViewModel(application: Application): AndroidViewModel(application) 
 
                 val detectedStore = detectStore(fullImageText)
                 if (detectedStore == null) {
-                    Logger.log(tag, "No store found in first pass")
+                    Logger.log(_tag, "No store found in first pass")
                     _parsingState.value = ParsingState.Error(
                         "Ingen butik fundet! Prøv venligst at inkludere billedet af butikslogoet"
                     )
                     textRecognizer.close()
                     return@launch
                 }
-                Logger.log(tag, "Store detected: $detectedStore")
+                Logger.log(_tag, "Store detected: $detectedStore")
 
                 when (val cropResult = ImagePreprocessor.preprocessAndCropForMlKit(
                     context, imageURI, fullImageText, detectedStore
                 )) {
                     is ImagePreprocessor.CropResult.Success -> {
-                        Logger.log(tag, "Crop successful, running second OCR pass")
+                        Logger.log(_tag, "Crop successful, running second OCR pass")
                         val croppedImageText = textRecognizer.process(cropResult.inputImage).await()
 
                         // Parse products from cropped image
@@ -211,7 +212,7 @@ class ReceiptViewModel(application: Application): AndroidViewModel(application) 
 
                     is ImagePreprocessor.CropResult.Failed -> {
                         // Fallback: Use full image if cropping fails
-                        Logger.log(tag, "Cropping failed: ${cropResult.reason}. Using full image.")
+                        Logger.log(_tag, "Cropping failed: ${cropResult.reason}. Using full image.")
                         parseAndSaveReceipt(
                             imageText = fullImageText,
                             store = detectedStore,
@@ -222,12 +223,12 @@ class ReceiptViewModel(application: Application): AndroidViewModel(application) 
                 }
                 textRecognizer.close()
             } catch(e: Exception) {
-                Logger.log(tag, "Error processing image: ${e.message}")
+                Logger.log(_tag, "Error processing image: ${e.message}")
                 _parsingState.value = ParsingState.Error("Kunne ikke behandle billedet. Prøv venligst igen.")
                 textRecognizer.close()
             }
         }
-        Logger.log(tag, "Image processing done")
+        Logger.log(_tag, "Image processing done")
     }
 
 
@@ -244,12 +245,12 @@ class ReceiptViewModel(application: Application): AndroidViewModel(application) 
         try {
             val parser = ParserFactory.parseReceipt(imageText, coop365Option)
             if (parser == null) {
-                Logger.log(tag, "Parser returned null")
+                Logger.log(_tag, "Parser returned null")
                 _parsingState.value = ParsingState.Error("Kunne ikke parse kvittering. Prøv igen.")
                 return
             }
 
-            Logger.log(tag, "Parsing with: ${parser.javaClass.simpleName}")
+            Logger.log(_tag, "Parsing with: ${parser.javaClass.simpleName}")
 
             val parsedText = parser.parse(imageText)
             val receipt = Receipt(
@@ -259,26 +260,26 @@ class ReceiptViewModel(application: Application): AndroidViewModel(application) 
             )
 
             viewModelScope.launch {
-                val receiptID = receiptRepo.addReceiptProducts(receipt, parsedText.products)
-                Logger.log(tag, "Receipt saved with ID: $receiptID, products: ${parsedText.products.size}")
+                val receiptID = _receiptRepo.addReceiptProducts(receipt, parsedText.products)
+                Logger.log(_tag, "Receipt saved with ID: $receiptID, products: ${parsedText.products.size}")
 
                 cameraCoordinator.setScanValidation(receiptID, parsedText.scanErrors)
-                app.activityLogger.logReceiptScan(receipt.copy(receiptID = receiptID))
+                _app.activityLogger.logReceiptScan(receipt.copy(receiptID = receiptID))
 
                 _parsingState.value = ParsingState.Success(store, receiptID)
             }
 
         } catch (e: ParsingException) {
-            Logger.log(tag, "Parsing exception: ${e.message}")
+            Logger.log(_tag, "Parsing exception: ${e.message}")
             _parsingState.value = ParsingState.Error("Fejl med at scanne kvittering: ${e.message}")
         } catch (e: Exception) {
-            Logger.log(tag, "Unexpected error: ${e.message}")
+            Logger.log(_tag, "Unexpected error: ${e.message}")
             _parsingState.value = ParsingState.Error("Uventet fejl: ${e.message}")
         }
     }
 
     fun applyScanValidation(validation: ScanValidation) {
-        Logger.log(tag, "Applying scan validation, with validation: $validation")
+        Logger.log(_tag, "Applying scan validation, with validation: $validation")
         _errors.value = validation
     }
 
@@ -286,7 +287,7 @@ class ReceiptViewModel(application: Application): AndroidViewModel(application) 
      * Clears the parsing state, preparing for the next scan.
      */
     fun clearParsingState() {
-        Logger.log(tag, "Clearing parsing state")
+        Logger.log(_tag, "Clearing parsing state")
         _parsingState.value = ParsingState.Idle
     }
     //endregion

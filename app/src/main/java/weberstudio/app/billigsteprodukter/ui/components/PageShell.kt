@@ -1,7 +1,9 @@
 package weberstudio.app.billigsteprodukter.ui.components
 
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.annotation.RestrictTo
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,6 +22,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,6 +46,10 @@ import weberstudio.app.billigsteprodukter.logic.CameraCoordinator
 import weberstudio.app.billigsteprodukter.logic.Logger
 import weberstudio.app.billigsteprodukter.ui.navigation.PageNavigation
 import weberstudio.app.billigsteprodukter.ui.pages.home.MainPageContent
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import kotlinx.coroutines.CoroutineScope
 
 /**
  * The shell of each page in the app. Has to be applied to every page in the app
@@ -65,8 +73,17 @@ fun PageShell(
         viewModelStoreOwner = context as ComponentActivity
     )
 
-    // Hoist camera state to PageShell level
+    val settingsRepo = (LocalContext.current.applicationContext as ReceiptApp).settingsRepository
+    val cameraLaunchRequest by settingsRepo.cameraLaunchRequest.collectAsState(initial = false)
+
     var showCamera by remember { mutableStateOf(false) }
+
+    if (cameraLaunchRequest) {
+        showCamera = true
+        LaunchedEffect(cameraLaunchRequest) {
+            settingsRepo.setCameraLaunchRequest(false)
+        }
+    }
 
     Box(modifier = modifier) {
         Scaffold(

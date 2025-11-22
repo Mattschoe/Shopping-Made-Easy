@@ -9,12 +9,14 @@ interface SettingsRepository {
     val hasCompletedOnboarding: Flow<Boolean>
     val hasBeenWarnedAboutReceiptReadability: Flow<Boolean>
     val hasVisitedReceiptPage: Flow<Boolean>
+    val cameraLaunchRequest: Flow<Boolean>
     suspend fun setTheme(theme: Theme)
     suspend fun setCoop365Option(option: Coop365Option.Option)
     suspend fun setTotalOption(option: TotalOption)
     suspend fun setOnboardingCompleted(completed: Boolean)
     suspend fun setHasBeenWarnedAboutScanReadability(hasBeenWarned: Boolean)
     suspend fun setHasVisitedReceiptPage(hasVisited: Boolean)
+    suspend fun setCameraLaunchRequest(requestLaunch: Boolean)
     suspend fun deleteAllProducts()
 }
 

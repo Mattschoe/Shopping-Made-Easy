@@ -453,9 +453,6 @@ fun BudgetPageUI(
         )
 
         Spacer(modifier = Modifier.height(32.dp))
-
-        //AD
-        MediumRectangleBannerAd(AdsID.BUDGETPAGE_BANNER, Modifier.fillMaxSize())
     }
 
     //region DIALOGS

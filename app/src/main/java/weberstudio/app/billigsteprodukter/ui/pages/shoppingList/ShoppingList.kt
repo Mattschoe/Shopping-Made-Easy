@@ -110,9 +110,6 @@ fun ShoppingListsPage(modifier: Modifier = Modifier, navController: NavControlle
                     }
                 )
             }
-            item {
-                BannerAd(AdsID.SHOPPINGLIST_BANNER, Modifier.fillMaxWidth())
-            }
         }
     }
 

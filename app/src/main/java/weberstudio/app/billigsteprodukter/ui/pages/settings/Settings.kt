@@ -174,9 +174,6 @@ fun SettingsPageContent(modifier: Modifier = Modifier, viewModel: SettingsViewMo
         //endregion
 
         Spacer(Modifier.weight(1f))
-
-
-        LargeBannerAd(AdsID.SETTINGS_BANNER)
     }
 
     //region DIALOGS

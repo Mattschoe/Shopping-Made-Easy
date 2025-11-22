@@ -128,8 +128,6 @@ fun MainPageContent(
         }
         //endregion
 
-        BannerAd(AdsID.MAINPAGE_BANNER)
-
         //region LATEST ACTIVITY
         if (currentBudget != null) {
             Column(

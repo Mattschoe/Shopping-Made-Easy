@@ -375,8 +375,6 @@ fun DatabaseContent(
         }
         //endregion
 
-        LargeBannerAd(AdsID.DATABASE_BANNER)
-
         //region DIALOGS
         product2Modify?.let { product ->
             ModifyProductDialog(

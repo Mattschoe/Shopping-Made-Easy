@@ -630,6 +630,71 @@ fun DeleteConfirmationDialog(title: String, body: String, onDismiss: () -> Unit,
     }
 }
 
+@Composable
+fun WelcomeToScanningDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer
+            )
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(20.dp)
+            ) {
+                //Header
+                Text(
+                    text = "Velkommen til oversigten!",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                Text(
+                    text = "Håber scanning gik godt!",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "Skal du ændre navnet eller prisen på et produkt trykker du bare på navnet, vil du fjerne det fra kvitteringen så hold inde så kan du slette produktet",
+                    fontSize = 14.sp,
+                )
+                //region OK/ANNULLER
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TextButton(
+                        onClick = onDismiss,
+                    ) {
+                        Text(
+                            text = "Annuller",
+                            color = Color.Gray
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
+                        onClick = onConfirm
+                    ) {
+                        Text(
+                            text = "Ok",
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
+                }
+                //endregion
+            }
+        }
+    }
+}
+
 /**
  * Updates a product given user input, and returns it via [onConfirm]
  */

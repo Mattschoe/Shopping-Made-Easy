@@ -47,6 +47,12 @@ class ReceiptViewModel(application: Application): AndroidViewModel(application) 
         initialValue = PRODUCT_TOTAL
     )
 
+    val hasFinishedFirstScan = _settingsRepo.finishedFirstScan.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = true
+    )
+
     //Camera/parsing state
     private val _parsingState = MutableStateFlow<ParsingState>(ParsingState.NotActivated)
     val parsingState = _parsingState.asStateFlow()
@@ -150,6 +156,12 @@ class ReceiptViewModel(application: Application): AndroidViewModel(application) 
     fun requestCameraLaunch() {
         viewModelScope.launch {
             _settingsRepo.setCameraLaunchRequest(true)
+        }
+    }
+
+    fun setHasFinishedFirstScan(isFirstScan: Boolean) {
+        viewModelScope.launch {
+            _settingsRepo.setFinishedFirstScan(isFirstScan)
         }
     }
 

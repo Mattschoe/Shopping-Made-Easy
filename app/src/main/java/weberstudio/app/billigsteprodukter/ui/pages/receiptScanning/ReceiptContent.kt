@@ -50,8 +50,6 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
@@ -82,6 +80,7 @@ import weberstudio.app.billigsteprodukter.ui.components.ProductRow
 import weberstudio.app.billigsteprodukter.ui.components.ProductRowSkeleton
 import weberstudio.app.billigsteprodukter.ui.components.ReceiptTotalCard
 import weberstudio.app.billigsteprodukter.ui.components.ReceiptTotalSkeleton
+import weberstudio.app.billigsteprodukter.ui.components.WelcomeToScanningDialog
 import weberstudio.app.billigsteprodukter.ui.components.launchCamera
 import weberstudio.app.billigsteprodukter.ui.navigation.PageNavigation
 import kotlin.math.max
@@ -103,8 +102,9 @@ fun ReceiptScanningContent(
 
     var showAddProductDialog by rememberSaveable { mutableStateOf(false) }
     var showModifyTotalDialog by rememberSaveable { mutableStateOf(false) }
+    val hasFinishedFirstScan by viewModel.hasFinishedFirstScan.collectAsState()
 
-    // Check if there's a pending camera capture to process
+    //Checks if there's a pending camera capture to process
     val pendingCapture by cameraCoordinator.pendingImageCapture.collectAsState()
     val pendingScanValidation by cameraCoordinator.pendingScanValidation.collectAsState()
 
@@ -189,7 +189,9 @@ fun ReceiptScanningContent(
                 modifyProduct = { newProduct ->
                     viewModel.updateProduct(newProduct)
                 },
-                onDeleteProduct = { product2Delete -> viewModel.deleteProduct(product2Delete) }
+                onDeleteProduct = { product2Delete -> viewModel.deleteProduct(product2Delete) },
+                hasFinishedFirstScan = hasFinishedFirstScan,
+                onFinishedFirstScan = { viewModel.setHasFinishedFirstScan(true) }
             )
         }
         is ReceiptUIState.Empty -> {
@@ -285,7 +287,9 @@ private fun ReceiptContent(
     onAddProductClick: () -> Unit,
     onModifyTotal: () -> Unit,
     modifyProduct: (Product) -> Unit,
-    onDeleteProduct: (Product) -> Unit
+    onDeleteProduct: (Product) -> Unit,
+    hasFinishedFirstScan: Boolean,
+    onFinishedFirstScan: () -> Unit
 ) {
     //Drag functionality
     val density = LocalDensity.current
@@ -526,6 +530,13 @@ private fun ReceiptContent(
     }
 
     //region DIALOGS
+    if (!hasFinishedFirstScan) {
+        WelcomeToScanningDialog(
+            onDismiss = onFinishedFirstScan,
+            onConfirm = onFinishedFirstScan
+        )
+    }
+
     product2Modify?.let { product ->
         ModifyProductDialog(
             product = product,

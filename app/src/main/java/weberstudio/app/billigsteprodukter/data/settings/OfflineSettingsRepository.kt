@@ -5,7 +5,6 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import weberstudio.app.billigsteprodukter.data.receipt.ReceiptDao
 
@@ -21,6 +20,7 @@ class OfflineSettingsRepository(
         val HAS_BEEN_WARNED_ABOUT_RECEIPT_READABILITY = booleanPreferencesKey("receipt_scan_readability")
         val HAS_VISITED_RECEIPT_PAGE = booleanPreferencesKey("visited_receipt_page")
         val CAMERA_LAUNCH_REQUEST = booleanPreferencesKey("camera_launch_request")
+        val finishedFirstScan = booleanPreferencesKey("finished_first_scan")
     }
 
     override suspend fun deleteAllProducts() {
@@ -58,6 +58,10 @@ class OfflineSettingsRepository(
 
     override val cameraLaunchRequest = dataStore.data.map { preferences ->
         preferences[PreferencesKeys.CAMERA_LAUNCH_REQUEST] == true
+    }
+
+    override val finishedFirstScan = dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.finishedFirstScan] == true
     }
     //endregion
 
@@ -102,6 +106,12 @@ class OfflineSettingsRepository(
     override suspend fun setCameraLaunchRequest(requestLaunch: Boolean) {
         dataStore.edit { preferences ->
             preferences[PreferencesKeys.CAMERA_LAUNCH_REQUEST] = requestLaunch
+        }
+    }
+
+    override suspend fun setFinishedFirstScan(firstScan: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[PreferencesKeys.finishedFirstScan] = firstScan
         }
     }
     //endregion

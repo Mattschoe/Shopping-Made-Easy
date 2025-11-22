@@ -242,9 +242,14 @@ class ShoppingListUndermenuViewModel(application: Application): AndroidViewModel
                 val result = mutableListOf<Product>()
                 productRepo.searchProductsContaining(query).collect { products ->
                     for (product in products) {
-                        if (result.none { it.isEqualTo(product, priceDifferenceEpsilon = 5.0f, useFuzzyMatcher = true) }) result.add(product)
+                        if (result.none { it.isEqualTo(product, priceDifferenceEpsilon = 5.0f, useFuzzyMatcher = true) }) {
+                            result.add(product)
+                        }
                     }
-                    _searchResults.value = result
+                    _searchResults.value = result.sortedWith(
+                        compareByDescending<Product> { it.isFavorite }
+                            .thenBy { it.price }
+                    )
                 }
             }
         } else {

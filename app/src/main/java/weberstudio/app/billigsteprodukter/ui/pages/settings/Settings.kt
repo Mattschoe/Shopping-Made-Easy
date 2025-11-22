@@ -1,5 +1,6 @@
 package weberstudio.app.billigsteprodukter.ui.pages.settings
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -30,11 +31,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.selects.select
 import weberstudio.app.billigsteprodukter.data.AdsID
 import weberstudio.app.billigsteprodukter.data.settings.Theme
 import weberstudio.app.billigsteprodukter.data.settings.TotalOption
@@ -48,6 +50,8 @@ import weberstudio.app.billigsteprodukter.ui.components.LargeBannerAd
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsPageContent(modifier: Modifier = Modifier, viewModel: SettingsViewModel) {
+    val uriHandler = LocalUriHandler.current
+
     //UI
     val buttonWidth = 180.dp
     val buttonHeight = 56.dp
@@ -147,9 +151,31 @@ fun SettingsPageContent(modifier: Modifier = Modifier, viewModel: SettingsViewMo
             )
         }
         //endregion
+
+        Spacer(Modifier.height(12.dp))
+
+        //region CONTACT
+        SectionDivider("Kontakt")
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+        ) {
+            SettingsText(
+                text = "Har du noget feedback, oplevet stødende indhold eller andet? Kontakt os på:"
+            )
+            Text(
+                text = "shoppingmadeeasy@creategoodthings.dk",
+                color = Color.Blue,
+                textDecoration = TextDecoration.Underline,
+                modifier = Modifier
+                    .clickable { uriHandler.openUri("mailto:shoppingmadeeasy@creategoodthings.dk") }
+            )
+        }
         //endregion
 
         Spacer(Modifier.weight(1f))
+
+
         LargeBannerAd(AdsID.SETTINGS_BANNER)
     }
 

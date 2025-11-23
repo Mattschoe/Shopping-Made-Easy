@@ -24,11 +24,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
@@ -174,7 +169,7 @@ fun ShoppingListItem(shoppingList: ShoppingList, onClick: () -> Unit, onDeleteCl
                 modifier = Modifier.size(32.dp)
             ) {
                 Icon(
-                    imageVector = Icons.Default.Close,
+                    ImageVector.vectorResource(R.drawable.close_icon),
                     contentDescription = "Slet liste",
                     tint = Color.Gray,
                     modifier = Modifier.size(20.dp)
@@ -298,7 +293,7 @@ fun ShoppingListUndermenuContent(modifier: Modifier, viewModel: ShoppingListUnde
                     ) {
                         Icon(
                             imageVector =
-                                if (isEditingListName) Icons.Default.Check
+                                if (isEditingListName) ImageVector.vectorResource(R.drawable.check_icon)
                                 else ImageVector.vectorResource( R.drawable.edit_icon),
                             contentDescription = if (isEditingListName) "Gem ændringer" else "Ændrer indkøbslistenavn",
                         )
@@ -381,7 +376,7 @@ fun ShoppingListUndermenuContent(modifier: Modifier, viewModel: ShoppingListUnde
                                 )
 
                                 Icon(
-                                    imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                                    imageVector = ImageVector.vectorResource(if (expanded) R.drawable.dropup_icon else R.drawable.dropdown_icon),
                                     contentDescription = if (expanded) "Collapse" else "Expand",
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.size(20.dp)

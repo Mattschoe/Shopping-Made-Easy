@@ -1,13 +1,14 @@
 package weberstudio.app.billigsteprodukter.ui.components
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.zIndex
+import weberstudio.app.billigsteprodukter.R
 
 @Composable
 fun AddFAB(modifier: Modifier = Modifier, onClick: () -> Unit) {
@@ -17,6 +18,6 @@ fun AddFAB(modifier: Modifier = Modifier, onClick: () -> Unit) {
         modifier = modifier
             .zIndex(1f) // make sure it's drawn above the list/cards
     ) {
-        Icon(imageVector = Icons.Default.Add, contentDescription = "Add")
+        Icon(ImageVector.vectorResource(R.drawable.add_icon), contentDescription = "Add")
     }
 }

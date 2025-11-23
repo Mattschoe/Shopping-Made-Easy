@@ -24,8 +24,6 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -346,8 +344,8 @@ fun AddProductDialog(showDialog: Boolean, onDismiss: () -> Unit, onConfirm: (nam
     var productPriceText by rememberSaveable { mutableStateOf("") }
     var storeDropdownExpanded by remember { mutableStateOf(false) }
     var selectedStore by rememberSaveable { mutableStateOf<Store?>(standardStore) }
-    var isValid: Boolean = productName.trim().isNotEmpty() && productPriceText.trim().isNotEmpty()
-
+    val isValid: Boolean = productName.trim().isNotEmpty() && productPriceText.trim().isNotEmpty()
+    val trailingIcon = if (storeDropdownExpanded) R.drawable.dropup_icon else R.drawable.dropdown_icon
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -412,7 +410,7 @@ fun AddProductDialog(showDialog: Boolean, onDismiss: () -> Unit, onConfirm: (nam
                             value = selectedStore?.name ?: "Vælg butik",
                             onValueChange = { /* READ ONLY */ },
                             readOnly = true,
-                            trailingIcon = { Icon(Icons.Default.ArrowDropDown, contentDescription = null) },
+                            trailingIcon = { Icon(ImageVector.vectorResource(trailingIcon), contentDescription = null) },
                             shape = RoundedCornerShape(24.dp),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,

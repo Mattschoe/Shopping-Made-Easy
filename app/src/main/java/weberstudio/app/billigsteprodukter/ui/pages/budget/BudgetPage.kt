@@ -23,8 +23,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -293,7 +291,7 @@ fun BudgetDialog(selectedMonth: Month, onDismiss: () -> Unit, onClick: (Budget) 
                 //Total budget field
                 BudgetInputField(
                     value = totalBudget,
-                    onValueChange = { totalBudget = it },
+                    onValueChange = { if (it.toFloatOrNull() != null) totalBudget = it },
                     label = "I alt",
                     totalBudget = formatDanishCurrencyToFloat(totalBudget),
                     currentAmount = formatDanishCurrencyToFloat(totalBudget),
@@ -384,7 +382,7 @@ fun BudgetInputField(
                 modifier = Modifier.padding(start = 8.dp)
             ) {
                 Icon(
-                    Icons.Default.Delete,
+                    ImageVector.vectorResource(R.drawable.close_icon),
                     contentDescription = "Slet kategori",
                     tint = Color.Gray
                 )

@@ -3,14 +3,10 @@ package weberstudio.app.billigsteprodukter.ui.components
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
-import androidx.annotation.RestrictTo
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -49,6 +45,8 @@ import weberstudio.app.billigsteprodukter.ui.pages.home.MainPageContent
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
 import kotlinx.coroutines.CoroutineScope
 
 /**
@@ -105,7 +103,7 @@ fun PageShell(
                                 navController.navigate(PageNavigation.Settings.route)
                             }) {
                                 Icon(
-                                    Icons.Default.Settings,
+                                    ImageVector.vectorResource(R.drawable.settings_icon),
                                     contentDescription = "Indstillinger"
                                 )
                             }
@@ -181,7 +179,7 @@ fun NavigationBar(
         NavigationBarItem(
             icon = {
                 Icon(
-                    Icons.Default.Home,
+                    ImageVector.vectorResource(R.drawable.home_icon),
                     contentDescription = "Hjem",
                     modifier = Modifier.size(36.dp),
                 )

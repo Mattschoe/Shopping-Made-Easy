@@ -16,8 +16,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -169,7 +167,7 @@ fun AddProductToReceiptButton(modifier: Modifier = Modifier, addProductToReceipt
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector = Icons.Default.Add,
+                ImageVector.vectorResource(R.drawable.add_icon),
                 contentDescription = "Tilføj produkter til kvitteringen",
                 modifier = Modifier
                     .size(48.dp),

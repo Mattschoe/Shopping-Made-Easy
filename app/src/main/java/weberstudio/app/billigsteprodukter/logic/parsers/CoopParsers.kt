@@ -235,7 +235,7 @@ object CoopParserQuantityBelow : StoreParser {
      * parse into products
      */
     private fun isIgnoreWord(input: String): Boolean {
-        val ignoreWords = listOf("MOMS", "MOMS UDGØR", "BYTTEPENGE", "PANT", "RABAT", "RABAT I ALT", "HERAF 25% MOMS", "SPECIALRABAT")
+        val ignoreWords = listOf("MOMS", "MOMS UDGØR", "BYTTEPENGE", "PANT", "RABAT", "RABAT I ALT", "HERAF 25% MOMS", "SPECIALRABAT", "DISCOUNT")
 
         return ignoreWords.any { ignoreWord ->
             val jaroSimilarity = fuzzyMatcherJaro.apply(input, ignoreWord) ?: 0.0
@@ -477,7 +477,7 @@ object CoopParserQuantityAbove : StoreParser {
      * parse into products
      */
     private fun isIgnoreWord(input: String): Boolean {
-        val ignoreWords = listOf("MOMS", "MOMS UDGØR", "BYTTEPENGE", "PANT", "RABAT", "RABAT I ALT", "HERAF 25% MOMS", "SPECIALRABAT")
+        val ignoreWords = listOf("MOMS", "MOMS UDGØR", "BYTTEPENGE", "PANT", "RABAT", "RABAT I ALT", "HERAF 25% MOMS", "SPECIALRABAT", "DISCOUNT")
 
         return ignoreWords.any { ignoreWord ->
             val jaroSimilarity = fuzzyMatcherJaro.apply(input, ignoreWord) ?: 0.0

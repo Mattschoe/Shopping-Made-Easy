@@ -436,7 +436,6 @@ fun ParsersAvailableDialog(
                 Text(text = "- Coop365", fontWeight = FontWeight.SemiBold)
                 Text(text = "- SuperBrugsen", fontWeight = FontWeight.SemiBold)
                 Text(text = "- Lidl", fontWeight = FontWeight.SemiBold)
-                Text(text = "- Rema1000", fontWeight = FontWeight.SemiBold)
 
                 Row(
                     modifier = Modifier

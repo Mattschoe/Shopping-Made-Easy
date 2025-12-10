@@ -47,6 +47,12 @@ object NettoParser : StoreParser {
                 if (controlLine == null && (fuzzyMatcher.match(lineB.text, Store.Netto.topAnchors, 0.85f, 0.15f))) controlLine = lineA
                 if (controlLine == null && (fuzzyMatcher.match(lineB.text, Store.Netto.topAnchors, 0.85f, 0.15f))) controlLine = lineB
 
+                //Skips already parsed products
+                val isAlreadyParsed = parsedProducts.any { product ->
+                    product.name.contains(lineA.text, ignoreCase = true)
+                }
+                if (isAlreadyParsed) continue
+
                 if (doesLinesCollide(lineA, lineB)) {
                     //Enten parser produkterne, eller gemmer parsningen til efter vi har fundet kontrollinjen.
                     if (controlLine == null) parseAfterControlLineFound.add(Pair(lineA, lineB))

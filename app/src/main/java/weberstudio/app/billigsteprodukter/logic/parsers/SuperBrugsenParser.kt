@@ -69,6 +69,12 @@ object SuperBrugsenParser: StoreParser {
                 if (i == j) continue
                 val lineB = parsedLines[j]
 
+                //Skips already parsed products
+                val isAlreadyParsed = parsedProducts.any { product ->
+                    product.name.contains(lineA.text, ignoreCase = true)
+                }
+                if (isAlreadyParsed) continue
+
                 if (doesLinesCollide(lineA, lineB)) {
                     val (product, error) = parseLinesToProduct(lineA, lineB, controlLine, includeRABAT, parsedLines, parsedProducts, product2Quantity)
                     parsedProducts.add(product)

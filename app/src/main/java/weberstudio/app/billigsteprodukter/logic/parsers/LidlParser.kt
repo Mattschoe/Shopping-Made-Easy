@@ -41,6 +41,12 @@ object LidlParser: StoreParser {
                 if (i == j) continue
                 val lineB = parsedLines[j]
 
+                //Skips already parsed products
+                val isAlreadyParsed = parsedProducts.any { product ->
+                    product.name.contains(lineA.text, ignoreCase = true)
+                }
+                if (isAlreadyParsed) continue
+
                 if (doesLinesCollide(lineA, lineB)) {
                     collidedLines[lineA] = lineB
                     if (isQuantityLine(lineB.text)) product2Quantity.put(lineA, lineB)

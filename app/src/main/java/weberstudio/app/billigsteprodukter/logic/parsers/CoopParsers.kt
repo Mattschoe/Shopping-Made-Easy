@@ -54,7 +54,7 @@ object CoopParserQuantityBelow : StoreParser {
         //Hvis linje er en quantity så markerer vi den under den som en der skal have dens pris ændret senere
         for (line in parsedLines) {
             if (isQuantityLine(line.text)) {
-                isMarked.put(line, true)
+                isMarked[line] = true
                 continue
             }
         }
@@ -69,10 +69,16 @@ object CoopParserQuantityBelow : StoreParser {
                 if (i == j) continue
                 val lineB = parsedLines[j]
 
+                //Skips already parsed products
+                val isAlreadyParsed = parsedProducts.any { product ->
+                    product.name.contains(lineA.text, ignoreCase = true)
+                }
+                if (isAlreadyParsed) continue
+
                 if (doesLinesCollide(lineA, lineB)) {
                     val (product, error) = parseLinesToProduct(lineA, lineB, controlLine, parsedLines, isMarked)
                     parsedProducts.add(product)
-                    scanLogicErrors.put(product, error)
+                    scanLogicErrors[product] = error
                     break
                 }
             }
@@ -307,6 +313,12 @@ object CoopParserQuantityAbove : StoreParser {
             for (j in parsedLines.indices) {
                 if (i == j) continue
                 val lineB = parsedLines[j]
+
+                //Skips already parsed products
+                val isAlreadyParsed = parsedProducts.any { product ->
+                    product.name.contains(lineA.text, ignoreCase = true)
+                }
+                if (isAlreadyParsed) continue
 
                 if (doesLinesCollide(lineA, lineB)) {
                     val (product, error) = parseLinesToProduct(lineA, lineB, controlLine, parsedLines, isMarked)

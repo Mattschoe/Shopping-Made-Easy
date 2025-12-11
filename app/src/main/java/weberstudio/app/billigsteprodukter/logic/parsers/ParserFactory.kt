@@ -23,7 +23,7 @@ object ParserFactory {
         return when (store) {
             Bilka -> return BilkaParser
             Coop365 -> {
-                return when (coop365Option) {
+                when (coop365Option) {
                     OVER -> CoopParserQuantityAbove
                     UNDER -> CoopParserQuantityBelow
                 }

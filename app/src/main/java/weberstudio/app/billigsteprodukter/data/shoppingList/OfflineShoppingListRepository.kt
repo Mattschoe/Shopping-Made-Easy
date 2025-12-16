@@ -48,6 +48,7 @@ class OfflineShoppingListRepository(private val dao: ShoppingListDao) : Shopping
     override fun getShoppingListProductsGroupedByStore(shoppingListID: String): Flow<Map<Store, List<Pair<Product, Boolean>>>> {
         return dao.getShoppingListProductsWithCheckedStatus(shoppingListID).map { productsWithStatus ->
             productsWithStatus
+                .filter { it.product.price < 0.1 }
                 .groupBy { it.product.store }
                 .mapValues { (_, products) ->
                     products.map { it.product to it.isChecked }

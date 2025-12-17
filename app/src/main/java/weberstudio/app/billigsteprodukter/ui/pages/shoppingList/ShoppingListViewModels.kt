@@ -178,8 +178,8 @@ class ShoppingListUndermenuViewModel(application: Application): AndroidViewModel
      */
     fun toggleStore(store: Store) {
         _isStoreExpanded.update { currentMap ->
-            Log.d("DEBUG", currentMap.toString())
-            currentMap + (store.ID to (currentMap[store.ID] != true))
+            val isExpanded = currentMap[store.ID] ?: true
+            currentMap + (store.ID to !isExpanded)
         }
     }
 

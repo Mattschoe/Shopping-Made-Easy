@@ -16,8 +16,8 @@ android {
         applicationId = "weberstudio.app.billigsteprodukter"
         minSdk = 26
         targetSdk = 36
-        versionCode = 5
-        versionName = "1.2"
+        versionCode = 7
+        versionName = "1.2.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

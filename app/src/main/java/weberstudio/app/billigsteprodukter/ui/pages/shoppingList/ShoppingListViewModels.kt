@@ -246,7 +246,9 @@ class ShoppingListUndermenuViewModel(application: Application): AndroidViewModel
                             result.add(product)
                         }
                     }
-                    _searchResults.value = result.sortedWith(
+                    _searchResults.value = result
+                        .filter { it.price > 0.2}
+                        .sortedWith(
                         compareByDescending<Product> { it.isFavorite }
                             .thenBy { it.price }
                     )

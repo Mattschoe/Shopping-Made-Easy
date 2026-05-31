@@ -1173,13 +1173,3 @@ private fun ViewReceiptsButton(onClick: () -> Unit) {
     }
 }
 //endregion
-
-//region HELPER FUNCTIONS
-private fun getCurrentTips(spentPercentage: Float): List<String> {
-    return when {
-        spentPercentage > 1.0f -> BudgetTips.OVERSPENDING.tips
-        spentPercentage < 0.7f -> BudgetTips.UNDER_BUDGET.tips
-        else -> BudgetTips.GENERAL.tips
-    }
-}
-//endregion

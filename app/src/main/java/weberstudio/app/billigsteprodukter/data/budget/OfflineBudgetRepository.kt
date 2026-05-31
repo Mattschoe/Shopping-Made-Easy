@@ -7,7 +7,7 @@ import java.time.Month
 import java.time.Year
 
 class OfflineBudgetRepository(private val dao: BudgetDao) : BudgetRepository {
-    override suspend fun getBudget(month: Month, year: Year): Flow<Budget?> {
+    override fun getBudget(month: Month, year: Year): Flow<Budget?> {
         return dao.getBudgetByDate(month, year)
     }
 
@@ -15,7 +15,7 @@ class OfflineBudgetRepository(private val dao: BudgetDao) : BudgetRepository {
         dao.insertBudget(budget)
     }
 
-    override suspend fun getExpenses(month: Month, year: Year): Flow<List<ExtraExpense>> {
+    override fun getExpenses(month: Month, year: Year): Flow<List<ExtraExpense>> {
         return dao.getExtraExpenses(month, year)
     }
 

@@ -10,6 +10,6 @@ object BilkaParser : StoreParser {
     }
 
     override fun toString(): String {
-        return "Rema1000"
+        return "Bilka"
     }
 }

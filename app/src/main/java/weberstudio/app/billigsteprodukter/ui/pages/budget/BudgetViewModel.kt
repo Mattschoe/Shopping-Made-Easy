@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -18,6 +19,9 @@ import weberstudio.app.billigsteprodukter.data.Receipt
 import weberstudio.app.billigsteprodukter.data.ReceiptWithProducts
 import weberstudio.app.billigsteprodukter.data.budget.BudgetRepository
 import weberstudio.app.billigsteprodukter.data.receipt.ReceiptRepository
+import weberstudio.app.billigsteprodukter.data.settings.SettingsRepository
+import weberstudio.app.billigsteprodukter.data.settings.TotalOption.PRODUCT_TOTAL
+import weberstudio.app.billigsteprodukter.data.settings.TotalOption.RECEIPT_TOTAL
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.Month
@@ -27,6 +31,7 @@ class BudgetViewModel(application: Application): AndroidViewModel(application) {
     private val app = application as ReceiptApp
     private val receiptRepo: ReceiptRepository = app.receiptRepository
     private val budgetRepo: BudgetRepository = app.budgetRepository
+    private val settingsRepo: SettingsRepository = app.settingsRepository
 
     //Den valgte periode er den eneste reaktive kilde; de tre states udledes herfra
     private val _selectedPeriod = MutableStateFlow(
@@ -48,6 +53,27 @@ class BudgetViewModel(application: Application): AndroidViewModel(application) {
     val currentExtraExpenses: StateFlow<List<ExtraExpense>> = _selectedPeriod
         .flatMapLatest { (month, year) -> budgetRepo.getExpenses(month, year) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    /**
+     * Det samlede forbrug for den valgte periode. Respekterer brugerens [TotalOption] ligesom
+     * kvitterings-skærmen: ved RECEIPT_TOTAL bruges kvitteringens OCR-total, men falder tilbage
+     * til summen af produktpriser hvis OCR-totalen er 0/ugyldig.
+     */
+    val totalSpent: StateFlow<Float> = combine(
+        currentReceipts,
+        currentExtraExpenses,
+        settingsRepo.totalOption
+    ) { receipts, expenses, totalOption ->
+        val receiptsTotal = receipts.sumOf { rwp ->
+            val productsTotal = rwp.products.sumOf { it.price.toDouble() }
+            when (totalOption) {
+                RECEIPT_TOTAL -> if (rwp.receipt.total > 0f) rwp.receipt.total.toDouble() else productsTotal
+                PRODUCT_TOTAL -> productsTotal
+            }
+        }
+        val expensesTotal = expenses.sumOf { it.price.toDouble() }
+        (receiptsTotal + expensesTotal).toFloat()
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0f)
 
     /**
      * Sets the period (month + year) the budget and expenses are shown for

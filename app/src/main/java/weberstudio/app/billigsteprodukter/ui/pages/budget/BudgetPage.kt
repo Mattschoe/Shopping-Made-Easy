@@ -86,6 +86,7 @@ fun BudgetPage(modifier: Modifier = Modifier, viewModel: BudgetViewModel, month:
     val currentBudget by viewModel.currentBudget.collectAsState()
     val currentReceipts by viewModel.currentReceipts.collectAsState()
     val currentExpenses by viewModel.currentExtraExpenses.collectAsState()
+    val totalSpent by viewModel.totalSpent.collectAsState()
 
     var selectedMonth by remember { mutableStateOf(month) }
     var selectedYear by remember { mutableStateOf(year) }
@@ -112,7 +113,7 @@ fun BudgetPage(modifier: Modifier = Modifier, viewModel: BudgetViewModel, month:
         BudgetPageUI(
             modifier = modifier,
             currentBudget =  currentBudget.budget,
-            totalSpent = (currentReceipts.sumOf { it.receipt.total.toDouble() } + currentExpenses.sumOf { it.price.toDouble() }).toFloat() ,
+            totalSpent = totalSpent,
             receipts = currentReceipts,
             expenses = currentExpenses,
             selectedMonth = currentBudget.month,

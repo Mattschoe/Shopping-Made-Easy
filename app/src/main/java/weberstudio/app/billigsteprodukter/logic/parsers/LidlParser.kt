@@ -43,7 +43,7 @@ object LidlParser: StoreParser {
 
                 //Skips already parsed products
                 val isAlreadyParsed = parsedProducts.any { product ->
-                    product.name.contains(lineA.text, ignoreCase = true)
+                    product.name.equals(lineA.text, ignoreCase = true)
                 }
                 if (isAlreadyParsed) continue
 
@@ -142,19 +142,27 @@ object LidlParser: StoreParser {
         }
 
         //region Filtering and returning
+        //Total = højeste pris blandt stop-ordene. Falder tilbage til summen af ikke-stop-ord-produkter hvis intet stop-ord blev læst (undgår crash på tom liste)
         val total = products
             .filter { isReceiptTotalWord(it.name) }
-            .maxOf { it.price }
+            .maxOfOrNull { it.price }
+            ?: products.filter { !isReceiptTotalWord(it.name) && !isIgnoreWord(it.name) && !isQuantityLine(it.name) }
+                .sumOf { it.price.toDouble() }.toFloat()
 
-        //Returner kun produkter som ikke er stop ordet, eller som har den samme pris som stop ordet (så hvis "Total" fucker f.eks.)
-        val filteredSet = products.filter { product ->
+        //Kandidatprodukter = alt der ikke er stop-/ignore-/quantity-ord eller rene tal/tal lig total
+        val candidates = products.filter { product ->
             !isReceiptTotalWord(product.name) &&
             !isIgnoreWord(product.name) &&
             !isQuantityLine(product.name) &&
-            !product.price.isIshEqualTo(total) &&
             !product.name.matches(Regex("[0-9]+")) && //Hvis det bare er tal
             product.name.toFloatOrNull()?.isIshEqualTo(total) != true //Hvis det bare er et tal som er lig total
-        }.toHashSet()
+        }
+
+        //Fjern kun produkter med samme pris som total når der er mere end ét kandidatprodukt (ellers ryger enkelt-vare kvitteringer)
+        val filteredSet = (
+            if (candidates.size <= 1) candidates
+            else candidates.filter { !it.price.isIshEqualTo(total) }
+        ).toHashSet()
 
 
         if (filteredSet.isEmpty()) {

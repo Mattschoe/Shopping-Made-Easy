@@ -31,11 +31,24 @@ object NettoParser : StoreParser {
         val includeRABAT = false
         val parsedLines = processImageText(receipt)
         val parsedProducts = ArrayList<ParsedProduct>()
-        val parseAfterControlLineFound = ArrayList<Pair<ParsedLine, ParsedLine>>() //Line combos vi parser senere efter at have fundet controllinjen
         val scanLogicErrors = HashMap<ParsedProduct, ScanError?>() //Errors fundet under ParsedProduct processen
 
-        //region PARSES LINES INTO PRODUCTS
+        //region FINDS CONTROLLINE
+        //Kontrollinjen er den linje der matcher butikkens anchor (oftest butikslogoets navn). Den afgør hvad der er "op"/"ned".
         var controlLine: ParsedLine? = null
+        for (line in parsedLines) {
+            if (fuzzyMatcher.match(line.text, Store.Netto.topAnchors, 0.85f, 0.15f)) {
+                controlLine = line
+                break
+            }
+        }
+        if (controlLine == null) {
+            Logger.log(this.toString(), "No control line found!")
+            throw ParsingException("Kunne ikke finde butikken. Husk at inkludere butikslogoet i billedet.")
+        }
+        //endregion
+
+        //region PARSES LINES INTO PRODUCTS
         for (i in parsedLines.indices) {
             val lineA = parsedLines[i]
 
@@ -43,37 +56,18 @@ object NettoParser : StoreParser {
                 if (i == j) continue
                 val lineB = parsedLines[j]
 
-                //Tries to get a controlLine
-                if (controlLine == null && (fuzzyMatcher.match(lineB.text, Store.Netto.topAnchors, 0.85f, 0.15f))) controlLine = lineA
-                if (controlLine == null && (fuzzyMatcher.match(lineB.text, Store.Netto.topAnchors, 0.85f, 0.15f))) controlLine = lineB
-
                 //Skips already parsed products
                 val isAlreadyParsed = parsedProducts.any { product ->
-                    product.name.contains(lineA.text, ignoreCase = true)
+                    product.name.equals(lineA.text, ignoreCase = true)
                 }
                 if (isAlreadyParsed) continue
 
                 if (doesLinesCollide(lineA, lineB)) {
-                    //Enten parser produkterne, eller gemmer parsningen til efter vi har fundet kontrollinjen.
-                    if (controlLine == null) parseAfterControlLineFound.add(Pair(lineA, lineB))
-                    else {
-                        val (product, error) = parseLinesToProduct(lineA, lineB, controlLine, includeRABAT, parsedLines, parsedProducts)
-                        parsedProducts.add(product)
-                        scanLogicErrors.put(product, error)
-                    }
+                    val (product, error) = parseLinesToProduct(lineA, lineB, controlLine, includeRABAT, parsedLines, parsedProducts)
+                    parsedProducts.add(product)
+                    scanLogicErrors.put(product, error)
                 }
             }
-        }
-        if (controlLine == null) {
-            Logger.log(this.toString(), "No control line found!")
-            throw ParsingException("Kunne ikke finde butikken. Husk at inkludere butikslogoet i billedet.")
-        }
-
-        //Parser de linjecomboer vi missede fordi kontrollinjen endnu ik var fundet
-        parseAfterControlLineFound.forEach { pair ->
-            val (product, error) = parseLinesToProduct(pair.first, pair.second, controlLine, includeRABAT, parsedLines, parsedProducts)
-            parsedProducts.add(product)
-            scanLogicErrors.put(product, error)
         }
         //endregion
 
@@ -120,7 +114,11 @@ object NettoParser : StoreParser {
             } else {
                 try {
                     //If we successfully got the actual product we save that instead of the original "2 x 25,5", and divide the price of the product by the amount
-                    val productPrice = normalizeText(lineB.text).toFloat()/normalizeText(lineA.text[0].toString()).toFloat()
+                    val quantity = parseQuantity(lineA.text)
+                    if (quantity == null || quantity == 0f) {
+                        return Pair(ParsedProduct(productName, 0.0f), ScanError.PRODUCT_WITHOUT_PRICE)
+                    }
+                    val productPrice = normalizeText(lineB.text).toFloat()/quantity
                     return Pair(ParsedProduct(parentLine.text, productPrice), null)
                 } catch (_: NumberFormatException) {
                     return Pair(ParsedProduct(productName, 0.0f), ScanError.PRODUCT_WITHOUT_PRICE)
@@ -165,17 +163,22 @@ object NettoParser : StoreParser {
         }
 
         //region Filtering and returning
-        //Hvis der er mere end to produkter (så ét produkt og ét stopord), så gemmer vi alle dem som har den samme pris som stop ordene (Så hvis "Total" fucker f.eks.)
+        //Kandidatprodukter = alt der ikke er stop-/ignore-ord
+        val candidates = products.filter { product ->
+            !isReceiptTotalWord(product.name) && !isIgnoreWord(product.name)
+        }
+
+        //Total = højeste pris blandt stop-ordene. Falder tilbage til summen af kandidaterne hvis intet stop-ord blev læst (undgår crash på tom liste)
         val total = products
             .filter { isReceiptTotalWord(it.name) }
-            .maxOf { it.price }
+            .maxOfOrNull { it.price }
+            ?: candidates.sumOf { it.price.toDouble() }.toFloat()
 
-        //Returner kun produkter som ikke er stop ordet, eller som har den samme pris som stop ordet (så hvis "Total" fucker f.eks.)
-        val filteredSet = products.filter { product ->
-            !isReceiptTotalWord(product.name) &&
-            !isIgnoreWord(product.name) &&
-            !product.price.isIshEqualTo(total)
-        }.toHashSet()
+        //Fjern kun produkter med samme pris som total når der er mere end ét kandidatprodukt (ellers ryger enkelt-vare kvitteringer hvor varens pris == total)
+        val filteredSet = (
+            if (candidates.size <= 1) candidates
+            else candidates.filter { !it.price.isIshEqualTo(total) }
+        ).toHashSet()
 
         if (filteredSet.isEmpty()) {
             Logger.log(this.toString(), "Filtered set of products is empty!. Please try again")

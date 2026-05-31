@@ -71,7 +71,7 @@ object SuperBrugsenParser: StoreParser {
 
                 //Skips already parsed products
                 val isAlreadyParsed = parsedProducts.any { product ->
-                    product.name.contains(lineA.text, ignoreCase = true)
+                    product.name.equals(lineA.text, ignoreCase = true)
                 }
                 if (isAlreadyParsed) continue
 
@@ -118,13 +118,12 @@ object SuperBrugsenParser: StoreParser {
         //region QUANTITY LINE
         //Hvis linjen over er en quantity line, så prøver vi at beregne prisen ud fra quantity line
         product2Quantity[lineA]?.let { quantityLine ->
-            try {
-                val productPrice = productPrice/normalizeText(quantityLine.text[0].toString()).toFloat()
-                return Pair(ParsedProduct(lineA.text, productPrice), null)
-            } catch (_: NumberFormatException) {
+            val quantity = parseQuantity(quantityLine.text)
+            if (quantity == null || quantity == 0f) {
                 Logger.log(this.toString(), "Error calculating quantityprice for input: [productPrice: $productPrice], [quantityLine: ${quantityLine.text}]")
                 return Pair(ParsedProduct(productName, 0.0f), ScanError.PRODUCT_WITHOUT_PRICE)
             }
+            return Pair(ParsedProduct(lineA.text, productPrice / quantity), null)
         }
 
         //endregion
@@ -166,18 +165,24 @@ object SuperBrugsenParser: StoreParser {
         }
 
         //region Filtering and returning
-        //Hvis der er mere end to produkter (så ét produkt og ét stopord), så gemmer vi alle dem som har den samme pris som stop ordene (Så hvis "Total" fucker f.eks.)
-        val total = products
-            .filter { isReceiptTotalWord(it.name) }
-            .maxOf { it.price }
-
-        //Returner kun produkter som ikke er stop ordet, eller som har den samme pris som stop ordet (så hvis "Total" fucker f.eks.)
-        val filteredSet = products.filter { product ->
+        //Kandidatprodukter = alt der ikke er stop-/ignore-/quantity-ord
+        val candidates = products.filter { product ->
             !isReceiptTotalWord(product.name) &&
             !isIgnoreWord(product.name) &&
-            !isQuantityLine(product.name) &&
-            !product.price.isIshEqualTo(total)
-        }.toHashSet()
+            !isQuantityLine(product.name)
+        }
+
+        //Total = højeste pris blandt stop-ordene. Falder tilbage til summen af kandidaterne hvis intet stop-ord blev læst (undgår crash på tom liste)
+        val total = products
+            .filter { isReceiptTotalWord(it.name) }
+            .maxOfOrNull { it.price }
+            ?: candidates.sumOf { it.price.toDouble() }.toFloat()
+
+        //Fjern kun produkter med samme pris som total når der er mere end ét kandidatprodukt (ellers ryger enkelt-vare kvitteringer hvor varens pris == total)
+        val filteredSet = (
+            if (candidates.size <= 1) candidates
+            else candidates.filter { !it.price.isIshEqualTo(total) }
+        ).toHashSet()
 
         if (filteredSet.isEmpty()) {
             Logger.log(this.toString(), "Filtered set of products is empty!")

@@ -2,7 +2,6 @@ package weberstudio.app.billigsteprodukter.logic.parsers
 
 import android.graphics.Point
 import android.graphics.PointF
-import android.util.Log
 import com.google.mlkit.vision.text.Text
 import weberstudio.app.billigsteprodukter.data.Product
 import weberstudio.app.billigsteprodukter.logic.Store
@@ -83,7 +82,6 @@ interface StoreParser {
                 val toLineY = line.center.y - quantityLine.center.y
                 val dot = toLineX * upX + toLineY * upY  //signed projection onto "up" vector
                 val dist = hypot(toLineX, toLineY)
-                Log.d("DEBUG", "${line.text} | dot=$dot | dist=$dist")
                 Triple(line, dot, dist)
             }
             .filter { (_, dot, _) -> dot < 0f }  //lines in the opposite direction of reference (i.e. "below")
@@ -154,6 +152,15 @@ interface StoreParser {
             //Add flere her hvis er
         }
     }
+
+    /**
+     * Extracts the *amount* (first number token) from a quantity line like "12 x 4,00" -> 12f.
+     * Reuses the same number-token regex as [isQuantityLine] so we don't naively read the first
+     * character (which breaks for multi-digit quantities).
+     * @return the parsed amount, or **null** if no number could be read
+     */
+    fun parseQuantity(line: String): Float? =
+        Regex("""\d+[.,]?\d*""").find(line)?.value?.replace(',', '.')?.toFloatOrNull()
 
     //region SUPPORT DATA CLASS/FUNCTIONS
 

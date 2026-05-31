@@ -71,7 +71,7 @@ object CoopParserQuantityBelow : StoreParser {
 
                 //Skips already parsed products
                 val isAlreadyParsed = parsedProducts.any { product ->
-                    product.name.contains(lineA.text, ignoreCase = true)
+                    product.name.equals(lineA.text, ignoreCase = true)
                 }
                 if (isAlreadyParsed) continue
 
@@ -116,13 +116,13 @@ object CoopParserQuantityBelow : StoreParser {
                 return Pair(ParsedProduct(productName, productPrice), ScanError.WRONG_NAME)
             }
             else {
-                try {
-                    //If we successfully got the actual product we save that instead of the original "2 x 25,5", and divide the price of the product by the amount
-                    val productPrice = productPrice / normalizeText(lineA.text[0].toString()).toFloat()
-                    return Pair(ParsedProduct(parentLine.text, productPrice), null)
-                } catch (_: NumberFormatException) {
+                //Mængden står på den markerede quantity-linje (lineA eller lineB). Vi deler rækkens pris med mængden for at få enhedsprisen
+                val quantityLineText = if (isMarked.contains(lineA)) lineA.text else lineB.text
+                val quantity = parseQuantity(quantityLineText)
+                if (quantity == null || quantity == 0f) {
                     return Pair(ParsedProduct(productName, 0.0f), ScanError.PRODUCT_WITHOUT_PRICE)
                 }
+                return Pair(ParsedProduct(parentLine.text, productPrice / quantity), null)
             }
         }
 
@@ -156,17 +156,24 @@ object CoopParserQuantityBelow : StoreParser {
 
         //region Filtering and returning
         //Hvis der er mere end to produkter (så ét produkt og ét stopord), så gemmer vi alle dem som har den samme pris som stop ordene (Så hvis "Total" fucker f.eks.)
-        val total = products
-            .filter { isReceiptTotalWord(it.name) }
-            .maxOf { it.price }
-
-        //Returner kun produkter som ikke er stop ordet, eller som har den samme pris som stop ordet (så hvis "Total" fucker f.eks.)
-        val filteredSet = products.filter { product ->
+        //Kandidatprodukter = alt der ikke er stop-/ignore-/quantity-ord
+        val candidates = products.filter { product ->
             !isReceiptTotalWord(product.name) &&
             !isIgnoreWord(product.name) &&
-            !isQuantityLine(product.name) &&
-            !product.price.isIshEqualTo(total)
-        }.toHashSet()
+            !isQuantityLine(product.name)
+        }
+
+        //Total = højeste pris blandt stop-ordene. Falder tilbage til summen af kandidaterne hvis intet stop-ord blev læst (undgår crash på tom liste)
+        val total = products
+            .filter { isReceiptTotalWord(it.name) }
+            .maxOfOrNull { it.price }
+            ?: candidates.sumOf { it.price.toDouble() }.toFloat()
+
+        //Fjern kun produkter med samme pris som total når der er mere end ét kandidatprodukt (ellers ryger enkelt-vare kvitteringer)
+        val filteredSet = (
+            if (candidates.size <= 1) candidates
+            else candidates.filter { !it.price.isIshEqualTo(total) }
+        ).toHashSet()
 
         if (filteredSet.isEmpty()) {
             Logger.log(this.toString(), "Filtered set of products is empty!")
@@ -316,7 +323,7 @@ object CoopParserQuantityAbove : StoreParser {
 
                 //Skips already parsed products
                 val isAlreadyParsed = parsedProducts.any { product ->
-                    product.name.contains(lineA.text, ignoreCase = true)
+                    product.name.equals(lineA.text, ignoreCase = true)
                 }
                 if (isAlreadyParsed) continue
 
@@ -362,13 +369,13 @@ object CoopParserQuantityAbove : StoreParser {
                 Logger.log(this.toString(), "Couldn't find childLine for line: ${lineA.text}")
                 return Pair(ParsedProduct(productName, productPrice), ScanError.WRONG_NAME)
             } else {
-                try {
-                    //Hvis det lykkedes at snuppe quantity linjen, så beregner vi enhedsprisen ud fra det.
-                    val productPrice = productPrice/normalizeText(childLine.text[0].toString()).toFloat()
-                    return Pair(ParsedProduct(lineA.text, productPrice), null)
-                } catch (_: NumberFormatException) {
+                //Mængden står på den markerede quantity-linje (lineA eller lineB), ikke på produktlinjen. Vi deler prisen med mængden for enhedsprisen
+                val quantityLineText = if (isMarked.contains(lineA)) lineA.text else lineB.text
+                val quantity = parseQuantity(quantityLineText)
+                if (quantity == null || quantity == 0f) {
                     return Pair(ParsedProduct(productName, 0.0f), ScanError.PRODUCT_WITHOUT_PRICE)
                 }
+                return Pair(ParsedProduct(lineA.text, productPrice / quantity), null)
             }
         }
         //endregion
@@ -404,17 +411,24 @@ object CoopParserQuantityAbove : StoreParser {
 
         //region Filtering and returning
         //Hvis der er mere end to produkter (så ét produkt og ét stopord), så gemmer vi alle dem som har den samme pris som stop ordene (Så hvis "Total" fucker f.eks.)
-        val total = products
-            .filter { isReceiptTotalWord(it.name) }
-            .maxOf { it.price }
-
-        //Returner kun produkter som ikke er stop ordet, eller som har den samme pris som stop ordet (så hvis "Total" fucker f.eks.)
-        val filteredSet = products.filter { product ->
+        //Kandidatprodukter = alt der ikke er stop-/ignore-/quantity-ord
+        val candidates = products.filter { product ->
             !isReceiptTotalWord(product.name) &&
             !isIgnoreWord(product.name) &&
-            !isQuantityLine(product.name) &&
-            !product.price.isIshEqualTo(total)
-        }.toHashSet()
+            !isQuantityLine(product.name)
+        }
+
+        //Total = højeste pris blandt stop-ordene. Falder tilbage til summen af kandidaterne hvis intet stop-ord blev læst (undgår crash på tom liste)
+        val total = products
+            .filter { isReceiptTotalWord(it.name) }
+            .maxOfOrNull { it.price }
+            ?: candidates.sumOf { it.price.toDouble() }.toFloat()
+
+        //Fjern kun produkter med samme pris som total når der er mere end ét kandidatprodukt (ellers ryger enkelt-vare kvitteringer)
+        val filteredSet = (
+            if (candidates.size <= 1) candidates
+            else candidates.filter { !it.price.isIshEqualTo(total) }
+        ).toHashSet()
 
         if (filteredSet.isEmpty()) {
             Logger.log(this.toString(), "Filtered set of products is empty!. Please try again")

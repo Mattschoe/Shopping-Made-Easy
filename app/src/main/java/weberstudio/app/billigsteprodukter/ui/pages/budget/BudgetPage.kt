@@ -735,7 +735,7 @@ private fun AddExpenseDialog(onDismiss: () -> Unit, onConfirm: (String, Float) -
 
 @Composable
 private fun DatePickerDialog(currentMonth: Month?, currentYear: Year?, onDismiss: () -> Unit, onMonthSelected: (Month, Year) -> Unit) {
-    val years = listOf(Year.of(2025))
+    val years = listOf(Year.now())
     val year2Month = years.flatMap { year ->
         Month.entries.map { month ->
             month to year

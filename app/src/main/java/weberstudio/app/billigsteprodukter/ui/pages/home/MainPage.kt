@@ -59,8 +59,6 @@ import com.airbnb.lottie.compose.rememberLottieComposition
 import weberstudio.app.billigsteprodukter.R
 import weberstudio.app.billigsteprodukter.data.ActivityType
 import weberstudio.app.billigsteprodukter.data.AdsID
-import weberstudio.app.billigsteprodukter.data.ExtraExpense
-import weberstudio.app.billigsteprodukter.data.ReceiptWithProducts
 import weberstudio.app.billigsteprodukter.data.RecentActivity
 import weberstudio.app.billigsteprodukter.data.getIcon
 import weberstudio.app.billigsteprodukter.logic.ActivityViewModel
@@ -86,8 +84,7 @@ fun MainPageContent(
     activityViewModel: ActivityViewModel
 ) {
     val currentBudget by budgetViewModel.currentBudget.collectAsState()
-    val currentReceipts by budgetViewModel.currentReceipts.collectAsState()
-    val currentExpenses by budgetViewModel.currentExtraExpenses.collectAsState()
+    val totalSpent by budgetViewModel.totalSpent.collectAsState()
 
     val hasCompletedOnboarding by mainPageViewModel.hasCompletedOnboarding.collectAsState(initial = true)
     val hasVisitedReceiptPage by mainPageViewModel.hasVisitedReceiptPage.collectAsState(initial = true)
@@ -121,8 +118,7 @@ fun MainPageContent(
                 BudgetCard(
                     onClick = { navController.navigate(PageNavigation.Budget.route) },
                     currentBudget = currentBudget.budget,
-                    currentReceipts = currentReceipts,
-                    currentExpenses = currentExpenses
+                    totalSpent = totalSpent
                 )
             }
         }
@@ -514,8 +510,7 @@ fun NoBudgetCard(modifier: Modifier = Modifier, onClick: () -> Unit) {
 }
 
 @Composable
-fun BudgetCard(modifier: Modifier = Modifier, onClick: () -> Unit, currentBudget: Float, currentReceipts: List<ReceiptWithProducts>, currentExpenses: List<ExtraExpense>) {
-    val totalSpent = (currentReceipts.sumOf { it.receipt.total.toDouble() } + currentExpenses.sumOf { it.price.toDouble() }).toFloat()
+fun BudgetCard(modifier: Modifier = Modifier, onClick: () -> Unit, currentBudget: Float, totalSpent: Float) {
     val remaining = currentBudget - totalSpent
     val spentPercentage = if (currentBudget > 0) (totalSpent / currentBudget).coerceIn(0f, 1f) else 0f
 

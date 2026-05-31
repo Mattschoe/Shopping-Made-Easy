@@ -8,6 +8,8 @@ When planning a task, use the file map and architecture section in this CLAUDE.m
 
 The codebase is bilingual: code identifiers and KDoc are mostly English, but inline comments, log messages, and all user-facing strings are in Danish. Match the surrounding language when editing.
 
+**Always run the `implementation-critic` agent before finishing off a plan** — after implementing a plan, use it to critically review the changes and address anything it surfaces before declaring the work done.
+
 ## Build & Development Commands
 
 ```bash

@@ -560,7 +560,6 @@ fun BudgetCircle(
     spentPercentage: Float,
     onPriceChanged: ((Float) -> Unit)? = null
 ) {
-    val isOverBudget = spentPercentage >= 1.0f
     val animatedProgress by animateFloatAsState(
         targetValue = spentPercentage,
         animationSpec = tween(durationMillis = 1000, easing = EaseOutCubic),
@@ -618,7 +617,7 @@ fun BudgetCircle(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
-                text = (if (isOverBudget) "-" else "") + "${formatInputToDanishCurrencyStandard(remaining.toInt().toString())}kr",
+                text = "${formatFloatToDanishCurrency(remaining)}kr",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = if (remaining < 0) Color.Red else MaterialTheme.colorScheme.primaryContainer
@@ -630,7 +629,7 @@ fun BudgetCircle(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
-                text = "${formatInputToDanishCurrencyStandard(totalSpent.toInt().toString())}kr",
+                text = "${formatFloatToDanishCurrency(totalSpent)}kr",
                 fontSize = 16.sp,
                 color = MaterialTheme.colorScheme.error
             )

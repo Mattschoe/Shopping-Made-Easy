@@ -13,7 +13,7 @@ import weberstudio.app.billigsteprodukter.data.shoppingList.ShoppingListDao
 @Database(
     entities = [Receipt::class, Product::class, RecentActivity::class, Budget::class, ExtraExpense::class, ShoppingList::class, ShoppingListCrossRef::class],
     version = 11,
-    exportSchema = false,
+    exportSchema = true,
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
@@ -31,7 +31,12 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "app_database"
-                ).fallbackToDestructiveMigration(true).build().also { INSTANCE = it }
+                )
+                    // Skemaer blev ikke eksporteret før version 11, så ældre databaser
+                    // kan ikke migreres og bliver nulstillet én sidste gang. Fra version 11
+                    // og frem skal hver versionsbumb ledsages af en rigtig migration.
+                    .fallbackToDestructiveMigrationFrom(true, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)
+                    .build().also { INSTANCE = it }
             }
         }
     }

@@ -39,6 +39,15 @@ android {
     buildFeatures {
         compose = true
     }
+    sourceSets {
+        // Gør de eksporterede Room-skemaer tilgængelige for migrations-tests
+        getByName("androidTest").assets.srcDir("$projectDir/schemas")
+    }
+}
+
+ksp {
+    // Eksporterer DB-skemaet til JSON ved hvert build, så migrations kan valideres
+    arg("room.schemaLocation", "$projectDir/schemas")
 }
 
 kotlin {
@@ -72,6 +81,7 @@ dependencies {
 
     implementation(libs.androidx.room.runtime)
     ksp(libs.androidx.room.compiler)
+    androidTestImplementation(libs.androidx.room.testing)
     implementation(libs.kotlinx.serialization.json)
 
     api(libs.androidx.datastore.preferences)

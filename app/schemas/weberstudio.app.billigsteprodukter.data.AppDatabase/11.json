@@ -1,0 +1,427 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 11,
+    "identityHash": "0d1437b23c2ff304001ca9859b5784b9",
+    "entities": [
+      {
+        "tableName": "receipts",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`receiptID` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `store` INTEGER NOT NULL, `date` INTEGER NOT NULL, `total` REAL NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "receiptID",
+            "columnName": "receiptID",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "store",
+            "columnName": "store",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "date",
+            "columnName": "date",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "total",
+            "columnName": "total",
+            "affinity": "REAL",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "receiptID"
+          ]
+        }
+      },
+      {
+        "tableName": "products",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`databaseID` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `receiptID` INTEGER, `name` TEXT NOT NULL, `price` REAL NOT NULL, `store` INTEGER NOT NULL, `isFavorite` INTEGER NOT NULL, FOREIGN KEY(`receiptID`) REFERENCES `receipts`(`receiptID`) ON UPDATE NO ACTION ON DELETE SET NULL )",
+        "fields": [
+          {
+            "fieldPath": "databaseID",
+            "columnName": "databaseID",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "receiptID",
+            "columnName": "receiptID",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "price",
+            "columnName": "price",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "store",
+            "columnName": "store",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isFavorite",
+            "columnName": "isFavorite",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "databaseID"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_products_receiptID",
+            "unique": false,
+            "columnNames": [
+              "receiptID"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_products_receiptID` ON `${TABLE_NAME}` (`receiptID`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "receipts",
+            "onDelete": "SET NULL",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "receiptID"
+            ],
+            "referencedColumns": [
+              "receiptID"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "recent_activities",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `activityType` TEXT NOT NULL, `displayInfo` TEXT NOT NULL, `timestamp` INTEGER NOT NULL, `receiptID` INTEGER, `budgetMonth` INTEGER, `budgetYear` INTEGER, `shoppingListID` TEXT, FOREIGN KEY(`receiptID`) REFERENCES `receipts`(`receiptID`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`budgetMonth`, `budgetYear`) REFERENCES `budgets`(`month`, `year`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`shoppingListID`) REFERENCES `shopping_list`(`ID`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "activityType",
+            "columnName": "activityType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "displayInfo",
+            "columnName": "displayInfo",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "timestamp",
+            "columnName": "timestamp",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "receiptID",
+            "columnName": "receiptID",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "budgetMonth",
+            "columnName": "budgetMonth",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "budgetYear",
+            "columnName": "budgetYear",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "shoppingListID",
+            "columnName": "shoppingListID",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_recent_activities_receiptID",
+            "unique": false,
+            "columnNames": [
+              "receiptID"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_recent_activities_receiptID` ON `${TABLE_NAME}` (`receiptID`)"
+          },
+          {
+            "name": "index_recent_activities_budgetMonth_budgetYear",
+            "unique": false,
+            "columnNames": [
+              "budgetMonth",
+              "budgetYear"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_recent_activities_budgetMonth_budgetYear` ON `${TABLE_NAME}` (`budgetMonth`, `budgetYear`)"
+          },
+          {
+            "name": "index_recent_activities_shoppingListID",
+            "unique": false,
+            "columnNames": [
+              "shoppingListID"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_recent_activities_shoppingListID` ON `${TABLE_NAME}` (`shoppingListID`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "receipts",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "receiptID"
+            ],
+            "referencedColumns": [
+              "receiptID"
+            ]
+          },
+          {
+            "table": "budgets",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "budgetMonth",
+              "budgetYear"
+            ],
+            "referencedColumns": [
+              "month",
+              "year"
+            ]
+          },
+          {
+            "table": "shopping_list",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "shoppingListID"
+            ],
+            "referencedColumns": [
+              "ID"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "budgets",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`month` INTEGER NOT NULL, `year` INTEGER NOT NULL, `budget` REAL NOT NULL, PRIMARY KEY(`month`, `year`))",
+        "fields": [
+          {
+            "fieldPath": "month",
+            "columnName": "month",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "year",
+            "columnName": "year",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "budget",
+            "columnName": "budget",
+            "affinity": "REAL",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "month",
+            "year"
+          ]
+        }
+      },
+      {
+        "tableName": "extra_expenses",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `price` REAL NOT NULL, `date` INTEGER NOT NULL, `month` INTEGER NOT NULL, `year` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "price",
+            "columnName": "price",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "date",
+            "columnName": "date",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "month",
+            "columnName": "month",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "year",
+            "columnName": "year",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "shopping_list",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`ID` TEXT NOT NULL, `name` TEXT NOT NULL, `createdDate` INTEGER NOT NULL, PRIMARY KEY(`ID`))",
+        "fields": [
+          {
+            "fieldPath": "ID",
+            "columnName": "ID",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdDate",
+            "columnName": "createdDate",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "ID"
+          ]
+        }
+      },
+      {
+        "tableName": "shopping_list_products",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`shoppingListID` TEXT NOT NULL, `productID` INTEGER NOT NULL, `isChecked` INTEGER NOT NULL, PRIMARY KEY(`shoppingListID`, `productID`), FOREIGN KEY(`shoppingListID`) REFERENCES `shopping_list`(`ID`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`productID`) REFERENCES `products`(`databaseID`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "shoppingListID",
+            "columnName": "shoppingListID",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "productID",
+            "columnName": "productID",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isChecked",
+            "columnName": "isChecked",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "shoppingListID",
+            "productID"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_shopping_list_products_productID",
+            "unique": false,
+            "columnNames": [
+              "productID"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_shopping_list_products_productID` ON `${TABLE_NAME}` (`productID`)"
+          },
+          {
+            "name": "index_shopping_list_products_shoppingListID",
+            "unique": false,
+            "columnNames": [
+              "shoppingListID"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_shopping_list_products_shoppingListID` ON `${TABLE_NAME}` (`shoppingListID`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "shopping_list",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "shoppingListID"
+            ],
+            "referencedColumns": [
+              "ID"
+            ]
+          },
+          {
+            "table": "products",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "productID"
+            ],
+            "referencedColumns": [
+              "databaseID"
+            ]
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '0d1437b23c2ff304001ca9859b5784b9')"
+    ]
+  }
+}

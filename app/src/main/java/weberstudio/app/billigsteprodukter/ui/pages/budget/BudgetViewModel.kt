@@ -3,8 +3,13 @@ package weberstudio.app.billigsteprodukter.ui.pages.budget
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import weberstudio.app.billigsteprodukter.ReceiptApp
 import weberstudio.app.billigsteprodukter.data.Budget
@@ -23,43 +28,32 @@ class BudgetViewModel(application: Application): AndroidViewModel(application) {
     private val receiptRepo: ReceiptRepository = app.receiptRepository
     private val budgetRepo: BudgetRepository = app.budgetRepository
 
-    private val _currentBudget = MutableStateFlow<Budget?>(null)
-    private val _currentReceipts = MutableStateFlow<List<ReceiptWithProducts>>(emptyList())
-    private val _currentExtraExpenses = MutableStateFlow<List<ExtraExpense>>(emptyList())
+    //Den valgte periode er den eneste reaktive kilde; de tre states udledes herfra
+    private val _selectedPeriod = MutableStateFlow(
+        LocalDateTime.now().let { Month.from(it) to Year.from(it) }
+    )
+    val selectedPeriod: StateFlow<Pair<Month, Year>> = _selectedPeriod.asStateFlow()
 
-    val currentBudget = _currentBudget.asStateFlow()
-    val currentReceipts = _currentReceipts.asStateFlow()
-    val currentExtraExpenses = _currentExtraExpenses
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val currentBudget: StateFlow<Budget?> = _selectedPeriod
+        .flatMapLatest { (month, year) -> budgetRepo.getBudget(month, year) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
-    init {
-        val now = LocalDateTime.now()
-        loadBudget(Month.from(now), Year.from(now))
-    }
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val currentReceipts: StateFlow<List<ReceiptWithProducts>> = _selectedPeriod
+        .flatMapLatest { (month, year) -> receiptRepo.getReceiptsForMonth(month, year) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val currentExtraExpenses: StateFlow<List<ExtraExpense>> = _selectedPeriod
+        .flatMapLatest { (month, year) -> budgetRepo.getExpenses(month, year) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     /**
-     * Loads the budget and expenses given from the month and year
+     * Sets the period (month + year) the budget and expenses are shown for
      */
-    fun loadBudget(month: Month, year: Year) {
-        //Collects budget
-        viewModelScope.launch {
-            budgetRepo.getBudget(month, year).collect { budget ->
-                _currentBudget.value = budget
-            }
-        }
-
-        //Collects Receipts
-        viewModelScope.launch {
-            receiptRepo.getReceiptsForMonth(month, year).collect { receipts ->
-                _currentReceipts.value = receipts
-            }
-        }
-
-        //Collects extra expenses
-        viewModelScope.launch {
-            budgetRepo.getExpenses(month, year).collect { expenses ->
-                _currentExtraExpenses.value = expenses
-            }
-        }
+    fun selectPeriod(month: Month, year: Year) {
+        _selectedPeriod.value = month to year
     }
 
     /**

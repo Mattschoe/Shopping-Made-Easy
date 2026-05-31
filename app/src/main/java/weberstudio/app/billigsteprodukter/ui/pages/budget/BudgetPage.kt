@@ -37,6 +37,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -88,7 +89,9 @@ fun BudgetPage(modifier: Modifier = Modifier, viewModel: BudgetViewModel, month:
 
     var selectedMonth by remember { mutableStateOf(month) }
     var selectedYear by remember { mutableStateOf(year) }
-    viewModel.loadBudget(selectedMonth, selectedYear)
+    LaunchedEffect(selectedMonth, selectedYear) {
+        viewModel.selectPeriod(selectedMonth, selectedYear)
+    }
 
     //Hvis useren ikke har givet budgetInput for de intro pagen
     if (currentBudget == null) {
@@ -99,7 +102,6 @@ fun BudgetPage(modifier: Modifier = Modifier, viewModel: BudgetViewModel, month:
             onMonthSelected = { month, year ->
                 selectedMonth = month
                 selectedYear = year
-                viewModel.loadBudget(month, year)
             },
             newBudget = { newBudget -> viewModel.addBudget(newBudget) }
         )
@@ -119,7 +121,6 @@ fun BudgetPage(modifier: Modifier = Modifier, viewModel: BudgetViewModel, month:
             onMonthSelected = { month, year ->
                 selectedMonth = month
                 selectedYear = year
-                viewModel.loadBudget(month, year)
             },
             onBudgetChanged = { newBudget ->
                 viewModel.updateBudget(currentBudget.copy(budget = newBudget))

@@ -75,7 +75,6 @@ import weberstudio.app.billigsteprodukter.ui.components.DeleteConfirmationDialog
 import weberstudio.app.billigsteprodukter.ui.components.MediumRectangleBannerAd
 import java.text.DecimalFormat
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.Month
 import java.time.Year
 import java.time.format.DateTimeFormatter
@@ -238,6 +237,7 @@ fun PreBudgetPageUI(modifier: Modifier = Modifier, newBudget: (Budget) -> Unit, 
     if (showCreateBudgetDialog) {
         BudgetDialog(
             selectedMonth = selectedMonth,
+            selectedYear = selectedYear,
             onDismiss = { showCreateBudgetDialog = false },
             onClick = { budget ->
                 showCreateBudgetDialog = false
@@ -262,9 +262,8 @@ fun PreBudgetPageUI(modifier: Modifier = Modifier, newBudget: (Budget) -> Unit, 
 }
 
 @Composable
-fun BudgetDialog(selectedMonth: Month, onDismiss: () -> Unit, onClick: (Budget) -> Unit) {
+fun BudgetDialog(selectedMonth: Month, selectedYear: Year, onDismiss: () -> Unit, onClick: (Budget) -> Unit) {
     var totalBudget by remember { mutableStateOf("") }
-    val currentYear by remember { mutableStateOf(Year.from(LocalDateTime.now())) }
     val isValid = totalBudget.trim().isNotEmpty()
 
     Dialog(onDismissRequest = onDismiss) {
@@ -283,7 +282,7 @@ fun BudgetDialog(selectedMonth: Month, onDismiss: () -> Unit, onClick: (Budget) 
             ) {
                 //Header
                 Text(
-                    text = "Budget for ${selectedMonth.toDanishString()} $currentYear",
+                    text = "Budget for ${selectedMonth.toDanishString()} ${selectedYear.value}",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSecondaryContainer,
@@ -309,7 +308,7 @@ fun BudgetDialog(selectedMonth: Month, onDismiss: () -> Unit, onClick: (Budget) 
                         onClick = {
                             val budget = Budget(
                                 month = selectedMonth,
-                                year = currentYear,
+                                year = selectedYear,
                                 budget = formatDanishCurrencyToFloat(totalBudget)
                             )
                             onClick(budget)

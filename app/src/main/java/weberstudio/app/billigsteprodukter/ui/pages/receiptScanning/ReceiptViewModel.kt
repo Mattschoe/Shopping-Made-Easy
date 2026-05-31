@@ -8,10 +8,14 @@ import androidx.lifecycle.viewModelScope
 import com.google.mlkit.vision.text.Text
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
+import org.apache.commons.lang3.NotImplementedException
+import kotlin.coroutines.cancellation.CancellationException
 import weberstudio.app.billigsteprodukter.ReceiptApp
 import weberstudio.app.billigsteprodukter.data.Product
 import weberstudio.app.billigsteprodukter.data.Receipt
@@ -191,7 +195,6 @@ class ReceiptViewModel(application: Application): AndroidViewModel(application) 
                 if (fullImageText.textBlocks.isEmpty()) {
                     Logger.log(_tag, "No text found in picture")
                     _parsingState.value = ParsingState.Error("Ingen tekst fundet i billedet!")
-                    textRecognizer.close()
                     return@launch
                 }
 
@@ -201,7 +204,6 @@ class ReceiptViewModel(application: Application): AndroidViewModel(application) 
                     _parsingState.value = ParsingState.Error(
                         "Ingen butik fundet! Prøv venligst at inkludere billedet af butikslogoet"
                     )
-                    textRecognizer.close()
                     return@launch
                 }
                 Logger.log(_tag, "Store detected: $detectedStore")
@@ -233,10 +235,12 @@ class ReceiptViewModel(application: Application): AndroidViewModel(application) 
                         )
                     }
                 }
-                textRecognizer.close()
-            } catch(e: Exception) {
+            } catch (e: CancellationException) {
+                throw e //Coroutine annullering må aldrig konverteres til en fejl-tilstand
+            } catch (e: Exception) {
                 Logger.log(_tag, "Error processing image: ${e.message}")
-                _parsingState.value = ParsingState.Error("Kunne ikke behandle billedet. Prøv venligst igen.")
+                _parsingState.value = ParsingState.Error("Kunne ikke behandle billedet: ${e.message}")
+            } finally {
                 textRecognizer.close()
             }
         }
@@ -248,7 +252,7 @@ class ReceiptViewModel(application: Application): AndroidViewModel(application) 
     /**
      * Parse receipt and save to database
      */
-    private fun parseAndSaveReceipt(
+    private suspend fun parseAndSaveReceipt(
         imageText: Text,
         store: Store,
         cameraCoordinator: CameraCoordinator,
@@ -264,23 +268,27 @@ class ReceiptViewModel(application: Application): AndroidViewModel(application) 
 
             Logger.log(_tag, "Parsing with: ${parser.javaClass.simpleName}")
 
-            val parsedText = parser.parse(imageText)
+            //Parsing er O(n²) + raycast + fuzzy pr. linje, så det køres væk fra main-tråden
+            val parsedText = withContext(Dispatchers.Default) { parser.parse(imageText) }
             val receipt = Receipt(
                 store = store,
                 date = LocalDate.now(),
                 total = parsedText.total
             )
 
-            viewModelScope.launch {
-                val receiptID = _receiptRepo.addReceiptProducts(receipt, parsedText.products)
-                Logger.log(_tag, "Receipt saved with ID: $receiptID, products: ${parsedText.products.size}")
+            val receiptID = _receiptRepo.addReceiptProducts(receipt, parsedText.products)
+            Logger.log(_tag, "Receipt saved with ID: $receiptID, products: ${parsedText.products.size}")
 
-                cameraCoordinator.setScanValidation(receiptID, parsedText.scanErrors)
-                _app.activityLogger.logReceiptScan(receipt.copy(receiptID = receiptID))
+            cameraCoordinator.setScanValidation(receiptID, parsedText.scanErrors)
+            _app.activityLogger.logReceiptScan(receipt.copy(receiptID = receiptID))
 
-                _parsingState.value = ParsingState.Success(store, receiptID)
-            }
+            _parsingState.value = ParsingState.Success(store, receiptID)
 
+        } catch (e: CancellationException) {
+            throw e //Coroutine annullering må aldrig konverteres til en fejl-tilstand
+        } catch (e: NotImplementedException) {
+            Logger.log(_tag, "Store not implemented yet: ${e.message}")
+            _parsingState.value = ParsingState.Error("Denne butik understøttes ikke endnu.")
         } catch (e: ParsingException) {
             Logger.log(_tag, "Parsing exception: ${e.message}")
             _parsingState.value = ParsingState.Error("Fejl med at scanne kvittering: ${e.message}")

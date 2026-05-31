@@ -9,12 +9,5 @@ interface ActivityRepository {
      */
     fun getRecentActivities(): Flow<List<RecentActivity>>
 
-    /**
-     * Returns all activities ordered by their timestamp
-     */
-    fun getAllActivities(): Flow<List<RecentActivity>>
-
     suspend fun insertActivity(activity: RecentActivity)
-
-    suspend fun deleteActivity(id: String)
 }

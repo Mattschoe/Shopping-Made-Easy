@@ -8,15 +8,13 @@ class OfflineActivityRepository(private val dao: RecentActivityDao) : ActivityRe
         return dao.getRecentActivities()
     }
 
-    override fun getAllActivities(): Flow<List<RecentActivity>> {
-        return dao.getAllActivities()
-    }
-
     override suspend fun insertActivity(activity: RecentActivity) {
-        return dao.insertActivity(activity)
+        dao.insertActivity(activity)
+        //Hold tabellen lille — UI viser kun de nyeste få aktiviteter
+        dao.trimToLatest(MAX_ACTIVITIES)
     }
 
-    override suspend fun deleteActivity(id: String) {
-        return dao.deleteActivity(id)
+    private companion object {
+        const val MAX_ACTIVITIES = 20
     }
 }

@@ -14,15 +14,15 @@ interface RecentActivityDao {
     @Query("SELECT * FROM recent_activities ORDER BY timestamp DESC LIMIT 5")
     fun getRecentActivities(): Flow<List<RecentActivity>>
 
-    /**
-     * Returns all activities ordered by their timestamp
-     */
-    @Query("SELECT * FROM recent_activities ORDER BY timestamp DESC")
-    fun getAllActivities(): Flow<List<RecentActivity>>
-
     @Insert
     suspend fun insertActivity(activity: RecentActivity)
 
-    @Query("DELETE FROM recent_activities WHERE id = :id")
-    suspend fun deleteActivity(id: String)
+    /**
+     * Sletter alle aktiviteter på nær de [cap] nyeste, så tabellen ikke vokser ubegrænset.
+     */
+    @Query(
+        "DELETE FROM recent_activities WHERE id NOT IN " +
+        "(SELECT id FROM recent_activities ORDER BY timestamp DESC, id DESC LIMIT :cap)"
+    )
+    suspend fun trimToLatest(cap: Int)
 }

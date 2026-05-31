@@ -55,19 +55,6 @@ class OfflineShoppingListRepository(private val dao: ShoppingListDao) : Shopping
         }
     }
 
-    override fun getStoreTotals(shoppingListID: String): Flow<Map<Store, Pair<Int, Int>>> {
-        return dao.getShoppingListProductsWithCheckedStatus(shoppingListID)
-            .map { productsWithStatus ->
-                productsWithStatus
-                    .groupBy { it.product.store }
-                    .mapValues { (_, products) ->
-                        val total = products.size
-                        val checkedOff = products.count { it.isChecked }
-                        Pair(total, checkedOff)
-                    }
-            }
-    }
-
     override suspend fun isProductInShoppingList(listID: String, productID: Long): Boolean {
         return dao.isProductInShoppingList(listID, productID)
     }

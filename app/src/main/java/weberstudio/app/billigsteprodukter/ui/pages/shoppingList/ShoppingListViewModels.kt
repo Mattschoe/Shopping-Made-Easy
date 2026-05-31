@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
@@ -29,7 +28,6 @@ import weberstudio.app.billigsteprodukter.data.ShoppingList
 import weberstudio.app.billigsteprodukter.data.ShoppingListCrossRef
 import weberstudio.app.billigsteprodukter.data.isEqualTo
 import weberstudio.app.billigsteprodukter.data.receipt.ReceiptRepository
-import weberstudio.app.billigsteprodukter.logic.components.MatchScoreCalculator
 import weberstudio.app.billigsteprodukter.logic.Store
 import java.time.LocalDate
 import kotlin.math.cos
@@ -78,12 +76,8 @@ class ShoppingListUndermenuViewModel(application: Application): AndroidViewModel
 
     private val _selectedShoppingListID = MutableStateFlow<String?>(null)
     private val _databaseSearchQuery = MutableStateFlow("")
-    private val _listSearchQuery = MutableStateFlow("")
-    private val _searchResults = MutableStateFlow<List<Product>>(emptyList())
-    private val _isStoreExpanded = MutableStateFlow<Map<Int, Boolean>>(emptyMap())
+    private val _isStoreExpanded = MutableStateFlow<Map<Store, Boolean>>(emptyMap())
 
-    val listSearchQuery = _listSearchQuery.asStateFlow()
-    val searchResults = _searchResults.asStateFlow()
     val isStoreExpanded = _isStoreExpanded.asStateFlow()
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -96,17 +90,9 @@ class ShoppingListUndermenuViewModel(application: Application): AndroidViewModel
         null
     )
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     val store2ProductsAdded2Store = _selectedShoppingListID.flatMapLatest { listID ->
         if (listID != null) shoppingListRepo.getShoppingListProductsGroupedByStore(listID)
-        else flowOf(emptyMap())
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5_000),
-        initialValue = emptyMap()
-    )
-
-    val storeTotals = _selectedShoppingListID.flatMapLatest { listID ->
-        if (listID != null) shoppingListRepo.getStoreTotals(listID)
         else flowOf(emptyMap())
     }.stateIn(
         scope = viewModelScope,
@@ -122,45 +108,38 @@ class ShoppingListUndermenuViewModel(application: Application): AndroidViewModel
         initialValue = 0.0
     )
 
-    @OptIn(FlowPreview::class)
-    val filteredStore2ProductsAdded2Store = run {
-        //region SETTINGS
-        val minimumQueryLength = 3 //How long the query has to be before search kicks in
-        val inputCooldown: Long = 300 //How long in MS from the user stops inputting 'till query starts
-        val itemLimit = 30 //How many items to retrieve per store
-        //endregion
-
-        store2ProductsAdded2Store.combine(
-            listSearchQuery
-                .debounce(inputCooldown)
-                .distinctUntilChanged()
-        ) { store2Products, rawQuery ->
-            val query = rawQuery.trim().lowercase()
-            when {
-                query.isBlank() || query.length < minimumQueryLength -> {
-                    store2Products
-                }
-                else -> {
-                    store2Products.mapValues { (store, productPair) ->
-                        productPair.map { productPair ->
-                            val score = MatchScoreCalculator.calculate(productPair.first.name, query)
-                            Triple(productPair.first, productPair.second, score)
-                        }
-                        .filter { it.third > 0 } // Only keep products with match score > 0
-                        .sortedByDescending { it.third } // Sort by match score
-                        .map { Pair(it.first, it.second) } // Convert back to Pair<Product, Boolean>
-                        .take(itemLimit)
+    /**
+     * Søgeresultater til "Tilføj produkt"-dialogen. Afledt reaktivt af [_databaseSearchQuery] så hver
+     * ny søgning annullerer den forrige collector (flatMapLatest) — ingen lækkede flows eller
+     * akkumulerede resultater på tværs af emissions.
+     */
+    @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
+    val searchResults: StateFlow<List<Product>> = _databaseSearchQuery
+        .debounce(300) //Hvor lang tid i MS fra brugeren stopper med at skrive 'til søgningen starter
+        .distinctUntilChanged()
+        .flatMapLatest { rawQuery ->
+            val query = rawQuery.trim()
+            if (query.length < 3) flowOf(emptyList())
+            else productRepo.searchProductsContaining(query).map { products ->
+                //Dedupliker friskt pr. emission, så fjernede/ændrede produkter ikke hænger ved
+                val deduped = products.fold(mutableListOf<Product>()) { acc, product ->
+                    if (acc.none { it.isEqualTo(product, priceDifferenceEpsilon = 5.0f, useFuzzyMatcher = true) }) {
+                        acc.add(product)
                     }
+                    acc
                 }
-            }.filterValues { products ->
-                products.isNotEmpty()
+                deduped
+                    .filter { it.price > 0.2f }
+                    .sortedWith(
+                        compareByDescending<Product> { it.isFavorite }
+                            .thenBy { it.price }
+                    )
             }
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = emptyMap()
+            initialValue = emptyList()
         )
-    }
 
     /**
      * Toggles the product to/from selected
@@ -178,13 +157,9 @@ class ShoppingListUndermenuViewModel(application: Application): AndroidViewModel
      */
     fun toggleStore(store: Store) {
         _isStoreExpanded.update { currentMap ->
-            val isExpanded = currentMap[store.ID] ?: true
-            currentMap + (store.ID to !isExpanded)
+            currentMap + (store to !currentMap.isExpanded(store))
         }
     }
-
-    fun setDatabaseSearchQuery(query: String) { _databaseSearchQuery.value = query }
-    fun setListSearchQuery(query: String) { _listSearchQuery.value = query }
 
     fun selectShoppingList(shoppingListID: String) {
         _selectedShoppingListID.value = shoppingListID
@@ -233,30 +208,10 @@ class ShoppingListUndermenuViewModel(application: Application): AndroidViewModel
     }
 
     /**
-     * Searches for products in the product database
+     * Opdaterer søgningen i produktdatabasen. Resultaterne afledes reaktivt i [searchResults].
      */
     fun searchProductsInDatabase(query: String) {
         _databaseSearchQuery.value = query
-        if (query.length >= 3) {
-            viewModelScope.launch {
-                val result = mutableListOf<Product>()
-                productRepo.searchProductsContaining(query).collect { products ->
-                    for (product in products) {
-                        if (result.none { it.isEqualTo(product, priceDifferenceEpsilon = 5.0f, useFuzzyMatcher = true) }) {
-                            result.add(product)
-                        }
-                    }
-                    _searchResults.value = result
-                        .filter { it.price > 0.2}
-                        .sortedWith(
-                        compareByDescending<Product> { it.isFavorite }
-                            .thenBy { it.price }
-                    )
-                }
-            }
-        } else {
-            _searchResults.value = emptyList()
-        }
     }
 
     fun updateShoppingListName(name: String) {
@@ -272,4 +227,10 @@ class ShoppingListUndermenuViewModel(application: Application): AndroidViewModel
         }
     }
 }
+
+/**
+ * Slår op om en butik er foldet ud i indkøbslisten. Stores starter udfoldet, så en manglende
+ * nøgle betyder "udfoldet". Defineret ét sted, så ViewModel og UI deler samme standard.
+ */
+internal fun Map<Store, Boolean>.isExpanded(store: Store): Boolean = this[store] ?: true
 

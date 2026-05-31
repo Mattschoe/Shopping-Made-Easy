@@ -66,7 +66,6 @@ import weberstudio.app.billigsteprodukter.data.ShoppingList
 import weberstudio.app.billigsteprodukter.ui.components.BannerAd
 import weberstudio.app.billigsteprodukter.ui.components.DeleteConfirmationDialog
 import weberstudio.app.billigsteprodukter.ui.components.ReceiptTotalCard
-import weberstudio.app.billigsteprodukter.ui.components.SearchBar
 import weberstudio.app.billigsteprodukter.ui.navigation.PageNavigation
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -181,9 +180,8 @@ fun ShoppingListItem(shoppingList: ShoppingList, onClick: () -> Unit, onDeleteCl
 
 @Composable
 fun ShoppingListUndermenuContent(modifier: Modifier, viewModel: ShoppingListUndermenuViewModel) {
-    val filteredList = viewModel.filteredStore2ProductsAdded2Store.collectAsState().value
+    val groupedProducts = viewModel.store2ProductsAdded2Store.collectAsState().value
     val isStoreExpanded by viewModel.isStoreExpanded.collectAsState()
-    val storeTotals by viewModel.storeTotals.collectAsState()
 
     val shoppingListState by viewModel.selectedShoppingList.collectAsState()
     val shoppingList = shoppingListState
@@ -309,20 +307,15 @@ fun ShoppingListUndermenuContent(modifier: Modifier, viewModel: ShoppingListUnde
         }
         //endregion
 
-        //region SEARCH + TOTAL ROW
+        //region TOTAL ROW
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(IntrinsicSize.Min)
                 .padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.End,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            SearchBar(
-                modifier = Modifier.weight(1f),
-                searchQuery =  viewModel.listSearchQuery.collectAsState().value,
-                onQueryChange =  viewModel::setListSearchQuery
-            )
             ReceiptTotalCard(
                 modifier = Modifier,
                 totalPrice = BigDecimal(totalPrice).setScale(2, RoundingMode.HALF_EVEN).toString().replace(".", ",")
@@ -336,9 +329,10 @@ fun ShoppingListUndermenuContent(modifier: Modifier, viewModel: ShoppingListUnde
                 .fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            filteredList.forEach { (store, productsWithStatus) ->
-                val expanded = isStoreExpanded[store.ID] ?: true //Starter stores expanded (Don't follow IntelliSense here, it's lying) (goddamn CLANKER)
-                val (total, checkedOff) = storeTotals[store] ?: Pair(0, 0)
+            groupedProducts.forEach { (store, productsWithStatus) ->
+                val expanded = isStoreExpanded.isExpanded(store) //Stores starter udfoldet (manglende nøgle = udfoldet)
+                val total = productsWithStatus.size
+                val checkedOff = productsWithStatus.count { it.second } //it.second = isChecked
 
                 item(key = store.ID) {
                     Card(

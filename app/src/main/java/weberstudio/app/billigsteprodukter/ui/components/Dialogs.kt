@@ -155,7 +155,9 @@ fun AddProductToListDialog(
     var productName by rememberSaveable { mutableStateOf("") }
     var selectedStore by rememberSaveable { mutableStateOf<Store?>(null) }
     var expanded by remember { mutableStateOf(false) } //Is DropDown expanded
-    var showSearchResults by remember { mutableStateOf(false) }
+    //Afledt reaktivt: søgeresultaterne kommer asynkront (debounced), så panelets synlighed må ikke
+    //låses fast i onValueChange — ellers dukker det op et tastetryk for sent.
+    val showSearchResults = productName.length >= 3 && searchResults.isNotEmpty()
     val isValid = productName.trim().isNotEmpty() && selectedStore != null //Form validity
 
     Dialog(onDismissRequest = onDismiss) {
@@ -184,7 +186,6 @@ fun AddProductToListDialog(
                     onValueChange = { query ->
                         productName = query
                         onSearchQueryChange(query)
-                        showSearchResults = query.length >= 3 && searchResults.isNotEmpty()
                     },
                     placeholder = { Text("Navn...") },
                     singleLine = true,
@@ -217,7 +218,6 @@ fun AddProductToListDialog(
                                     .fillMaxWidth()
                                     .clickable {
                                         onSelectExistingProduct(product)
-                                        showSearchResults = false
                                         onDismiss()
                                     }
                                     .padding(horizontal = 16.dp, vertical = 12.dp)

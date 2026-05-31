@@ -178,7 +178,7 @@ class ReceiptViewModel(application: Application): AndroidViewModel(application) 
 
             if (coop365Option == null) {
                 Logger.log(_tag, "Coop365Option not sat")
-                ParsingState.Error("Coop365Option ikke valgt! Se indstillinger.")
+                _parsingState.value = ParsingState.Error("Coop365Option ikke valgt! Se indstillinger.")
                 return@launch
             }
 

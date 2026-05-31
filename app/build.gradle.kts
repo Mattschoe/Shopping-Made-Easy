@@ -38,6 +38,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     sourceSets {
         // Gør de eksporterede Room-skemaer tilgængelige for migrations-tests

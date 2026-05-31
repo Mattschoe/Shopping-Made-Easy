@@ -76,9 +76,9 @@ interface ReceiptRepository {
     suspend fun deleteProduct(product: Product)
 
     /**
-     * Marks a product as favorite/unfavorite by store and name.
+     * Marks a single product row as favorite/unfavorite by its [databaseID].
      */
-    suspend fun setProductFavorite(store: Store, name: String, isFavorite: Boolean)
+    suspend fun setProductFavorite(databaseID: Long, isFavorite: Boolean)
 
     /**
      * Observes all products for a specific receipt.
@@ -86,6 +86,11 @@ interface ReceiptRepository {
      * This is the key method for auto-updating UI!
      */
     fun getProductsForReceipt(receiptID: Long): Flow<List<Product>>
+
+    /**
+     * Observes all products across every store.
+     */
+    fun getAllProducts(): Flow<List<Product>>
 
     /**
      * Observes all products from a specific store.

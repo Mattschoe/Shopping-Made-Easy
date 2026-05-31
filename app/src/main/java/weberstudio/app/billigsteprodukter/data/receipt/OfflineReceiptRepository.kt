@@ -66,8 +66,8 @@ class OfflineReceiptRepository(private val dao: ReceiptDao) : ReceiptRepository 
         recomputeTotalForReceiptsInStore(product.store)
     }
 
-    override suspend fun setProductFavorite(store: Store, name: String, isFavorite: Boolean) {
-        return dao.setProductFavorite(store, name, isFavorite)
+    override suspend fun setProductFavorite(databaseID: Long, isFavorite: Boolean) {
+        return dao.setProductFavorite(databaseID, isFavorite)
     }
 
     /**
@@ -77,6 +77,10 @@ class OfflineReceiptRepository(private val dao: ReceiptDao) : ReceiptRepository 
      */
     override fun getProductsForReceipt(receiptID: Long): Flow<List<Product>> {
         return dao.getProductsForReceipt(receiptID)
+    }
+
+    override fun getAllProducts(): Flow<List<Product>> {
+        return dao.getAllProducts()
     }
 
     override fun getProductsByStore(store: Store): Flow<List<Product>> {

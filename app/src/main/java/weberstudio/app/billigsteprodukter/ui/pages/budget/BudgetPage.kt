@@ -844,7 +844,10 @@ private fun ViewExpensesDialog(
                             onDeleteReceipt = onDeleteReceipt
                         )
                     }
-                    items(expenses) { expense ->
+                    items(
+                        items = expenses.asReversed(),
+                        key = { it.id }
+                    ) { expense ->
                         ExpenseCard(
                             expense = expense,
                             onDeleteExpense = onDeleteExpense

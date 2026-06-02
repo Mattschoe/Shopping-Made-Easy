@@ -144,7 +144,11 @@ fun ReceiptScanningContent(
                 viewModel.showLoadingState()
             }
             is ParsingState.Success -> {
-                navController.navigate(PageNavigation.ReceiptScanning(state.receiptID))
+                // Fjern den tomme scanner-side (id = 0), så "tilbage" fører til fanen kameraet blev startet fra
+                navController.navigate(PageNavigation.ReceiptScanning(state.receiptID)) {
+                    popUpTo(PageNavigation.ReceiptScanning(0)) { inclusive = true }
+                    launchSingleTop = true
+                }
                 viewModel.clearParsingState()
             }
             is ParsingState.Error -> {
@@ -161,7 +165,8 @@ fun ReceiptScanningContent(
             errorMessage = errorMessage,
             onDismissRequest = {
                 viewModel.clearParsingState()
-                navController.navigate(PageNavigation.Home)
+                // Fjern den tomme scanner-side, så vi returnerer til fanen kameraet blev startet fra (symmetrisk med success-flowet)
+                navController.popBackStack(PageNavigation.ReceiptScanning(0), inclusive = true)
             },
             onConfirmError = {
                 viewModel.clearParsingState()

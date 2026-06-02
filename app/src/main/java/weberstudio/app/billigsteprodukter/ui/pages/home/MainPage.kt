@@ -113,7 +113,7 @@ fun MainPageContent(
                 modifier = Modifier.weight(1f),
                 onClick = {
                     val now = LocalDateTime.now()
-                    navController.navigate(PageNavigation.Budget(now.year, now.monthValue))
+                    navController.navigate(PageNavigation.Budget(now.year, now.monthValue)) { launchSingleTop = true }
                 }
             )
         } else {
@@ -121,7 +121,7 @@ fun MainPageContent(
                 BudgetCard(
                     onClick = {
                         val now = LocalDateTime.now()
-                        navController.navigate(PageNavigation.Budget(now.year, now.monthValue))
+                        navController.navigate(PageNavigation.Budget(now.year, now.monthValue)) { launchSingleTop = true }
                     },
                     currentBudget = currentBudget.budget,
                     totalSpent = totalSpent
@@ -154,9 +154,9 @@ fun MainPageContent(
                             activity = activity,
                             onClick = {
                                 when(activity.activityType) {
-                                    ActivityType.RECEIPT_SCANNED -> navController.navigate(PageNavigation.ReceiptScanning(activity.receiptID!!))
-                                    ActivityType.BUDGET_CREATED -> navController.navigate(PageNavigation.Budget(activity.budgetYear!!.value, activity.budgetMonth!!.value))
-                                    ActivityType.SHOPPING_LIST_CREATED -> navController.navigate(PageNavigation.ShoppingListUndermenu(activity.shoppingListID!!))
+                                    ActivityType.RECEIPT_SCANNED -> navController.navigate(PageNavigation.ReceiptScanning(activity.receiptID!!)) { launchSingleTop = true }
+                                    ActivityType.BUDGET_CREATED -> navController.navigate(PageNavigation.Budget(activity.budgetYear!!.value, activity.budgetMonth!!.value)) { launchSingleTop = true }
+                                    ActivityType.SHOPPING_LIST_CREATED -> navController.navigate(PageNavigation.ShoppingListUndermenu(activity.shoppingListID!!)) { launchSingleTop = true }
                                 }
                             }
                         )

@@ -97,7 +97,7 @@ fun ShoppingListsPage(modifier: Modifier = Modifier, navController: NavControlle
             items(shoppingLists) { shoppingList ->
                 ShoppingListItem(
                     shoppingList = shoppingList,
-                    onClick = { navController.navigate(PageNavigation.ShoppingListUndermenu(shoppingList.ID)) },
+                    onClick = { navController.navigate(PageNavigation.ShoppingListUndermenu(shoppingList.ID)) { launchSingleTop = true } },
                     onDeleteClick = {
                         shoppingListToDelete = shoppingList
                         showDeleteDialog = true

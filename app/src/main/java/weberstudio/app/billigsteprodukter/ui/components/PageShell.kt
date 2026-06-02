@@ -101,7 +101,7 @@ fun PageShell(
                         },
                         actions = {
                             IconButton(onClick = {
-                                navController.navigate(PageNavigation.Settings)
+                                navController.navigate(PageNavigation.Settings) { launchSingleTop = true }
                             }) {
                                 Icon(
                                     ImageVector.vectorResource(R.drawable.settings_icon),
@@ -142,7 +142,7 @@ fun PageShell(
                 onImageCaptured = { uri, ctx ->
                     cameraCoordinator.onImageCaptured(uri, ctx)
                     showCamera = false
-                    navController.navigate(PageNavigation.ReceiptScanning(0))
+                    navController.navigate(PageNavigation.ReceiptScanning(0)) { launchSingleTop = true }
                 },
                 onError = { exception ->
                     Logger.log("Camera", "TakePicture Failure! ${exception.message}")
@@ -186,11 +186,11 @@ fun NavigationBar(
                 )
             },
             selected = currentDestination?.hasRoute<PageNavigation.Home>() == true,
+            enabled = currentDestination?.hasRoute<PageNavigation.Home>() != true,
             onClick = {
                 navController.navigate(PageNavigation.Home) {
                     popUpTo(navController.graph.startDestinationId) { inclusive = false }
                     launchSingleTop = true
-                    restoreState = true
                 }
             },
         )
@@ -205,11 +205,11 @@ fun NavigationBar(
                 )
             },
             selected = currentDestination?.hasRoute<PageNavigation.ShoppingList>() == true || currentDestination?.hasRoute<PageNavigation.ShoppingListUndermenu>() == true,
+            enabled = !(currentDestination?.hasRoute<PageNavigation.ShoppingList>() == true || currentDestination?.hasRoute<PageNavigation.ShoppingListUndermenu>() == true),
             onClick = {
                 navController.navigate(PageNavigation.ShoppingList) {
                     popUpTo(navController.graph.startDestinationId) { inclusive = false }
                     launchSingleTop = true
-                    restoreState = true
                 }
             }
         )
@@ -224,11 +224,11 @@ fun NavigationBar(
                 )
             },
             selected = currentDestination?.hasRoute<PageNavigation.Database>() == true,
+            enabled = currentDestination?.hasRoute<PageNavigation.Database>() != true,
             onClick = {
                 navController.navigate(PageNavigation.Database) {
                     popUpTo(navController.graph.startDestinationId) { inclusive = false }
                     launchSingleTop = true
-                    restoreState = true
                 }
             }
         )

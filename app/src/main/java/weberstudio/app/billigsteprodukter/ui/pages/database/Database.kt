@@ -72,6 +72,7 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
 import androidx.compose.ui.zIndex
+import androidx.navigation.NavHostController
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
@@ -81,6 +82,9 @@ import weberstudio.app.billigsteprodukter.data.Product
 import weberstudio.app.billigsteprodukter.logic.Store
 import weberstudio.app.billigsteprodukter.ui.components.LargeBannerAd
 import weberstudio.app.billigsteprodukter.ui.components.ModifyProductDialog
+import weberstudio.app.billigsteprodukter.ui.components.PageShell
+import weberstudio.app.billigsteprodukter.ui.components.PageTitle
+import weberstudio.app.billigsteprodukter.ui.components.PageTopBar
 import weberstudio.app.billigsteprodukter.ui.components.PagerIndicator
 import weberstudio.app.billigsteprodukter.ui.components.ProductCard
 import weberstudio.app.billigsteprodukter.ui.components.SearchBar
@@ -89,10 +93,28 @@ import kotlin.math.absoluteValue
 import kotlin.math.max
 import kotlin.math.roundToInt
 
+@Composable
+fun DatabaseContent(
+    modifier: Modifier = Modifier,
+    navController: NavHostController,
+    viewModel: DataBaseViewModel,
+) {
+    PageShell(
+        navController = navController,
+        modifier = modifier,
+        topBar = { PageTopBar { PageTitle("Oversigt") } }
+    ) { padding ->
+        DatabaseBody(
+            modifier = Modifier.padding(padding),
+            viewModel = viewModel
+        )
+    }
+}
+
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DatabaseContent(
+private fun DatabaseBody(
     modifier: Modifier,
     viewModel: DataBaseViewModel,
 ) {

@@ -57,6 +57,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import kotlinx.coroutines.launch
 import weberstudio.app.billigsteprodukter.R
 import weberstudio.app.billigsteprodukter.data.Product
@@ -75,6 +76,7 @@ import weberstudio.app.billigsteprodukter.ui.components.LogoBarHandler
 import weberstudio.app.billigsteprodukter.ui.components.LogoBarSkeleton
 import weberstudio.app.billigsteprodukter.ui.components.ModifyProductDialog
 import weberstudio.app.billigsteprodukter.ui.components.ModifyTotalDialog
+import weberstudio.app.billigsteprodukter.ui.components.PageShell
 import weberstudio.app.billigsteprodukter.ui.components.ProductCard
 import weberstudio.app.billigsteprodukter.ui.components.ProductRow
 import weberstudio.app.billigsteprodukter.ui.components.ProductRowSkeleton
@@ -87,9 +89,30 @@ import kotlin.math.max
 import kotlin.math.roundToInt
 
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ReceiptScanningContent(
+    modifier: Modifier = Modifier,
+    navController: NavHostController,
+    viewModel: ReceiptViewModel,
+    cameraCoordinator: CameraCoordinator
+) {
+    // Ingen titel/topbar på scanningssiden
+    PageShell(
+        navController = navController,
+        modifier = modifier
+    ) { padding ->
+        ReceiptScanningBody(
+            modifier = Modifier.padding(padding),
+            navController = navController,
+            viewModel = viewModel,
+            cameraCoordinator = cameraCoordinator
+        )
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun ReceiptScanningBody(
     modifier: Modifier = Modifier,
     navController: NavController,
     viewModel: ReceiptViewModel,

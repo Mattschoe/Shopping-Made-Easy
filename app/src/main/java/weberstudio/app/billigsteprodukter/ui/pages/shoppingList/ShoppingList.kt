@@ -22,8 +22,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
@@ -33,38 +31,38 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
-import kotlinx.coroutines.delay
+import androidx.navigation.NavHostController
 import weberstudio.app.billigsteprodukter.R
 import weberstudio.app.billigsteprodukter.data.AdsID
 import weberstudio.app.billigsteprodukter.data.Product
 import weberstudio.app.billigsteprodukter.data.ShoppingList
+import weberstudio.app.billigsteprodukter.data.ShoppingListWithProducts
+import weberstudio.app.billigsteprodukter.ui.components.AddFAB
+import weberstudio.app.billigsteprodukter.ui.components.AddProductToListDialog
+import weberstudio.app.billigsteprodukter.ui.components.AddShoppingListDialog
 import weberstudio.app.billigsteprodukter.ui.components.BannerAd
 import weberstudio.app.billigsteprodukter.ui.components.DeleteConfirmationDialog
+import weberstudio.app.billigsteprodukter.ui.components.EditableTitle
+import weberstudio.app.billigsteprodukter.ui.components.PageShell
+import weberstudio.app.billigsteprodukter.ui.components.PageTitle
+import weberstudio.app.billigsteprodukter.ui.components.PageTopBar
 import weberstudio.app.billigsteprodukter.ui.components.ReceiptTotalCard
 import weberstudio.app.billigsteprodukter.ui.navigation.PageNavigation
 import java.math.BigDecimal
@@ -75,54 +73,72 @@ import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ShoppingListsPage(modifier: Modifier = Modifier, navController: NavController, viewModel: ShoppingListsViewModel) {
+fun ShoppingListsPage(modifier: Modifier = Modifier, navController: NavHostController, viewModel: ShoppingListsViewModel) {
     val shoppingLists by viewModel.shoppingLists.collectAsState()
 
     var showDeleteDialog by remember { mutableStateOf(false) }
     var shoppingListToDelete by remember { mutableStateOf<ShoppingList?>(null)}
+    var showAddShoppingList by remember { mutableStateOf(false) }
 
-    Column(
-        modifier = modifier
-    ) {
-        //Shopping Lists
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            contentPadding = PaddingValues(vertical = 16.dp),
-            reverseLayout = true
+    PageShell(
+        navController = navController,
+        modifier = modifier,
+        topBar = { PageTopBar { PageTitle("Indkøbslister") } },
+        floatingActionButton = { AddFAB(onClick = { showAddShoppingList = true }) }
+    ) { padding ->
+        Column(
+            modifier = Modifier.padding(padding)
         ) {
-            items(shoppingLists) { shoppingList ->
-                ShoppingListItem(
-                    shoppingList = shoppingList,
-                    onClick = { navController.navigate(PageNavigation.ShoppingListUndermenu(shoppingList.ID)) { launchSingleTop = true } },
-                    onDeleteClick = {
-                        shoppingListToDelete = shoppingList
-                        showDeleteDialog = true
+            //Shopping Lists
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(vertical = 16.dp),
+                reverseLayout = true
+            ) {
+                items(shoppingLists) { shoppingList ->
+                    ShoppingListItem(
+                        shoppingList = shoppingList,
+                        onClick = { navController.navigate(PageNavigation.ShoppingListUndermenu(shoppingList.ID)) { launchSingleTop = true } },
+                        onDeleteClick = {
+                            shoppingListToDelete = shoppingList
+                            showDeleteDialog = true
+                        }
+                    )
+                }
+                item {
+                    BannerAd(AdsID.SHOPPINGLIST_BANNER, Modifier.fillMaxWidth())
+                }
+            }
+        }
+
+        //Delete Confirmation Dialog
+        if (showDeleteDialog) {
+            shoppingListToDelete?.let { list ->
+                DeleteConfirmationDialog(
+                    title = "Slet indkøbsliste?",
+                    body = "Dette kan ikke fortrydes",
+                    onDismiss = { showDeleteDialog = false },
+                    onConfirm = {
+                        viewModel.deleteShoppingList(list)
+                        showDeleteDialog = false
                     }
                 )
             }
-            item {
-                BannerAd(AdsID.SHOPPINGLIST_BANNER, Modifier.fillMaxWidth())
-            }
         }
-    }
 
-    //Delete Confirmation Dialog
-    if (showDeleteDialog) {
-        shoppingListToDelete?.let { list ->
-            DeleteConfirmationDialog(
-                title = "Slet indkøbsliste?",
-                body = "Dette kan ikke fortrydes",
-                onDismiss = { showDeleteDialog = false },
-                onConfirm = {
-                    viewModel.deleteShoppingList(list)
-                    showDeleteDialog = false
-                }
-            )
-        }
+        //Add Shopping List Dialog
+        AddShoppingListDialog(
+            showDialog = showAddShoppingList,
+            onDismiss = { showAddShoppingList = false },
+            onConfirm = { name ->
+                viewModel.addShoppingList(name)
+                showAddShoppingList = false
+            }
+        )
     }
 }
 
@@ -179,132 +195,86 @@ fun ShoppingListItem(shoppingList: ShoppingList, onClick: () -> Unit, onDeleteCl
 }
 
 @Composable
-fun ShoppingListUndermenuContent(modifier: Modifier, viewModel: ShoppingListUndermenuViewModel) {
-    val groupedProducts = viewModel.store2ProductsAdded2Store.collectAsState().value
-    val isStoreExpanded by viewModel.isStoreExpanded.collectAsState()
-
+fun ShoppingListUndermenuContent(
+    modifier: Modifier = Modifier,
+    navController: NavHostController,
+    viewModel: ShoppingListUndermenuViewModel
+) {
     val shoppingListState by viewModel.selectedShoppingList.collectAsState()
     val shoppingList = shoppingListState
-    if (shoppingList == null) {
-        Box(
-            modifier = modifier
-                .fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator()
+
+    var showAddDialog by rememberSaveable { mutableStateOf(false) }
+    val searchResults by viewModel.searchResults.collectAsState()
+
+    PageShell(
+        navController = navController,
+        modifier = modifier,
+        topBar = {
+            PageTopBar {
+                EditableTitle(
+                    name = shoppingList?.shoppingList?.name ?: "",
+                    onCommit = viewModel::updateShoppingListName
+                )
+            }
+        },
+        floatingActionButton = { AddFAB(onClick = { showAddDialog = true }) }
+    ) { padding ->
+        if (shoppingList == null) {
+            Box(
+                modifier = Modifier
+                    .padding(padding)
+                    .fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        } else {
+            ShoppingListUndermenuBody(
+                modifier = Modifier.padding(padding),
+                viewModel = viewModel,
+                shoppingList = shoppingList
+            )
         }
-        return
     }
 
+    AddProductToListDialog(
+        showDialog = showAddDialog,
+        onDismiss = { showAddDialog = false },
+        onConfirm = { name, store ->
+            viewModel.addCustomProductToList(name, store)
+            showAddDialog = false
+        },
+        searchResults = searchResults,
+        onSearchQueryChange = viewModel::searchProductsInDatabase,
+        onSelectExistingProduct = { product ->
+            viewModel.addExistingProductToList(product)
+            showAddDialog = false
+        }
+    )
+}
+
+@Composable
+private fun ShoppingListUndermenuBody(
+    modifier: Modifier = Modifier,
+    viewModel: ShoppingListUndermenuViewModel,
+    shoppingList: ShoppingListWithProducts
+) {
+    val groupedProducts = viewModel.store2ProductsAdded2Store.collectAsState().value
+    val isStoreExpanded by viewModel.isStoreExpanded.collectAsState()
     val totalPrice by viewModel.priceTotal.collectAsState()
     val createdAtDate = remember { DateTimeFormatter.ofPattern("dd/MM").format(shoppingList.shoppingList.createdDate) }
-
-    val listName = shoppingList.shoppingList.name
-    var isEditingListName by remember { mutableStateOf(false) }
-    var tempListName by remember(listName) { mutableStateOf(listName) }
-
-    var hasInitialFocus by remember { mutableStateOf(false) }
-    val focusRequester = remember { FocusRequester() }
-    val focusManager = LocalFocusManager.current
 
     Column(
         modifier = modifier
             .padding(12.dp)
     ) {
-        //region TITLE
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-        ) {
-            //Text
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-            ) {
-                //Indkøbsliste navn
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    if (isEditingListName) {
-                        OutlinedTextField(
-                            value = tempListName,
-                            onValueChange = { tempListName = it },
-                            textStyle = TextStyle(
-                                fontSize = 24.sp,
-                                fontWeight = FontWeight.Medium
-                            ),
-                            singleLine = true,
-                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                            keyboardActions = KeyboardActions(
-                                onDone = {
-                                    isEditingListName = false
-                                    hasInitialFocus = false
-                                    viewModel.updateShoppingListName(tempListName)
-                                    focusManager.clearFocus()
-                                }
-                            ),
-                            modifier = Modifier
-                                .focusRequester(focusRequester)
-                                .onFocusChanged { focusState ->
-                                    if (focusState.isFocused) {
-                                        hasInitialFocus = true
-                                    } else if (hasInitialFocus) {
-                                        isEditingListName = false
-                                        hasInitialFocus = false
-                                        viewModel.updateShoppingListName(tempListName)
-                                    }
-                                }
-                        )
-                        LaunchedEffect(Unit) {
-                            delay(50)
-                            focusRequester.requestFocus()
-                        }
-                    } else {
-                        Text(
-                            text = listName,
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Medium,
-                            modifier = Modifier
-                                .weight(1f)
-                                .clickable {
-                                    isEditingListName = true
-                                    hasInitialFocus = false
-                                }
-                        )
-                    }
-                    IconButton(
-                        modifier = Modifier
-                            .weight(0.3f),
-                        onClick = {
-                            if (isEditingListName) {
-                                isEditingListName = false
-                                hasInitialFocus = false
-                                viewModel.updateShoppingListName(tempListName)
-                                focusManager.clearFocus()
-                            } else {
-                                isEditingListName = true
-                                hasInitialFocus = false
-                            }
-                        }
-                    ) {
-                        Icon(
-                            imageVector =
-                                if (isEditingListName) ImageVector.vectorResource(R.drawable.check_icon)
-                                else ImageVector.vectorResource( R.drawable.edit_icon),
-                            contentDescription = if (isEditingListName) "Gem ændringer" else "Ændrer indkøbslistenavn",
-                        )
-                    }
-                }
-                Text(
-                    text = "Oprettet den $createdAtDate",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color.Gray,
-                )
-            }
-        }
+        //region TITLE (kun oprettelsesdato — listenavnet er nu sidens titel)
+        Text(
+            text = "Oprettet den $createdAtDate",
+            fontSize = 12.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = Color.Gray,
+        )
         //endregion
 
         //region TOTAL ROW

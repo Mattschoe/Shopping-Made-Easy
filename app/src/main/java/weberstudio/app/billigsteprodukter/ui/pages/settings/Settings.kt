@@ -37,19 +37,41 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 import weberstudio.app.billigsteprodukter.data.AdsID
 import weberstudio.app.billigsteprodukter.data.settings.Theme
 import weberstudio.app.billigsteprodukter.data.settings.TotalOption
 import weberstudio.app.billigsteprodukter.ui.components.Coop365OptionDialog
 import weberstudio.app.billigsteprodukter.ui.components.DeleteConfirmationDialog
 import weberstudio.app.billigsteprodukter.ui.components.LargeBannerAd
+import weberstudio.app.billigsteprodukter.ui.components.PageShell
+import weberstudio.app.billigsteprodukter.ui.components.PageTitle
+import weberstudio.app.billigsteprodukter.ui.components.PageTopBar
 
 /**
  * The UI content of the *Settings* Page
  */
+@Composable
+fun SettingsPageContent(
+    modifier: Modifier = Modifier,
+    navController: NavHostController,
+    viewModel: SettingsViewModel
+) {
+    PageShell(
+        navController = navController,
+        modifier = modifier,
+        topBar = { PageTopBar { PageTitle("Indstillinger") } }
+    ) { padding ->
+        SettingsBody(
+            modifier = Modifier.padding(padding),
+            viewModel = viewModel
+        )
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsPageContent(modifier: Modifier = Modifier, viewModel: SettingsViewModel) {
+private fun SettingsBody(modifier: Modifier = Modifier, viewModel: SettingsViewModel) {
     val uriHandler = LocalUriHandler.current
 
     //UI

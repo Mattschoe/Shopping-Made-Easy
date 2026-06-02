@@ -50,7 +50,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
@@ -64,7 +64,11 @@ import weberstudio.app.billigsteprodukter.data.getIcon
 import weberstudio.app.billigsteprodukter.logic.ActivityViewModel
 import weberstudio.app.billigsteprodukter.logic.Formatter.toDanishString
 import weberstudio.app.billigsteprodukter.ui.components.BannerAd
+import weberstudio.app.billigsteprodukter.ui.components.PageShell
+import weberstudio.app.billigsteprodukter.ui.components.PageTitle
+import weberstudio.app.billigsteprodukter.ui.components.PageTopBar
 import weberstudio.app.billigsteprodukter.ui.components.PagerIndicator
+import weberstudio.app.billigsteprodukter.ui.components.SettingsAction
 import weberstudio.app.billigsteprodukter.ui.navigation.PageNavigation
 import weberstudio.app.billigsteprodukter.ui.pages.budget.BudgetCircle
 import weberstudio.app.billigsteprodukter.ui.pages.budget.BudgetViewModel
@@ -78,7 +82,7 @@ import java.time.Month
 @Composable
 fun MainPageContent(
     modifier: Modifier = Modifier,
-    navController: NavController,
+    navController: NavHostController,
     budgetViewModel: BudgetViewModel,
     mainPageViewModel: MainPageViewModel,
     activityViewModel: ActivityViewModel
@@ -93,105 +97,111 @@ fun MainPageContent(
 
     val recentActivities by activityViewModel.recentActivities.collectAsState(initial = emptyList())
 
+    val budgetTitle = "${currentBudget?.month?.toDanishString() ?: Month.from(LocalDateTime.now()).toDanishString()} Budget"
 
-    //Main page
-    Column(
-        modifier = modifier
-            .padding(12.dp) //Standard padding from screen edge
-            .fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        //region BUDGET CARD
-        Text(
-            text = "${currentBudget?.month?.toDanishString() ?: Month.from(LocalDateTime.now()).toDanishString()} Budget",
-            style = MaterialTheme.typography.displaySmall,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onBackground
-        )
-        if (currentBudget == null) {
-            NoBudgetCard(
-                modifier = Modifier.weight(1f),
-                onClick = {
-                    val now = LocalDateTime.now()
-                    navController.navigate(PageNavigation.Budget(now.year, now.monthValue)) { launchSingleTop = true }
-                }
-            )
-        } else {
-            currentBudget?.let { currentBudget ->
-                BudgetCard(
+    PageShell(
+        navController = navController,
+        modifier = modifier,
+        topBar = {
+            PageTopBar(actions = { SettingsAction(navController) }) {
+                PageTitle(budgetTitle)
+            }
+        }
+    ) { padding ->
+        //Main page
+        Column(
+            modifier = Modifier
+                .padding(padding)
+                .padding(12.dp) //Standard padding from screen edge
+                .fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            //region BUDGET CARD
+            if (currentBudget == null) {
+                NoBudgetCard(
+                    modifier = Modifier.weight(1f),
                     onClick = {
                         val now = LocalDateTime.now()
                         navController.navigate(PageNavigation.Budget(now.year, now.monthValue)) { launchSingleTop = true }
-                    },
-                    currentBudget = currentBudget.budget,
-                    totalSpent = totalSpent
+                    }
                 )
+            } else {
+                currentBudget?.let { currentBudget ->
+                    BudgetCard(
+                        onClick = {
+                            val now = LocalDateTime.now()
+                            navController.navigate(PageNavigation.Budget(now.year, now.monthValue)) { launchSingleTop = true }
+                        },
+                        currentBudget = currentBudget.budget,
+                        totalSpent = totalSpent
+                    )
+                }
             }
-        }
-        //endregion
+            //endregion
 
-        BannerAd(AdsID.MAINPAGE_BANNER)
+            BannerAd(AdsID.MAINPAGE_BANNER)
 
-        //region LATEST ACTIVITY
-        if (currentBudget != null) {
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-            ) {
-                Text(
-                    text = "Seneste Aktivitet",
-                    style = MaterialTheme.typography.headlineLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-
-                LazyColumn(
+            //region LATEST ACTIVITY
+            if (currentBudget != null) {
+                Column(
                     modifier = Modifier
+                        .weight(1f)
                 ) {
-                    items(recentActivities) { activity ->
-                        LatestActivityCard(
-                            modifier = Modifier,
-                            activity = activity,
-                            onClick = {
-                                when(activity.activityType) {
-                                    ActivityType.RECEIPT_SCANNED -> navController.navigate(PageNavigation.ReceiptScanning(activity.receiptID!!)) { launchSingleTop = true }
-                                    ActivityType.BUDGET_CREATED -> navController.navigate(PageNavigation.Budget(activity.budgetYear!!.value, activity.budgetMonth!!.value)) { launchSingleTop = true }
-                                    ActivityType.SHOPPING_LIST_CREATED -> navController.navigate(PageNavigation.ShoppingListUndermenu(activity.shoppingListID!!)) { launchSingleTop = true }
+                    Text(
+                        text = "Seneste Aktivitet",
+                        style = MaterialTheme.typography.headlineLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+
+                    LazyColumn(
+                        modifier = Modifier
+                    ) {
+                        items(recentActivities) { activity ->
+                            LatestActivityCard(
+                                modifier = Modifier,
+                                activity = activity,
+                                onClick = {
+                                    when(activity.activityType) {
+                                        ActivityType.RECEIPT_SCANNED -> navController.navigate(PageNavigation.ReceiptScanning(activity.receiptID!!)) { launchSingleTop = true }
+                                        ActivityType.BUDGET_CREATED -> navController.navigate(PageNavigation.Budget(activity.budgetYear!!.value, activity.budgetMonth!!.value)) { launchSingleTop = true }
+                                        ActivityType.SHOPPING_LIST_CREATED -> navController.navigate(PageNavigation.ShoppingListUndermenu(activity.shoppingListID!!)) { launchSingleTop = true }
+                                    }
                                 }
-                            }
-                        )
+                            )
+                        }
                     }
                 }
             }
+            //endregion
         }
-        //endregion
-    }
 
-    if (!hasCompletedOnboarding) {
-        OnboardingDialog(
-            onDismiss = {
-                mainPageViewModel.setOnboardingCompleted(true)
-                showParsersAvailableDialog = true
-            },
-            onConfirm = {
-                mainPageViewModel.setOnboardingCompleted(true)
-                showParsersAvailableDialog = true
-            },
-        )
-    }
+        if (!hasCompletedOnboarding) {
+            OnboardingDialog(
+                onDismiss = {
+                    mainPageViewModel.setOnboardingCompleted(true)
+                    showParsersAvailableDialog = true
+                },
+                onConfirm = {
+                    mainPageViewModel.setOnboardingCompleted(true)
+                    showParsersAvailableDialog = true
+                },
+            )
+        }
 
-    if (showParsersAvailableDialog) {
-        ParsersAvailableDialog(
-            onDismiss = { showParsersAvailableDialog = false },
-            onConfirm = { showParsersAvailableDialog = false },
-        )
-    }
+        if (showParsersAvailableDialog) {
+            ParsersAvailableDialog(
+                onDismiss = { showParsersAvailableDialog = false },
+                onConfirm = { showParsersAvailableDialog = false },
+            )
+        }
 
-    if (hasVisitedReceiptPage && !hasBeenWarnedAboutReceipt) {
-        WarnAboutReceiptDialog(
-            onDismiss = { mainPageViewModel.setHasBeenWarnedAboutReceipt(true) },
-            onConfirm = { mainPageViewModel.setHasBeenWarnedAboutReceipt(true) },
-        )
+        if (hasVisitedReceiptPage && !hasBeenWarnedAboutReceipt) {
+            WarnAboutReceiptDialog(
+                onDismiss = { mainPageViewModel.setHasBeenWarnedAboutReceipt(true) },
+                onConfirm = { mainPageViewModel.setHasBeenWarnedAboutReceipt(true) },
+            )
+        }
     }
 }
 

@@ -61,6 +61,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.navigation.NavHostController
 import weberstudio.app.billigsteprodukter.R
 import weberstudio.app.billigsteprodukter.data.AdsID
 import weberstudio.app.billigsteprodukter.data.Budget
@@ -73,6 +74,9 @@ import weberstudio.app.billigsteprodukter.logic.Formatter.formatInputToDanishCur
 import weberstudio.app.billigsteprodukter.logic.Formatter.toDanishString
 import weberstudio.app.billigsteprodukter.ui.components.DeleteConfirmationDialog
 import weberstudio.app.billigsteprodukter.ui.components.MediumRectangleBannerAd
+import weberstudio.app.billigsteprodukter.ui.components.PageShell
+import weberstudio.app.billigsteprodukter.ui.components.PageTitle
+import weberstudio.app.billigsteprodukter.ui.components.PageTopBar
 import java.text.DecimalFormat
 import java.time.LocalDate
 import java.time.Month
@@ -81,7 +85,29 @@ import java.time.format.DateTimeFormatter
 
 
 @Composable
-fun BudgetPage(modifier: Modifier = Modifier, viewModel: BudgetViewModel, month: Month, year: Year) {
+fun BudgetPage(
+    modifier: Modifier = Modifier,
+    navController: NavHostController,
+    viewModel: BudgetViewModel,
+    month: Month,
+    year: Year
+) {
+    PageShell(
+        navController = navController,
+        modifier = modifier,
+        topBar = { PageTopBar { PageTitle("Budget") } }
+    ) { padding ->
+        BudgetBody(
+            modifier = Modifier.padding(padding),
+            viewModel = viewModel,
+            month = month,
+            year = year
+        )
+    }
+}
+
+@Composable
+private fun BudgetBody(modifier: Modifier = Modifier, viewModel: BudgetViewModel, month: Month, year: Year) {
     val currentBudget by viewModel.currentBudget.collectAsState()
     val currentReceipts by viewModel.currentReceipts.collectAsState()
     val currentExpenses by viewModel.currentExtraExpenses.collectAsState()

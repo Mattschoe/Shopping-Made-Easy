@@ -33,7 +33,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -87,15 +87,15 @@ fun MainPageContent(
     mainPageViewModel: MainPageViewModel,
     activityViewModel: ActivityViewModel
 ) {
-    val currentBudget by budgetViewModel.currentBudget.collectAsState()
-    val totalSpent by budgetViewModel.totalSpent.collectAsState()
+    val currentBudget by budgetViewModel.currentBudget.collectAsStateWithLifecycle()
+    val totalSpent by budgetViewModel.totalSpent.collectAsStateWithLifecycle()
 
-    val hasCompletedOnboarding by mainPageViewModel.hasCompletedOnboarding.collectAsState(initial = true)
-    val hasVisitedReceiptPage by mainPageViewModel.hasVisitedReceiptPage.collectAsState(initial = true)
-    val hasBeenWarnedAboutReceipt by mainPageViewModel.hasBeenWarnedAboutReceiptReadability.collectAsState(initial = true)
+    val hasCompletedOnboarding by mainPageViewModel.hasCompletedOnboarding.collectAsStateWithLifecycle(initialValue = true)
+    val hasVisitedReceiptPage by mainPageViewModel.hasVisitedReceiptPage.collectAsStateWithLifecycle(initialValue = true)
+    val hasBeenWarnedAboutReceipt by mainPageViewModel.hasBeenWarnedAboutReceiptReadability.collectAsStateWithLifecycle(initialValue = true)
     var showParsersAvailableDialog by remember { mutableStateOf(false) }
 
-    val recentActivities by activityViewModel.recentActivities.collectAsState(initial = emptyList())
+    val recentActivities by activityViewModel.recentActivities.collectAsStateWithLifecycle(initialValue = emptyList())
 
     val budgetTitle = "${currentBudget?.month?.toDanishString() ?: Month.from(LocalDateTime.now()).toDanishString()} Budget"
 

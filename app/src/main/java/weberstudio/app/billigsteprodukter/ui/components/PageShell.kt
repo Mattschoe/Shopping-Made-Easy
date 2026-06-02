@@ -18,7 +18,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,9 +44,6 @@ import weberstudio.app.billigsteprodukter.logic.CameraCoordinator
 import weberstudio.app.billigsteprodukter.logic.Logger
 import weberstudio.app.billigsteprodukter.ui.navigation.PageNavigation
 import weberstudio.app.billigsteprodukter.ui.pages.home.MainPageContent
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import kotlinx.coroutines.CoroutineScope
@@ -92,7 +89,7 @@ fun PageShell(
     )
 
     val settingsRepo = (LocalContext.current.applicationContext as ReceiptApp).settingsRepository
-    val cameraLaunchRequest by settingsRepo.cameraLaunchRequest.collectAsState(initial = false)
+    val cameraLaunchRequest by settingsRepo.cameraLaunchRequest.collectAsStateWithLifecycle(initialValue = false)
 
     var showCamera by remember { mutableStateOf(false) }
 

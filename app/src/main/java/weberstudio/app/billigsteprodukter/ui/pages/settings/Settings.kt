@@ -23,7 +23,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -79,7 +79,7 @@ private fun SettingsBody(modifier: Modifier = Modifier, viewModel: SettingsViewM
     val buttonHeight = 56.dp
 
     //THEME
-    val theme by viewModel.theme.collectAsState()
+    val theme by viewModel.theme.collectAsStateWithLifecycle()
     val themeOptions = listOf(
         DropdownOption(Theme.SYSTEM, Theme.SYSTEM.toString()),
         DropdownOption(Theme.DARK, Theme.DARK.toString()),
@@ -87,7 +87,7 @@ private fun SettingsBody(modifier: Modifier = Modifier, viewModel: SettingsViewM
     )
 
     //RECEIPT
-    val totalOption by viewModel.totalOption.collectAsState()
+    val totalOption by viewModel.totalOption.collectAsStateWithLifecycle()
     val totalOptions = listOf(
         DropdownOption(TotalOption.RECEIPT_TOTAL, TotalOption.RECEIPT_TOTAL.toString()),
         DropdownOption(TotalOption.PRODUCT_TOTAL, TotalOption.PRODUCT_TOTAL.toString())

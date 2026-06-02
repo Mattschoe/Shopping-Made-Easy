@@ -5,7 +5,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import weberstudio.app.billigsteprodukter.ReceiptApp
@@ -72,7 +72,7 @@ fun BilligsteProdukterTheme(
 ) {
     val application = LocalContext.current.applicationContext as ReceiptApp
     val settingsRepo = application.settingsRepository
-    val theme by settingsRepo.theme.collectAsState(initial = Theme.SYSTEM)
+    val theme by settingsRepo.theme.collectAsStateWithLifecycle(initialValue = Theme.SYSTEM)
 
     val darkTheme = when (theme) {
         Theme.LIGHT -> false

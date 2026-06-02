@@ -26,7 +26,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -120,16 +120,16 @@ private fun ReceiptScanningBody(
 ) {
     val tag = remember { "ReceiptScanningContent" }
 
-    val parsingState by viewModel.parsingState.collectAsState()
-    val uiState by viewModel.uiState.collectAsState()
+    val parsingState by viewModel.parsingState.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     var showAddProductDialog by rememberSaveable { mutableStateOf(false) }
     var showModifyTotalDialog by rememberSaveable { mutableStateOf(false) }
-    val hasFinishedFirstScan by viewModel.hasFinishedFirstScan.collectAsState()
+    val hasFinishedFirstScan by viewModel.hasFinishedFirstScan.collectAsStateWithLifecycle()
 
     //Checks if there's a pending camera capture to process
-    val pendingCapture by cameraCoordinator.pendingImageCapture.collectAsState()
-    val pendingScanValidation by cameraCoordinator.pendingScanValidation.collectAsState()
+    val pendingCapture by cameraCoordinator.pendingImageCapture.collectAsStateWithLifecycle()
+    val pendingScanValidation by cameraCoordinator.pendingScanValidation.collectAsStateWithLifecycle()
 
     LaunchedEffect(pendingCapture) {
         pendingCapture?.let { capture ->

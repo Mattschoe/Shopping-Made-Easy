@@ -33,7 +33,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -74,7 +74,7 @@ import java.time.format.DateTimeFormatter
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShoppingListsPage(modifier: Modifier = Modifier, navController: NavHostController, viewModel: ShoppingListsViewModel) {
-    val shoppingLists by viewModel.shoppingLists.collectAsState()
+    val shoppingLists by viewModel.shoppingLists.collectAsStateWithLifecycle()
 
     var showDeleteDialog by remember { mutableStateOf(false) }
     var shoppingListToDelete by remember { mutableStateOf<ShoppingList?>(null)}
@@ -200,11 +200,11 @@ fun ShoppingListUndermenuContent(
     navController: NavHostController,
     viewModel: ShoppingListUndermenuViewModel
 ) {
-    val shoppingListState by viewModel.selectedShoppingList.collectAsState()
+    val shoppingListState by viewModel.selectedShoppingList.collectAsStateWithLifecycle()
     val shoppingList = shoppingListState
 
     var showAddDialog by rememberSaveable { mutableStateOf(false) }
-    val searchResults by viewModel.searchResults.collectAsState()
+    val searchResults by viewModel.searchResults.collectAsStateWithLifecycle()
 
     PageShell(
         navController = navController,
@@ -259,9 +259,9 @@ private fun ShoppingListUndermenuBody(
     viewModel: ShoppingListUndermenuViewModel,
     shoppingList: ShoppingListWithProducts
 ) {
-    val groupedProducts = viewModel.store2ProductsAdded2Store.collectAsState().value
-    val isStoreExpanded by viewModel.isStoreExpanded.collectAsState()
-    val totalPrice by viewModel.priceTotal.collectAsState()
+    val groupedProducts = viewModel.store2ProductsAdded2Store.collectAsStateWithLifecycle().value
+    val isStoreExpanded by viewModel.isStoreExpanded.collectAsStateWithLifecycle()
+    val totalPrice by viewModel.priceTotal.collectAsStateWithLifecycle()
     val createdAtDate = remember { DateTimeFormatter.ofPattern("dd/MM").format(shoppingList.shoppingList.createdDate) }
 
     Column(

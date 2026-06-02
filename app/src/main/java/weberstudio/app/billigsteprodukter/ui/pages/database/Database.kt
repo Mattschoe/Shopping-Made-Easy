@@ -38,7 +38,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -119,9 +119,9 @@ private fun DatabaseBody(
     viewModel: DataBaseViewModel,
 ) {
     val stores = remember { Store.entries.toList() }
-    val filteredAndRankedProducts by viewModel.filteredProductsFlow.collectAsState()
-    val currentStore by viewModel.currentStore.collectAsState()
-    val allStoresEnabled by viewModel.allStoresSearchEnabled.collectAsState()
+    val filteredAndRankedProducts by viewModel.filteredProductsFlow.collectAsStateWithLifecycle()
+    val currentStore by viewModel.currentStore.collectAsStateWithLifecycle()
+    val allStoresEnabled by viewModel.allStoresSearchEnabled.collectAsStateWithLifecycle()
 
     //Drag functionality
     val density = LocalDensity.current
@@ -243,7 +243,7 @@ private fun DatabaseBody(
             SearchBar(
                 modifier = Modifier
                     .weight(1f, fill = false),
-                searchQuery =  viewModel.searchQuery.collectAsState().value,
+                searchQuery =  viewModel.searchQuery.collectAsStateWithLifecycle().value,
                 onQueryChange =  viewModel::setSearchQuery
             )
             Spacer(modifier = Modifier.width((8.dp)))

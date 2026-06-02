@@ -38,7 +38,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -108,10 +108,10 @@ fun BudgetPage(
 
 @Composable
 private fun BudgetBody(modifier: Modifier = Modifier, viewModel: BudgetViewModel, month: Month, year: Year) {
-    val currentBudget by viewModel.currentBudget.collectAsState()
-    val currentReceipts by viewModel.currentReceipts.collectAsState()
-    val currentExpenses by viewModel.currentExtraExpenses.collectAsState()
-    val totalSpent by viewModel.totalSpent.collectAsState()
+    val currentBudget by viewModel.currentBudget.collectAsStateWithLifecycle()
+    val currentReceipts by viewModel.currentReceipts.collectAsStateWithLifecycle()
+    val currentExpenses by viewModel.currentExtraExpenses.collectAsStateWithLifecycle()
+    val totalSpent by viewModel.totalSpent.collectAsStateWithLifecycle()
 
     var selectedMonth by remember { mutableStateOf(month) }
     var selectedYear by remember { mutableStateOf(year) }

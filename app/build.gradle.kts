@@ -10,14 +10,14 @@ plugins {
 
 android {
     namespace = "weberstudio.app.billigsteprodukter"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "weberstudio.app.billigsteprodukter"
         minSdk = 26
-        targetSdk = 36
-        versionCode = 7
-        versionName = "1.2.2"
+        targetSdk = 37
+        versionCode = 8
+        versionName = "1.2.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

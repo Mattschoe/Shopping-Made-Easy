@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.0.1](https://github.com/Mattschoe/Shopping-Made-Easy/compare/v1.0.0...v1.0.1) (2026-06-02)
+
+
+### Bug Fixes
+
+* **budget:** honor TotalOption when computing total spent ([2bb58ff](https://github.com/Mattschoe/Shopping-Made-Easy/commit/2bb58ff88af12dd5137e8d9fc2af7d81e300c6f9))
+* **budget:** list expenses newest-first in the expenses dialog ([4cbcdd3](https://github.com/Mattschoe/Shopping-Made-Easy/commit/4cbcdd313d55faf6e332d5d0c2e42427bd457ef9))
+* **budget:** show øre in the budget circle instead of truncating ([79ed117](https://github.com/Mattschoe/Shopping-Made-Easy/commit/79ed1172063950a7ff097f388bff4f5e6d3cb71c))
+* **budget:** use the selected year when creating a budget ([e473941](https://github.com/Mattschoe/Shopping-Made-Easy/commit/e4739416fdb27130c26737f9da1dc4b7e1fbcaf5))
+* **database:** hide 0,00 kr products and observe products live ([187bdf3](https://github.com/Mattschoe/Shopping-Made-Easy/commit/187bdf3bad94f8f19a5a6b4c52b2d789d3d32594))
+* **home:** respect TotalOption in dashboard budget total ([5446c47](https://github.com/Mattschoe/Shopping-Made-Easy/commit/5446c472a40c2ba2645d2264dcb24f99e0e2caaa))
+* **ocr:** offload parsing and surface real scan errors ([5b45ab0](https://github.com/Mattschoe/Shopping-Made-Easy/commit/5b45ab0158b715333a288fd66fabc248aa202288))
+* **parsers:** harden quantity, total and product filters ([1e9cb58](https://github.com/Mattschoe/Shopping-Made-Easy/commit/1e9cb5882c6de8cf86074fd87ca44f0e17428462))
+* **parsers:** use correct store name in BilkaParser ([a494706](https://github.com/Mattschoe/Shopping-Made-Easy/commit/a49470645b27c6fd70d94b8b670765c0ad0a5de1))
+* prevent false loading state when no coop option selected for OCR ([ee79e97](https://github.com/Mattschoe/Shopping-Made-Easy/commit/ee79e97428b8331d28179159edd06b147b7f5381))
+* **shoppingList:** correct add-dialog search, collapse totals, unify expand key ([ea7ac04](https://github.com/Mattschoe/Shopping-Made-Easy/commit/ea7ac049b69ffe96e92f0d6f170cf95dc2d822c4))
+
 ## 1.0.0 (2026-05-31)
 
 

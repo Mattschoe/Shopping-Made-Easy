@@ -88,7 +88,7 @@ fun BilligsteProdukterTheme(
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = Typography,
+        typography = smeTypography,
         content = content
     )
 }

@@ -140,7 +140,7 @@ fun MainPageContent(
             ) {
                 Text(
                     text = "Seneste Aktivitet",
-                    style = MaterialTheme.typography.displaySmall,
+                    style = MaterialTheme.typography.headlineLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground
                 )

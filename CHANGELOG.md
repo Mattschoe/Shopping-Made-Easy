@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.1.0](https://github.com/Mattschoe/Shopping-Made-Easy/compare/v1.0.1...v1.1.0) (2026-06-02)
+
+
+### Features
+
+* change font ([96e0c78](https://github.com/Mattschoe/Shopping-Made-Easy/commit/96e0c782b7d44c95671b7195221e8b3003e8b46b))
+
+
+### Bug Fixes
+
+* improve navigation ([23d955a](https://github.com/Mattschoe/Shopping-Made-Easy/commit/23d955a7c6cb15d88e342eb2e76f1f89baba56df))
+
 ## [1.0.1](https://github.com/Mattschoe/Shopping-Made-Easy/compare/v1.0.0...v1.0.1) (2026-06-02)
 
 

@@ -1,0 +1,11 @@
+name: Build and Attach Release Artifacts
+on:
+  release:
+    types: [published]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write          
+    steps:
+      - uses: Mattschoe/action-release-apk@v1

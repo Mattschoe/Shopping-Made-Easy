@@ -32,6 +32,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import kotlinx.coroutines.flow.firstOrNull
@@ -100,7 +101,7 @@ fun PageShell(
                         },
                         actions = {
                             IconButton(onClick = {
-                                navController.navigate(PageNavigation.Settings.route)
+                                navController.navigate(PageNavigation.Settings)
                             }) {
                                 Icon(
                                     ImageVector.vectorResource(R.drawable.settings_icon),
@@ -141,7 +142,7 @@ fun PageShell(
                 onImageCaptured = { uri, ctx ->
                     cameraCoordinator.onImageCaptured(uri, ctx)
                     showCamera = false
-                    navController.navigate(PageNavigation.createReceiptRoute(0))
+                    navController.navigate(PageNavigation.ReceiptScanning(0))
                 },
                 onError = { exception ->
                     Logger.log("Camera", "TakePicture Failure! ${exception.message}")
@@ -173,7 +174,7 @@ fun NavigationBar(
         contentColor = MaterialTheme.colorScheme.onSurface,
     ) {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
-        val currentRoute = navBackStackEntry?.destination?.route
+        val currentDestination = navBackStackEntry?.destination
 
         //Home
         NavigationBarItem(
@@ -184,9 +185,9 @@ fun NavigationBar(
                     modifier = Modifier.size(36.dp),
                 )
             },
-            selected = currentRoute == PageNavigation.Home.route,
+            selected = currentDestination?.hasRoute<PageNavigation.Home>() == true,
             onClick = {
-                navController.navigate(PageNavigation.Home.route) {
+                navController.navigate(PageNavigation.Home) {
                     popUpTo(navController.graph.startDestinationId) { inclusive = false }
                     launchSingleTop = true
                     restoreState = true
@@ -203,9 +204,9 @@ fun NavigationBar(
                     modifier = Modifier.size(36.dp),
                 )
             },
-            selected = currentRoute == PageNavigation.ShoppingList.route || currentRoute == PageNavigation.ShoppingListUndermenu.route,
+            selected = currentDestination?.hasRoute<PageNavigation.ShoppingList>() == true || currentDestination?.hasRoute<PageNavigation.ShoppingListUndermenu>() == true,
             onClick = {
-                navController.navigate(PageNavigation.ShoppingList.route) {
+                navController.navigate(PageNavigation.ShoppingList) {
                     popUpTo(navController.graph.startDestinationId) { inclusive = false }
                     launchSingleTop = true
                     restoreState = true
@@ -222,9 +223,9 @@ fun NavigationBar(
                     modifier = Modifier.size(36.dp),
                 )
             },
-            selected = currentRoute == PageNavigation.Database.route,
+            selected = currentDestination?.hasRoute<PageNavigation.Database>() == true,
             onClick = {
-                navController.navigate(PageNavigation.Database.route) {
+                navController.navigate(PageNavigation.Database) {
                     popUpTo(navController.graph.startDestinationId) { inclusive = false }
                     launchSingleTop = true
                     restoreState = true
@@ -241,7 +242,7 @@ fun NavigationBar(
                     modifier = Modifier.size(36.dp),
                 )
             },
-            selected = currentRoute?.startsWith("receipt/") == true,
+            selected = currentDestination?.hasRoute<PageNavigation.ReceiptScanning>() == true,
             onClick = {
                 scope.launch {
                     val coopOption = settingsRepo.coop365Option.firstOrNull()

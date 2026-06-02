@@ -144,7 +144,7 @@ fun ReceiptScanningContent(
                 viewModel.showLoadingState()
             }
             is ParsingState.Success -> {
-                navController.navigate(PageNavigation.createReceiptRoute(state.receiptID))
+                navController.navigate(PageNavigation.ReceiptScanning(state.receiptID))
                 viewModel.clearParsingState()
             }
             is ParsingState.Error -> {
@@ -161,7 +161,7 @@ fun ReceiptScanningContent(
             errorMessage = errorMessage,
             onDismissRequest = {
                 viewModel.clearParsingState()
-                navController.navigate(PageNavigation.Home.route)
+                navController.navigate(PageNavigation.Home)
             },
             onConfirmError = {
                 viewModel.clearParsingState()

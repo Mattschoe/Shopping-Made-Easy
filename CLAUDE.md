@@ -47,7 +47,7 @@ Single-module Android app (`app/`) — Kotlin, Jetpack Compose, Room, manual dep
 **Key architectural decisions:**
 - **Manual DI through `ReceiptApp`** (no Hilt/Dagger). ViewModels are `AndroidViewModel`s that cast `application` to `ReceiptApp` and pull repositories off it. There is no DI container object passed around — the `Application` *is* the container.
 - **Repository pattern**: interface in `data/<domain>/`, `Offline*` impl wrapping a DAO. Repositories expose `Flow`s for observation; UI state is built reactively with `combine` / `flatMapLatest` / `stateIn(SharingStarted.WhileSubscribed(5_000))`.
-- **String-route navigation** via `PageNavigation` sealed class (NOT type-safe `@Serializable` routes). Routes with arguments use string templates (`"receipt/{ID}"`) and `createX(...)` builder functions in the companion object.
+- **Type-safe navigation** via `PageNavigation`, a sealed interface of `@Serializable` route types (`data object` for argument-less pages, `data class` for pages with arguments, e.g. `ReceiptScanning(id: Long)`, `Budget(year: Int, month: Int)`). Navigate by passing a route instance (`navController.navigate(PageNavigation.ReceiptScanning(0))`); the host declares pages with the reified `composable<PageNavigation.X> { }` and reads typed args via `backStackEntry.toRoute<PageNavigation.X>()`. Current-destination checks use `destination.hasRoute<PageNavigation.X>()`. Requires the `kotlin-serialization` Gradle plugin.
 - **Room with exported schemas + real migrations** — schema version is currently 11. `exportSchema = true`; the KSP `room.schemaLocation` arg writes a JSON per version to `app/schemas/` (committed; never delete one). **Bumping the schema requires a migration — do not rely on destructive wipes.** A scoped `fallbackToDestructiveMigrationFrom(true, 1..11)` only covers pre-baseline (legacy <11) databases that have no exported schema to migrate from; from 11 onward a missing migration crashes at startup by design. Migrations are validated by `MigrationTest` (`androidTest`) via `MigrationTestHelper`.
 - **`Store` enum is the central domain key.** Products, receipts, parsers, and logos are all keyed off it. A `Product`'s logical identity is `ProductID(store, name)` (its `businessID`), distinct from its Room `databaseID`.
 
@@ -103,7 +103,7 @@ All paths relative to `app/src/main/java/weberstudio/app/billigsteprodukter/`.
 - `Logger.kt` — file-based debug logger (`app_debug.log` in filesDir, 5MB cap). Use `Logger.log(tag, msg)`.
 
 **UI — navigation (`ui/navigation/`):**
-- `PageNavigation.kt` — **registration point**: sealed class of string routes + route builders.
+- `PageNavigation.kt` — **registration point**: sealed interface of `@Serializable` type-safe routes.
 - `ApplicationNavigationHost.kt` — `NavHost`; per-route ViewModel creation, `PageShell` wrapping, dialogs/FABs.
 
 **UI — pages (`ui/pages/`)** — each folder has a screen composable + a ViewModel:
@@ -128,8 +128,8 @@ All paths relative to `app/src/main/java/weberstudio/app/billigsteprodukter/`.
 3. Wire it into both `ParserFactory.detectStore` (fuzzy anchor match) and `ParserFactory.parseReceipt` (Store → parser mapping).
 
 **New navigation page:**
-1. Add a route `object` to `PageNavigation` (+ a `createX` builder if it takes arguments).
-2. Add a `composable(...)` block in `ApplicationNavigationHost`, create the ViewModel there, and wrap content in `PageShell`.
+1. Add a `@Serializable` route to `PageNavigation` (`data object` for no args, `data class` with typed fields for arguments).
+2. Add a `composable<PageNavigation.X> { }` block in `ApplicationNavigationHost` (read args via `backStackEntry.toRoute<PageNavigation.X>()`), create the ViewModel there, and wrap content in `PageShell`.
 3. Create the page composable + its ViewModel under `ui/pages/<name>/`.
 
 **New persisted data:**

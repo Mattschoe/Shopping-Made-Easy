@@ -111,12 +111,18 @@ fun MainPageContent(
         if (currentBudget == null) {
             NoBudgetCard(
                 modifier = Modifier.weight(1f),
-                onClick = { navController.navigate(PageNavigation.Budget.route) }
+                onClick = {
+                    val now = LocalDateTime.now()
+                    navController.navigate(PageNavigation.Budget(now.year, now.monthValue))
+                }
             )
         } else {
             currentBudget?.let { currentBudget ->
                 BudgetCard(
-                    onClick = { navController.navigate(PageNavigation.Budget.route) },
+                    onClick = {
+                        val now = LocalDateTime.now()
+                        navController.navigate(PageNavigation.Budget(now.year, now.monthValue))
+                    },
                     currentBudget = currentBudget.budget,
                     totalSpent = totalSpent
                 )
@@ -148,9 +154,9 @@ fun MainPageContent(
                             activity = activity,
                             onClick = {
                                 when(activity.activityType) {
-                                    ActivityType.RECEIPT_SCANNED -> navController.navigate(PageNavigation.createReceiptRoute(activity.receiptID!!))
-                                    ActivityType.BUDGET_CREATED -> navController.navigate(PageNavigation.createBudgetRoute(activity.budgetMonth!!, activity.budgetYear!!))
-                                    ActivityType.SHOPPING_LIST_CREATED -> navController.navigate(PageNavigation.createShoppingListDetailRoute(activity.shoppingListID!!))
+                                    ActivityType.RECEIPT_SCANNED -> navController.navigate(PageNavigation.ReceiptScanning(activity.receiptID!!))
+                                    ActivityType.BUDGET_CREATED -> navController.navigate(PageNavigation.Budget(activity.budgetYear!!.value, activity.budgetMonth!!.value))
+                                    ActivityType.SHOPPING_LIST_CREATED -> navController.navigate(PageNavigation.ShoppingListUndermenu(activity.shoppingListID!!))
                                 }
                             }
                         )

@@ -1,20 +1,33 @@
 package weberstudio.app.billigsteprodukter.ui.navigation
 
-import java.time.Month
-import java.time.Year
+import kotlinx.serialization.Serializable
 
-sealed class PageNavigation(val route: String) {
-    object Home : PageNavigation("home")
-    object ReceiptScanning : PageNavigation("receipt/{ID}")
-    object ShoppingList : PageNavigation("shoppingList")
-    object ShoppingListUndermenu : PageNavigation("shoppingListDetail/{listID}")
-    object Database : PageNavigation("database")
-    object Budget : PageNavigation("budget/{year}/{month}")
-    object Settings : PageNavigation("settings")
+/**
+ * Type-safe navigation routes. Each page is a [Serializable] route type; routes
+ * with arguments carry them as typed constructor fields, read back in the host
+ * via `backStackEntry.toRoute<T>()`.
+ */
+sealed interface PageNavigation {
+    @Serializable
+    data object Home : PageNavigation
 
-    companion object {
-        fun createShoppingListDetailRoute(listID: String) = "shoppingListDetail/$listID"
-        fun createBudgetRoute(month: Month, year: Year) = "budget/$year/$month"
-        fun createReceiptRoute(receiptID: Long) = "receipt/$receiptID"
-    }
+    /** [id] = 0 starts a new scan; >0 loads an existing receipt. */
+    @Serializable
+    data class ReceiptScanning(val id: Long) : PageNavigation
+
+    @Serializable
+    data object ShoppingList : PageNavigation
+
+    @Serializable
+    data class ShoppingListUndermenu(val listID: String) : PageNavigation
+
+    @Serializable
+    data object Database : PageNavigation
+
+    /** [month] is 1-12, [year] the four-digit year. */
+    @Serializable
+    data class Budget(val year: Int, val month: Int) : PageNavigation
+
+    @Serializable
+    data object Settings : PageNavigation
 }

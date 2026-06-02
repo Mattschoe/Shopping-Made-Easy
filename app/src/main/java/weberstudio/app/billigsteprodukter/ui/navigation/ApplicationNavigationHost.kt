@@ -16,11 +16,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
+import androidx.navigation.toRoute
 import weberstudio.app.billigsteprodukter.logic.ActivityViewModel
 import weberstudio.app.billigsteprodukter.logic.CameraCoordinator
 import weberstudio.app.billigsteprodukter.ui.components.AddFAB
@@ -41,7 +40,6 @@ import weberstudio.app.billigsteprodukter.ui.pages.shoppingList.ShoppingListUnde
 import weberstudio.app.billigsteprodukter.ui.pages.shoppingList.ShoppingListUndermenuViewModel
 import weberstudio.app.billigsteprodukter.ui.pages.shoppingList.ShoppingListsPage
 import weberstudio.app.billigsteprodukter.ui.pages.shoppingList.ShoppingListsViewModel
-import java.time.LocalDateTime
 import java.time.Month
 import java.time.Year
 
@@ -51,15 +49,15 @@ import java.time.Year
 @Composable
 fun ApplicationNavigationHost(
     navController: NavHostController = rememberNavController(),
-    startPage: String = PageNavigation.Home.route
+    startDestination: PageNavigation = PageNavigation.Home
 ) {
     NavHost(
         navController = navController,
-        startDestination = startPage,
+        startDestination = startDestination,
         modifier = Modifier.fillMaxSize()
     ) {
         // Main Screen
-        composable(PageNavigation.Home.route) { backStackEntry ->
+        composable<PageNavigation.Home> { backStackEntry ->
             val context = LocalContext.current.applicationContext as Application
             val budgetViewModel: BudgetViewModel = viewModel(backStackEntry) {
                 BudgetViewModel(context)
@@ -86,7 +84,7 @@ fun ApplicationNavigationHost(
         }
 
         // Shopping List Main menu
-        composable(PageNavigation.ShoppingList.route) { backStackEntry ->
+        composable<PageNavigation.ShoppingList> { backStackEntry ->
             val context = LocalContext.current
             val viewModel: ShoppingListsViewModel = viewModel(backStackEntry) {
                 ShoppingListsViewModel(context.applicationContext as Application)
@@ -117,16 +115,13 @@ fun ApplicationNavigationHost(
         }
 
         //Shopping List Under menu
-        composable(
-            PageNavigation.ShoppingListUndermenu.route,
-            arguments = listOf(navArgument("listID") { type = NavType.StringType })
-        ) { backStackEntry ->
+        composable<PageNavigation.ShoppingListUndermenu> { backStackEntry ->
             val context = LocalContext.current
             val viewModel: ShoppingListUndermenuViewModel = viewModel(backStackEntry) {
                 ShoppingListUndermenuViewModel(context.applicationContext as Application)
             }
-            val listID = backStackEntry.arguments?.getString("listID")
-            viewModel.selectShoppingList(listID!!)
+            val listID = backStackEntry.toRoute<PageNavigation.ShoppingListUndermenu>().listID
+            viewModel.selectShoppingList(listID)
             var showAddDialog by rememberSaveable { mutableStateOf(false) }
 
             PageShell(
@@ -159,7 +154,7 @@ fun ApplicationNavigationHost(
         }
 
         // Database
-        composable(PageNavigation.Database.route) { backStackEntry ->
+        composable<PageNavigation.Database> { backStackEntry ->
             val databaseViewModel: DataBaseViewModel = viewModel(backStackEntry)
             PageShell(
                 navController,
@@ -171,28 +166,12 @@ fun ApplicationNavigationHost(
         }
 
         // Budget
-        composable(
-            PageNavigation.Budget.route,
-            arguments = listOf(
-                navArgument("year") { type = NavType.StringType },
-                navArgument("month") { type = NavType.StringType }
-            )
-        ) { backStackEntry ->
+        composable<PageNavigation.Budget> { backStackEntry ->
             val budgetViewModel: BudgetViewModel = viewModel(backStackEntry)
-            val month = backStackEntry.arguments?.getString("month")?.let {
-                try {
-                    Month.valueOf(it)
-                } catch (_: Exception) {
-                    Month.from(LocalDateTime.now())
-                }
-            } ?: Month.from(LocalDateTime.now())
-            val year = backStackEntry.arguments?.getString("year")?.let {
-                try {
-                    Year.parse(it)
-                } catch (_: Exception) {
-                    Year.from(LocalDateTime.now())
-                }
-            } ?: Year.from(LocalDateTime.now())
+            val route = backStackEntry.toRoute<PageNavigation.Budget>()
+            // Klem måneden ind i 1-12, så en ugyldig værdi falder tilbage frem for at crashe (Month.of kaster ellers)
+            val month = Month.of(route.month.coerceIn(1, 12))
+            val year = Year.of(route.year)
 
             PageShell(
                 navController,
@@ -204,7 +183,7 @@ fun ApplicationNavigationHost(
         }
 
         // Settings
-        composable(PageNavigation.Settings.route) { backStackEntry ->
+        composable<PageNavigation.Settings> { backStackEntry ->
             val viewModel: SettingsViewModel = viewModel(backStackEntry)
             PageShell(
                 navController,
@@ -216,12 +195,9 @@ fun ApplicationNavigationHost(
         }
 
         // Receipt Scanning
-        composable(
-            PageNavigation.ReceiptScanning.route,
-            arguments = listOf(navArgument("ID") { type = NavType.LongType })
-        ) { backStackEntry ->
+        composable<PageNavigation.ReceiptScanning> { backStackEntry ->
             val context = LocalContext.current
-            val receiptID = backStackEntry.arguments?.getLong("ID") ?: 0
+            val receiptID = backStackEntry.toRoute<PageNavigation.ReceiptScanning>().id
             val receiptViewModel: ReceiptViewModel = viewModel(
                 viewModelStoreOwner = context as ComponentActivity
             )
